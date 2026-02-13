@@ -1,0 +1,29 @@
+# Terraform state — never commit
+*.tfstate
+*.tfstate.backup
+*.tfstate.lock.info
+.terraform/
+.terraform.lock.hcl
+
+# Bootstrap local state is the exception — commit only bootstrap/terraform.tfstate
+# if your team uses that pattern (small, contains only ARNs/IDs, no secrets)
+
+# Terraform variable files that may contain secrets
+*.tfvars
+!*.tfvars.example
+
+# Terraform plan output
+*.tfplan
+
+# Claude Code local settings
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
