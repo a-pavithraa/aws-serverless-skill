@@ -102,6 +102,18 @@ Patterns for Lambda, API Gateway, and event-driven architecture on AWS.
 - **Load selectively.** Skills load only the reference file relevant to the question — never bulk-load all references.
 - **Cite sources.** Non-obvious patterns link to official docs, GitHub issues, or PRs that verify the claim.
 
+## Testing Skills
+
+Want to verify skills work as intended? See the `tests/` directory.
+
+```bash
+# Quick start
+cat tests/baseline-scenarios.md   # 8 scenarios, 3 skills
+cat tests/rationalizations.md     # known failure modes and counters
+```
+
+RED-GREEN-REFACTOR methodology: run each scenario without the skill loaded (RED), then with it loaded (GREEN), then pressure-test (REFACTOR). See `tests/README.md` for the full process.
+
 ## Credits
 
 - DynamoDB modeling patterns: [Alex DeBrie](https://www.alexdebrie.com/) — author of [The DynamoDB Book](https://www.dynamodbbook.com/)
