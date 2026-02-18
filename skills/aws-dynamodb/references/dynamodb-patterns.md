@@ -1,35 +1,15 @@
 # DynamoDB Patterns & Best Practices
 
 ## Table of Contents
-1. [Data Modeling Fundamentals](#data-modeling-fundamentals)
-2. [Single-Table Design](#single-table-design)
-3. [Access Patterns](#access-patterns)
-4. [Multi-Attribute Composite Keys](#multi-attribute-composite-keys)
-5. [One-to-Many Relationships](#one-to-many-relationships)
-6. [Cost Optimization](#cost-optimization)
-7. [Terraform Examples](#terraform-examples)
-
----
-
-## Data Modeling Fundamentals
-
-### Key Principle: Access Patterns First
-Unlike relational databases, DynamoDB requires you to know your access patterns before designing the schema:
-
-```
-Relational: Design schema → Write queries
-DynamoDB:   Define access patterns → Design schema → Write code
-```
+1. [Single-Table Design](#single-table-design)
+2. [Access Pattern Gotcha: Filter Expressions](#access-pattern-gotcha-filter-expressions)
+3. [Multi-Attribute Composite Keys](#multi-attribute-composite-keys)
+4. [Cost Optimization](#cost-optimization)
+5. [Terraform Examples](#terraform-examples)
 
 ---
 
 ## Single-Table Design
-
-### When to Use Single-Table
-Use single-table design when:
-- You need to fetch related items in one request
-- Your access patterns are well-defined
-- You want consistent performance at scale
 
 ### Item Collection Pattern
 Group related items by partition key:
@@ -79,56 +59,74 @@ GSI partition and sort keys can now be composed from **up to 4 attributes each**
 
 ### Before vs After
 
-**Before** — manual concatenation, string parsing, zero-padding:
+The GSI in this example has `hash_key = ["tournamentId", "region"]` and `range_key = ["round", "bracket", "matchId"]`.
+
+**Before** — synthetic concatenated attributes, requires string parsing and zero-padding for numeric sort:
 ```python
 item = {
     "PK": "MATCH#match-001",
     "SK": "METADATA",
-    "GSI1PK": f"TOURNAMENT#{tournament_id}#REGION#{region}",
-    "GSI1SK": f"{round}#{bracket}#{match_id}",
+    "GSI1PK": f"TOURNAMENT#{tournament_id}#REGION#{region}",  # manually joined
+    "GSI1SK": f"{round}#{bracket}#{match_id}",                # manually joined
 }
 ```
 
-**After** — natural domain attributes, typed values:
+**After** — natural domain attributes; DynamoDB handles composite hashing and sort ordering:
 ```python
 item = {
     "PK": "MATCH#match-001",
     "SK": "METADATA",
+    # GSI partition key (both required when querying)
     "tournamentId": "WINTER2024",
     "region": "NA-EAST",
+    # GSI sort key (query left-to-right, stopping at any point)
     "round": "SEMIFINALS",
     "bracket": "UPPER",
+    "matchId": "match-001",
 }
 ```
 
 ### Query Rules
 
-**Partition key** — ALL attributes required, equality only:
+**Partition key** — every attribute required, equality only. Omitting any one attribute is invalid:
 ```python
-# All partition attrs must be present with =
-KeyConditionExpression='tournamentId = :t AND #region = :r'
+# Valid — both PK attributes present
+table.query(
+    IndexName="TournamentRegionIndex",
+    KeyConditionExpression="tournamentId = :t AND #region = :r",
+    ExpressionAttributeNames={"#region": "region"},
+    ExpressionAttributeValues={":t": "WINTER2024", ":r": "NA-EAST"},
+)
+
+# Invalid — missing region; partial PK is not allowed
+table.query(
+    IndexName="TournamentRegionIndex",
+    KeyConditionExpression="tournamentId = :t",
+)
 ```
 
-**Sort key** — left-to-right, no gaps:
+**Sort key** — left-to-right, no gaps. You can stop at any SK attribute, but cannot skip one:
 ```python
-# round only
-KeyConditionExpression='... AND round = :round'
+# Valid — first SK attribute only
+KeyConditionExpression="tournamentId = :t AND #region = :r AND round = :round"
 
-# round + bracket
-KeyConditionExpression='... AND round = :round AND bracket = :bracket'
+# Valid — first two SK attributes
+KeyConditionExpression="tournamentId = :t AND #region = :r AND round = :round AND bracket = :bracket"
 
-# INVALID: skipping round to query bracket
-KeyConditionExpression='... AND bracket = :bracket'
+# Invalid — skips round, jumps straight to bracket
+KeyConditionExpression="tournamentId = :t AND #region = :r AND bracket = :bracket"
 ```
 
-**Inequality** — must be the **last** condition:
+**Inequality** — allowed only on the last SK attribute in the expression. No further conditions after it:
 ```python
-# Valid: inequality on last sort attr queried
-KeyConditionExpression='... AND round >= :start_round'
-KeyConditionExpression='... AND round = :round AND bracket BETWEEN :a AND :b'
+# Valid — inequality on the first (and only) SK attribute used
+KeyConditionExpression="tournamentId = :t AND #region = :r AND round >= :start_round"
 
-# Invalid: conditions after inequality
-KeyConditionExpression='... AND round > :round AND bracket = :bracket'
+# Valid — equality on round, then inequality on bracket (the last SK attr queried)
+KeyConditionExpression="tournamentId = :t AND #region = :r AND round = :round AND bracket BETWEEN :a AND :b"
+
+# Invalid — bracket condition follows an inequality on round
+KeyConditionExpression="tournamentId = :t AND #region = :r AND round > :round AND bracket = :bracket"
 ```
 
 ### Data Types
@@ -258,45 +256,61 @@ global_secondary_index {
 
 ---
 
-## One-to-Many: Multi-Attribute Composite Keys (GSI)
+## Cost Optimization
 
-For hierarchical queries without string concatenation, use a [multi-attribute GSI](#multi-attribute-composite-keys):
-```hcl
-global_secondary_index {
-  name            = "GeoIndex"
-  hash_key        = ["country"]
-  range_key       = ["state", "city", "storeId"]
-  projection_type = "ALL"
-}
-```
+### Billing Modes
 
-Query at any level of the hierarchy with typed attributes:
-```python
-# All stores in USA
-table.query(IndexName='GeoIndex',
-    KeyConditionExpression='country = :country',
-    ExpressionAttributeValues={':country': 'USA'})
+| Mode | Cost | When to Use |
+|------|------|-------------|
+| On-demand | ~3.5× provisioned (fully utilized) | Unpredictable or spiky traffic |
+| Provisioned | Pay per reserved unit, throttles at limit | Predictable load with ≥28.8% average utilization |
+| Reserved capacity | Discounted provisioned | Stable, long-running workloads |
 
-# All stores in California
-table.query(IndexName='GeoIndex',
-    KeyConditionExpression='country = :country AND #state = :state',
-    ExpressionAttributeNames={'#state': 'state'},
-    ExpressionAttributeValues={':country': 'USA', ':state': 'CA'})
+### Storage Classes
 
-# Specific city
-table.query(IndexName='GeoIndex',
-    KeyConditionExpression='country = :country AND #state = :state AND city = :city',
-    ExpressionAttributeNames={'#state': 'state'},
-    ExpressionAttributeValues={':country': 'USA', ':state': 'CA', ':city': 'SF'})
-```
+| Class | Cost | Use When |
+|-------|------|----------|
+| Standard | ~$0.25/GB-month | Frequently accessed data |
+| Standard-IA | ~$0.10/GB-month | Storage dominates cost (storage > 50% of throughput spend) |
 
-Prefer this over Strategy 4 when adding a GSI to an existing table (no backfill needed) or when attributes have distinct types.
+> AWS's documented threshold: switch to Standard-IA when storage cost exceeds 50% of your throughput (reads + writes) cost. Standard-IA read/write rates are ~25% higher than Standard ($0.155 vs $0.125 per million reads; $0.780 vs $0.625 per million writes). Enable TTL to avoid paying for stale data.
 
 ---
 
-## Cost Optimization
+### Cost Multipliers (the hidden costs)
+
+**Item size** — rounds up per KB per operation:
+```
+Read  20KB item  →  5 RCUs  (ceil(20/4))
+Write 10KB item  →  10 WCUs (ceil(10/1))
+Write same item to a GSI → another 10 WCUs
+```
+
+**Secondary indexes** — every write to the base table propagates to each GSI:
+```
+1 write to table with 3 GSIs = 4× write capacity consumed
+```
+
+**Transactions** — carry a 2× cost premium vs standard reads/writes.
+
+**Global Tables** — each write is replicated to every region; storage is also replicated. Only deploy when cross-region active-active is genuinely required.
+
+**Strongly consistent reads** — 2× the cost of eventually consistent. Avoid unless your access pattern strictly requires them.
+
+---
+
+### Reducing Item Size
+
+- Remove attributes that are never read
+- Shorten attribute names — DynamoDB bills the name bytes on every read
+
+### Secondary Index Hygiene
+
+- Delete unused GSIs immediately — every write still propagates to them
+- Use `KEYS_ONLY` or `INCLUDE` projections instead of `ALL` where possible; projected item size drives both write and read costs on the index
 
 ### Vertical Sharding
+
 Split frequently-updated fields from static data:
 ```
 # Instead of updating 10KB item for view count:
@@ -309,61 +323,11 @@ USER#123     | PROFILE      | {name, bio...} (9.5KB)
 USER#123     | STATS        | {views: 1000} (0.1KB)
 ```
 
+Writing 0.1KB instead of 10KB for stat updates cuts write cost 100×.
+
 ---
 
 ## Terraform Examples
-
-### DynamoDB Table with GSI
-```hcl
-resource "aws_dynamodb_table" "main" {
-  name         = "${var.project}-${var.environment}"
-  billing_mode = "PAY_PER_REQUEST"  # On-demand
-  hash_key     = "PK"
-  range_key    = "SK"
-  
-  attribute {
-    name = "PK"
-    type = "S"
-  }
-  
-  attribute {
-    name = "SK"
-    type = "S"
-  }
-  
-  attribute {
-    name = "GSI1PK"
-    type = "S"
-  }
-  
-  attribute {
-    name = "GSI1SK"
-    type = "S"
-  }
-  
-  global_secondary_index {
-    name            = "GSI1"
-    hash_key        = "GSI1PK"
-    range_key       = "GSI1SK"
-    projection_type = "ALL"
-  }
-  
-  ttl {
-    attribute_name = "expiresAt"
-    enabled        = true
-  }
-  
-  point_in_time_recovery {
-    enabled = true
-  }
-  
-  server_side_encryption {
-    enabled = true
-  }
-  
-  tags = var.tags
-}
-```
 
 ### DynamoDB Streams with Lambda
 
@@ -382,7 +346,7 @@ resource "aws_lambda_event_source_mapping" "dynamodb" {
   function_name     = aws_lambda_function.stream_processor.arn
   starting_position = "LATEST"
   batch_size        = 100
-  
+
   filter_criteria {
     filter {
       pattern = jsonencode({
@@ -392,4 +356,3 @@ resource "aws_lambda_event_source_mapping" "dynamodb" {
   }
 }
 ```
-

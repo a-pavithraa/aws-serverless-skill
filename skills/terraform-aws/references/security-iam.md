@@ -70,8 +70,333 @@ Static analysis alone is insufficient — run post-deployment scans:
 
 ## Policy Enforcement with Sentinel (HCP Terraform)
 
-Sentinel policies evaluate before `apply` — violations block deployment without manual intervention:
+Sentinel policies evaluate before `apply`. Three enforcement levels control what happens on violation:
+
+| Level | Behaviour |
+|-------|-----------|
+| **Advisory** | Warning logged; run continues |
+| **Soft-Mandatory** | Run blocked; designated override users can bypass |
+| **Hard-Mandatory** | Run blocked; no override possible |
+
+Soft-Mandatory is the practical starting point — it gates without permanently blocking teams that need an escape valve during rollout. Promote to Hard-Mandatory once a policy is stable and well understood.
+
+Common policies:
 
 - Require tags on all resources
 - Restrict instance types to an approved list
 - Block destruction of production resources
+
+---
+
+## Static Analysis — IaC Scanning
+
+Two scanning modes catch different failure classes:
+
+| Stage | Mode | Input | Catches |
+|-------|------|-------|---------|
+| PR / pre-plan | HCL | Raw `.tf` files | Per-resource misconfigs |
+| Post-plan | Plan | `tfplan.json` | Cross-resource issues (e.g. permissive SG attached to a public-subnet EC2 — only visible once the resource graph is resolved) |
+
+Run both. HCL mode gives fast PR feedback; plan mode is the only stage that sees how resources relate to each other.
+
+### Trivy
+
+[Trivy](https://trivy.dev) (`trivy config`) is the actively maintained successor to tfsec — same underlying detection engine, broader ecosystem. `tfsec <dir>` maps directly to `trivy config <dir>`.
+
+```bash
+# HCL scan
+trivy config terraform/
+
+# Filter to actionable findings only
+trivy config --severity HIGH,CRITICAL terraform/
+
+# With tfvars (resolves variable references in rule evaluation)
+trivy config --tf-vars environments/prod.tfvars terraform/
+```
+
+Minimal `trivy.yaml` at project root:
+
+```yaml
+severity:
+  - HIGH
+  - CRITICAL
+misconfiguration:
+  terraform:
+    exclude-downloaded-modules: true  # skip .terraform/modules — third-party, not your code
+```
+
+GitHub Actions:
+
+```yaml
+- uses: aquasecurity/trivy-action@0.30.0
+  with:
+    scan-type: config
+    scan-ref: terraform/
+    severity: HIGH,CRITICAL
+    exit-code: '1'
+    format: sarif
+    output: trivy-results.sarif
+
+- uses: github/codeql-action/upload-sarif@v3
+  if: always()
+  with:
+    sarif_file: trivy-results.sarif
+```
+
+> SARIF output surfaces findings as code scanning alerts on PRs in GitHub's Security tab — developers see inline annotations rather than having to search build logs.
+
+### Checkov: DynamoDB
+
+| Check ID | Non-obvious detail |
+|----------|--------------------|
+| `CKV_AWS_119` | `server_side_encryption { enabled = true }` with no `kms_key_arn` uses an AWS-owned key and **silently fails** this check. A customer-managed key is required. |
+
+```hcl
+resource "aws_kms_key" "dynamodb" {
+  description             = "DynamoDB CMK"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+  tags                    = var.tags
+}
+
+resource "aws_dynamodb_table" "example" {
+  # ...
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_key.dynamodb.arn  # CKV_AWS_119 ✓
+  }
+
+  point_in_time_recovery {
+    enabled = true  # CKV_AWS_28 ✓
+  }
+
+  deletion_protection_enabled = true  # No Checkov check — enforced by AWS Config + Security Hub DynamoDB.6
+
+  tags = var.tags
+}
+```
+
+> `CKV_AWS_165` (PITR for `aws_dynamodb_global_table`) always returns PASSED in Terraform — the Checkov source unconditionally returns PASSED because the field is not configurable at the global table resource level. Configure PITR on the underlying table resources instead.
+
+### Checkov: Lambda
+
+| Check ID | Non-obvious detail |
+|----------|--------------------|
+| `CKV_AWS_50` | Accepts both `"Active"` and `"PassThrough"`. PassThrough propagates trace headers but does not sample — traces only appear if the upstream caller initiates them. Prefer `"Active"`. |
+| `CKV_AWS_258` | Covers `aws_lambda_function_url` only. Easy to overlook since Function URLs are a separate resource from the function itself. Fix: `authorization_type = "AWS_IAM"`. |
+
+> **Log group pre-creation**: Pre-create `aws_cloudwatch_log_group "/aws/lambda/${var.function_name}"` in Terraform and scope execution role log permissions to that ARN. Eliminates `logs:CreateLogGroup` on `*` and enables `retention_in_days`. Without it, Lambda auto-creates on first invocation, requiring wildcard permissions.
+
+### Checkov: API Gateway
+
+| Check ID | Non-obvious detail |
+|----------|--------------------|
+| `CKV2_AWS_29` | Covers REST APIs (`aws_api_gateway_rest_api`) only. Teams switching to HTTP APIs (`aws_apigatewayv2_api`) lose this WAF check silently — the check simply does not fire. |
+
+### CI Integration (GitHub Actions)
+
+Run HCL-mode scanning before `plan` for fast feedback; run plan-mode scanning after `plan` for cross-resource checks.
+
+```yaml
+# HCL-mode: fast, runs before plan
+- uses: aquasecurity/trivy-action@0.30.0
+  with:
+    scan-type: config
+    scan-ref: terraform/
+    severity: HIGH,CRITICAL
+    exit-code: '1'
+
+- uses: bridgecrewio/checkov-action@v12
+  with:
+    directory: terraform/
+    framework: terraform
+    quiet: true
+    soft_fail: false
+
+# Plan-mode: graph-aware, runs after terraform plan
+- name: Export plan to JSON
+  run: terraform show -json tfplan > tfplan.json
+
+- uses: bridgecrewio/checkov-action@v12
+  with:
+    file: terraform/tfplan.json
+    framework: terraform_plan   # different framework — plan mode uses a separate rule set
+    quiet: true
+    soft_fail: false
+```
+
+> `framework: terraform_plan` (not `terraform`) parses plan JSON rather than HCL. The two modes run different rule sets — some checks only exist in one mode.
+
+For centralized policy management across repos, see [AWS Prescriptive Guidance: Centralized Custom Checkov Scanning](https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/centralized-custom-checkov-scanning.html) — store custom policies and reusable workflows in a central repo; individual repos reference the shared workflow.
+
+---
+
+## Terraform CI/CD: OIDC over Static IAM Keys
+
+Static `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` in CI secrets are long-lived credentials — leaked once, compromised indefinitely. OIDC lets GitHub Actions request short-lived tokens directly from STS with no stored secrets.
+
+```hcl
+resource "aws_iam_openid_connect_provider" "github" {
+  url             = "https://token.actions.githubusercontent.com"
+  client_id_list  = ["sts.amazonaws.com"]
+  # Thumbprint: fetch from https://token.actions.githubusercontent.com or use tls_certificate data source
+  thumbprint_list = ["<sha1_of_github_oidc_root_ca>"]
+}
+
+resource "aws_iam_role" "github_actions" {
+  name = "github-actions-terraform"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Federated = aws_iam_openid_connect_provider.github.arn }
+      Action    = "sts:AssumeRoleWithWebIdentity"
+      Condition = {
+        StringEquals = {
+          "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
+        }
+        StringLike = {
+          # Restrict to specific repo — remove :ref: to allow all branches
+          "token.actions.githubusercontent.com:sub" = "repo:MY_ORG/MY_REPO:ref:refs/heads/main"
+        }
+      }
+    }]
+  })
+}
+```
+
+GitHub Actions workflow side:
+```yaml
+permissions:
+  id-token: write
+  contents: read
+
+steps:
+  - uses: aws-actions/configure-aws-credentials@v4
+    with:
+      role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+      aws-region: us-east-1
+```
+
+---
+
+## Secrets in Terraform State
+
+Terraform state is plaintext. Any `resource` or `data` block that reads a secret value writes it to the state file — including `aws_secretsmanager_secret_version`, `random_password`, and RDS `password` attributes.
+
+**Terraform 1.10+: use ephemeral resources (not stored in state)**
+
+```hcl
+# BAD — secret_string is written to tfstate in plaintext
+data "aws_secretsmanager_secret_version" "db" {
+  secret_id = aws_secretsmanager_secret.db.id
+}
+
+# GOOD — ephemeral: not persisted to state or plan file (Terraform ≥ 1.10)
+ephemeral "aws_secretsmanager_secret_version" "db" {
+  secret_id = aws_secretsmanager_secret.db.id
+}
+```
+
+**For pre-1.10 or non-ephemeral values: protect the state file itself**
+
+```hcl
+terraform {
+  backend "s3" {
+    bucket       = "my-tfstate"
+    key          = "prod/terraform.tfstate"
+    region       = "us-east-1"
+    encrypt      = true
+    kms_key_id   = "<kms_key_arn>"  # SSE-KMS for CMK control
+    use_lockfile = true              # S3 native locking (Terraform ≥ 1.10) — dynamodb_table is deprecated
+  }
+}
+```
+
+Mark any output that surfaces a secret as `sensitive = true` — Terraform redacts it from CLI output, though it is still present in state.
+
+---
+
+## KMS Key Policy: Default IAM Delegation
+
+When you create a KMS CMK, the default key policy includes:
+
+```json
+{
+  "Sid": "Enable IAM User Permissions",
+  "Effect": "Allow",
+  "Principal": { "AWS": "arn:aws:iam::ACCOUNT_ID:root" },
+  "Action": "kms:*",
+  "Resource": "*"
+}
+```
+
+This delegates full key access to IAM — meaning **any IAM principal in the account that holds a policy granting `kms:*` or `kms:Decrypt` can use the key**, even if you didn't intend them to. IAM policies cannot *override* a key policy Allow; they can only add permissions on top of it.
+
+The safe pattern is to remove the broad delegation statement and add explicit statements per service and role:
+
+```hcl
+resource "aws_kms_key" "lambda_env" {
+  description         = "Lambda environment variable encryption"
+  enable_key_rotation = true
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        # Emergency break-glass only — restrict in production
+        Sid       = "RootAccess"
+        Effect    = "Allow"
+        Principal = { AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root" }
+        Action    = "kms:*"
+        Resource  = "*"
+      },
+      {
+        Sid       = "LambdaDecrypt"
+        Effect    = "Allow"
+        Principal = { AWS = aws_iam_role.lambda_exec.arn }
+        Action    = ["kms:Decrypt", "kms:GenerateDataKey"]
+        Resource  = "*"
+      },
+      {
+        # Restrict grants to AWS service use only — prevents manual grant abuse
+        Sid       = "LambdaGrant"
+        Effect    = "Allow"
+        Principal = { AWS = aws_iam_role.lambda_exec.arn }
+        Action    = ["kms:CreateGrant", "kms:ListGrants", "kms:RevokeGrant"]
+        Resource  = "*"
+        Condition = { Bool = { "kms:GrantIsForAWSResource" = "true" } }
+      }
+    ]
+  })
+}
+
+---
+
+## SQS → Lambda: Event Source Mapping Permissions
+
+The Lambda event source mapping polls SQS using the **function's execution role**, not a separate polling role. The execution role needs exactly three actions, scoped to the specific queue:
+
+```hcl
+statement {
+  actions = [
+    "sqs:ReceiveMessage",      # Poll for messages
+    "sqs:DeleteMessage",       # Delete after successful processing
+    "sqs:GetQueueAttributes",  # Read queue metadata (batch size, visibility timeout)
+  ]
+  resources = [aws_sqs_queue.input.arn]
+}
+```
+
+**For KMS-encrypted queues**, add `kms:Decrypt` on the queue's CMK:
+
+```hcl
+statement {
+  actions   = ["kms:Decrypt"]
+  resources = [aws_kms_key.sqs.arn]
+}
+```
+
+> These are the exact three actions in the `AWSLambdaSQSQueueExecutionRole` AWS managed policy (verified from AWS managed policy reference). The managed policy scopes to `*` — always replace with the specific queue ARN in custom policies.
