@@ -349,13 +349,6 @@ jobs:
         run: tflint --format compact --recursive
         working-directory: terraform/
 
-      - uses: aquasecurity/trivy-action@0.30.0
-        with:
-          scan-type: config
-          scan-ref: terraform/
-          severity: HIGH,CRITICAL
-          exit-code: '1'
-
       - uses: bridgecrewio/checkov-action@v12
         with:
           directory: terraform/
@@ -365,8 +358,8 @@ jobs:
 ```
 
 > - `setup-tflint@v6` caches plugins and supports problem matchers for PR annotations — [terraform-linters/setup-tflint](https://github.com/terraform-linters/setup-tflint)
-> - `trivy-action` catches IaC misconfigurations; actively maintained successor to tfsec with the same detection engine — [aquasecurity/trivy-action](https://github.com/aquasecurity/trivy-action)
-> - `checkov-action` scans for misconfigurations against CIS benchmarks and supports plan-mode scanning for cross-resource checks — [bridgecrewio/checkov-action](https://github.com/bridgecrewio/checkov-action)
+> - `checkov-action` scans for misconfigurations and supports plan-mode scanning for cross-resource checks — [bridgecrewio/checkov-action](https://github.com/bridgecrewio/checkov-action)
+> - For Lambda container image deployments, replace the Checkov HCL step with `trivy-action` (image + config scan) and keep Checkov for plan-mode only. See `security-iam.md` → "CI Integration" for the container scenario pipeline.
 
 ---
 

@@ -26,48 +26,6 @@ data "aws_iam_policy_document" "dynamodb" {
 
 ---
 
-## Combining Policy Documents
-
-Compose multiple scoped policy documents into one without inline merging:
-
-```hcl
-data "aws_iam_policy_document" "lambda_combined" {
-  source_policy_documents = [
-    data.aws_iam_policy_document.lambda_logs.json,
-    data.aws_iam_policy_document.dynamodb.json,
-    data.aws_iam_policy_document.s3.json,
-  ]
-}
-```
-
----
-
-## IAM Access Analyzer
-
-Enable per-account to continuously identify resources shared outside the account, unused roles/permissions, and excessive access.
-
-```hcl
-resource "aws_accessanalyzer_analyzer" "main" {
-  analyzer_name = "${local.name_prefix}-analyzer"
-  type          = "ACCOUNT"
-}
-```
-
----
-
-## Dynamic Infrastructure Scanning
-
-Static analysis alone is insufficient — run post-deployment scans:
-
-| Tool | What it catches |
-|------|----------------|
-| Amazon Inspector | EC2, Lambda, container vulnerabilities |
-| AWS Security Hub CSPM | Recurring configuration drift scans |
-| Amazon GuardDuty | Threat detection, anomalous API calls |
-| Amazon Detective | Incident investigation and root cause |
-
----
-
 ## Policy Enforcement with Sentinel (HCP Terraform)
 
 Sentinel policies evaluate before `apply`. Three enforcement levels control what happens on violation:
@@ -80,39 +38,45 @@ Sentinel policies evaluate before `apply`. Three enforcement levels control what
 
 Soft-Mandatory is the practical starting point — it gates without permanently blocking teams that need an escape valve during rollout. Promote to Hard-Mandatory once a policy is stable and well understood.
 
-Common policies:
-
-- Require tags on all resources
-- Restrict instance types to an approved list
-- Block destruction of production resources
-
 ---
 
 ## Static Analysis — IaC Scanning
 
-Two scanning modes catch different failure classes:
+In HCL mode, pick **one** tool — running both generates duplicate findings for the same resources under different check ID namespaces (`AVD-AWS-*` vs `CKV_AWS_*`). Plan-mode scanning is always Checkov.
+
+| Scenario | Use Checkov | Use Trivy |
+|----------|-------------|-----------|
+| Lambda zip deployments (no containers) | ✓ HCL + plan mode | — marginal value |
+| Lambda container image deployments | ✓ Plan mode | ✓ IaC + image scan (one tool) |
+| Container image CVE scan | ✗ Not supported | ✓ Only option (`trivy image`) |
+| Plan-mode scan (cross-resource graph) | ✓ Mature (`framework: terraform_plan`) | Supported but has a known limitation with `each`/`count` expressions |
+| Secret detection in `.tf` files | Partial (IaC-specific hardcoded value checks) | ✓ `trivy fs --scanners secret,misconfig` |
+| Custom policies | Python or YAML | Rego |
+| Bridgecrew / Prisma Cloud integration | ✓ Native | ✗ |
+
+Two scanning stages regardless of tool choice:
 
 | Stage | Mode | Input | Catches |
 |-------|------|-------|---------|
 | PR / pre-plan | HCL | Raw `.tf` files | Per-resource misconfigs |
-| Post-plan | Plan | `tfplan.json` | Cross-resource issues (e.g. permissive SG attached to a public-subnet EC2 — only visible once the resource graph is resolved) |
-
-Run both. HCL mode gives fast PR feedback; plan mode is the only stage that sees how resources relate to each other.
+| Post-plan | Plan | `tfplan.json` | Cross-resource issues (only visible once the resource graph is resolved) |
 
 ### Trivy
 
-[Trivy](https://trivy.dev) (`trivy config`) is the actively maintained successor to tfsec — same underlying detection engine, broader ecosystem. `tfsec <dir>` maps directly to `trivy config <dir>`.
+[Trivy](https://trivy.dev) (`trivy config`) is the actively maintained successor to tfsec — same underlying detection engine, broader ecosystem. `tfsec <dir>` maps directly to `trivy config <dir>`. Custom checks are written in Rego.
 
 ```bash
-# HCL scan
-trivy config terraform/
-
-# Filter to actionable findings only
-trivy config --severity HIGH,CRITICAL terraform/
-
 # With tfvars (resolves variable references in rule evaluation)
 trivy config --tf-vars environments/prod.tfvars terraform/
+
+# Plan JSON — same command, pass the file directly
+trivy config tfplan.json
+
+# IaC + secret detection in one pass (trivy fs, not trivy config)
+trivy fs --scanners secret,misconfig --severity HIGH,CRITICAL terraform/
 ```
+
+> `trivy config` does not run secret scanning. To detect hardcoded credentials alongside IaC misconfigs, use `trivy fs --scanners secret,misconfig`.
 
 Minimal `trivy.yaml` at project root:
 
@@ -124,26 +88,6 @@ misconfiguration:
   terraform:
     exclude-downloaded-modules: true  # skip .terraform/modules — third-party, not your code
 ```
-
-GitHub Actions:
-
-```yaml
-- uses: aquasecurity/trivy-action@0.30.0
-  with:
-    scan-type: config
-    scan-ref: terraform/
-    severity: HIGH,CRITICAL
-    exit-code: '1'
-    format: sarif
-    output: trivy-results.sarif
-
-- uses: github/codeql-action/upload-sarif@v3
-  if: always()
-  with:
-    sarif_file: trivy-results.sarif
-```
-
-> SARIF output surfaces findings as code scanning alerts on PRs in GitHub's Security tab — developers see inline annotations rather than having to search build logs.
 
 ### Checkov: DynamoDB
 
@@ -196,17 +140,12 @@ resource "aws_dynamodb_table" "example" {
 
 ### CI Integration (GitHub Actions)
 
-Run HCL-mode scanning before `plan` for fast feedback; run plan-mode scanning after `plan` for cross-resource checks.
+**Scenario A — Lambda zip deployments (no container images)**
+
+Checkov only, two passes:
 
 ```yaml
-# HCL-mode: fast, runs before plan
-- uses: aquasecurity/trivy-action@0.30.0
-  with:
-    scan-type: config
-    scan-ref: terraform/
-    severity: HIGH,CRITICAL
-    exit-code: '1'
-
+# Pre-plan: HCL scan
 - uses: bridgecrewio/checkov-action@v12
   with:
     directory: terraform/
@@ -214,108 +153,83 @@ Run HCL-mode scanning before `plan` for fast feedback; run plan-mode scanning af
     quiet: true
     soft_fail: false
 
-# Plan-mode: graph-aware, runs after terraform plan
+# Post-plan: graph-aware scan
 - name: Export plan to JSON
   run: terraform show -json tfplan > tfplan.json
 
 - uses: bridgecrewio/checkov-action@v12
   with:
     file: terraform/tfplan.json
-    framework: terraform_plan   # different framework — plan mode uses a separate rule set
+    framework: terraform_plan   # not "terraform" — plan mode uses a separate rule set
     quiet: true
     soft_fail: false
 ```
 
-> `framework: terraform_plan` (not `terraform`) parses plan JSON rather than HCL. The two modes run different rule sets — some checks only exist in one mode.
+**Scenario B — Lambda container image deployments**
+
+Trivy covers the container image and IaC scan. Checkov adds plan-mode graph checks.
+
+```yaml
+# Container image scan — OS-level CVEs; Checkov cannot do this
+- uses: aquasecurity/trivy-action@0.30.0
+  with:
+    scan-type: image
+    image-ref: ${{ env.IMAGE_URI }}
+    severity: HIGH,CRITICAL
+    exit-code: '1'
+    format: sarif
+    output: trivy-image.sarif
+
+# IaC scan — reuse Trivy since it is already in the pipeline
+- uses: aquasecurity/trivy-action@0.30.0
+  with:
+    scan-type: config
+    scan-ref: terraform/
+    severity: HIGH,CRITICAL
+    exit-code: '1'
+
+# Plan-mode: cross-resource graph checks
+- name: Export plan to JSON
+  run: terraform show -json tfplan > tfplan.json
+
+- uses: bridgecrewio/checkov-action@v12
+  with:
+    file: terraform/tfplan.json
+    framework: terraform_plan
+    quiet: true
+    soft_fail: false
+
+- uses: github/codeql-action/upload-sarif@v3
+  if: always()
+  with:
+    sarif_file: trivy-image.sarif
+```
+
+> SARIF upload surfaces container scan findings as code scanning alerts in GitHub's Security tab — inline on PRs rather than buried in build logs.
+
+> Trivy supports plan JSON (`trivy config tfplan.json`) but has a confirmed limitation: resources using `each` or `count` expressions may produce incomplete results because the plan JSON omits attribute-level reference information for those constructs. Use Checkov for plan-mode scanning.
 
 For centralized policy management across repos, see [AWS Prescriptive Guidance: Centralized Custom Checkov Scanning](https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/centralized-custom-checkov-scanning.html) — store custom policies and reusable workflows in a central repo; individual repos reference the shared workflow.
 
 ---
 
-## Terraform CI/CD: OIDC over Static IAM Keys
-
-Static `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` in CI secrets are long-lived credentials — leaked once, compromised indefinitely. OIDC lets GitHub Actions request short-lived tokens directly from STS with no stored secrets.
-
-```hcl
-resource "aws_iam_openid_connect_provider" "github" {
-  url             = "https://token.actions.githubusercontent.com"
-  client_id_list  = ["sts.amazonaws.com"]
-  # Thumbprint: fetch from https://token.actions.githubusercontent.com or use tls_certificate data source
-  thumbprint_list = ["<sha1_of_github_oidc_root_ca>"]
-}
-
-resource "aws_iam_role" "github_actions" {
-  name = "github-actions-terraform"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect    = "Allow"
-      Principal = { Federated = aws_iam_openid_connect_provider.github.arn }
-      Action    = "sts:AssumeRoleWithWebIdentity"
-      Condition = {
-        StringEquals = {
-          "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
-        }
-        StringLike = {
-          # Restrict to specific repo — remove :ref: to allow all branches
-          "token.actions.githubusercontent.com:sub" = "repo:MY_ORG/MY_REPO:ref:refs/heads/main"
-        }
-      }
-    }]
-  })
-}
-```
-
-GitHub Actions workflow side:
-```yaml
-permissions:
-  id-token: write
-  contents: read
-
-steps:
-  - uses: aws-actions/configure-aws-credentials@v4
-    with:
-      role-to-assume: ${{ vars.AWS_ROLE_ARN }}
-      aws-region: us-east-1
-```
-
----
-
 ## Secrets in Terraform State
 
-Terraform state is plaintext. Any `resource` or `data` block that reads a secret value writes it to the state file — including `aws_secretsmanager_secret_version`, `random_password`, and RDS `password` attributes.
-
-**Terraform 1.10+: use ephemeral resources (not stored in state)**
+**Ephemeral resources (Terraform ≥ 1.10)** are not persisted to state or plan files — use them for any secret read:
 
 ```hcl
-# BAD — secret_string is written to tfstate in plaintext
+# data block — secret_string written to tfstate in plaintext
 data "aws_secretsmanager_secret_version" "db" {
   secret_id = aws_secretsmanager_secret.db.id
 }
 
-# GOOD — ephemeral: not persisted to state or plan file (Terraform ≥ 1.10)
+# ephemeral block — not persisted to state or plan file
 ephemeral "aws_secretsmanager_secret_version" "db" {
   secret_id = aws_secretsmanager_secret.db.id
 }
 ```
 
-**For pre-1.10 or non-ephemeral values: protect the state file itself**
-
-```hcl
-terraform {
-  backend "s3" {
-    bucket       = "my-tfstate"
-    key          = "prod/terraform.tfstate"
-    region       = "us-east-1"
-    encrypt      = true
-    kms_key_id   = "<kms_key_arn>"  # SSE-KMS for CMK control
-    use_lockfile = true              # S3 native locking (Terraform ≥ 1.10) — dynamodb_table is deprecated
-  }
-}
-```
-
-Mark any output that surfaces a secret as `sensitive = true` — Terraform redacts it from CLI output, though it is still present in state.
+> `use_lockfile = true` on the S3 backend (Terraform ≥ 1.10) replaces the deprecated `dynamodb_table` attribute for state locking.
 
 ---
 
@@ -372,6 +286,7 @@ resource "aws_kms_key" "lambda_env" {
     ]
   })
 }
+```
 
 ---
 
