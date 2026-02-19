@@ -3,33 +3,12 @@
 ## Cold Starts: The Real Problem
 
 ### Cold Start Happens Per Concurrent Execution
-**Common misconception**: "It's only the first request, then the next million are fast."
 
-**Reality**: Cold start happens once **for each concurrent execution**. If 10 requests arrive simultaneously, you get 10 cold starts.
-
-```
-Traffic pattern matters:
-- Sequential requests (1 at a time) → 1 cold start total
-- Burst of 100 concurrent requests → up to 100 cold starts
-- Bursty traffic (food ordering at noon, Black Friday) → worst case
-```
-
-### Idle Timeout Behavior
-AWS terminates idle functions after **45-60 minutes of inactivity**. However:
-- Functions can be terminated earlier during high resource contention
-- Higher memory functions (1536MB+) may be terminated earlier
-- **Don't build business logic assuming specific idle timeouts**
+Cold start happens once **per concurrent execution slot**, not once globally. 100 simultaneous requests = up to 100 cold starts. Functions are terminated after ~45–60 minutes idle (can be earlier under resource pressure) — don't build logic that assumes a specific idle duration.
 
 ### Cold Start Mitigation
 
-**Pre-warming** (only effective at low concurrency):
-```hcl
-# Schedule Lambda to invoke itself before expected traffic spike
-resource "aws_cloudwatch_event_rule" "warmup" {
-  name                = "prewarm-api"
-  schedule_expression = "cron(58 11 * * ? *)"  # 11:58 AM before lunch rush
-}
-```
+**Pre-warming** — only effective at very low concurrency; useless during burst traffic since the warm instances are outnumbered immediately. For predictable peaks, use scheduled Provisioned Concurrency instead — see Concurrency & Scaling section.
 
 **Provisioned Concurrency** (for critical paths):
 ```hcl
@@ -71,15 +50,13 @@ Absolute cold start numbers are too SDK-version and payload-sensitive to be reli
 
 Key characteristics:
 - **Rust**: Sub-50ms in optimized production functions; the limiting factor is SDK/dependency initialization, not the runtime itself
-- **Go**: Native binary, stable from first invocation; managed runtime since 2023 (no longer requires custom runtime)
+- **Go**: Native binary, stable from first invocation; managed runtime (no longer requires a custom runtime bootstrap)
 - **.NET 8 NativeAOT**: Now in the fastest tier — a large regression from .NET 3.1/6 which had 500ms+ cold starts; requires `PublishAot=true` at build time
 - **Python / Node.js / Ruby**: Cold start scales with the number and size of imports initialized at module level — keep the global scope lean
 - **Java (JVM)**: Needs 1–3k warm invocations for C1 JIT; use SnapStart instead of trying to optimize JVM cold start manually
 - **GraalVM native**: Stable warm performance comparable to Go; needs 256 MB+; perform worse on arm64 unless rebuilt for that target
 
-### SnapStart (Java Only)
-
-> Launched November 2022. Java 11, 17, 21 only.
+### SnapStart (Java 11, 17, 21 only)
 
 Snapshots the fully initialized execution environment after the init phase and restores it on cold start. Cuts Java cold start from 3–10 s to typically under 1 s — without provisioned concurrency costs.
 
@@ -111,19 +88,9 @@ resource "aws_lambda_alias" "live" {
 
 ## Lambda Layers: Deployment Optimization, NOT Package Manager
 
-### Common Misconception
-"Use Lambda Layers to share code between functions like NPM packages."
+Don't use layers to share business logic or application dependencies between functions. Layers have no semantic versioning, break local dev (they're not installed in your environment), blind vulnerability scanners, and have a hard limit of 5 per function.
 
-### Why Layers Are Poor Package Managers
-1. **No semantic versioning** - only incremental version numbers
-2. **Breaks local testing** - you still need dependencies locally
-3. **Doesn't work with statically compiled languages**
-4. **Breaks static analyzers** - vulnerability scanners can't see layer contents
-5. **Max 5 layers per function**
-6. **Doesn't integrate with npm/pip ecosystem**
-
-### Correct Use: Deployment Optimization
-Layers speed up deployments by separating rarely-changed dependencies from frequently-changed code:
+**Correct use — deployment optimization** by separating rarely-changed dependencies from frequently-changed code:
 
 ```hcl
 # Layer contains node_modules (changes rarely)
@@ -152,27 +119,6 @@ resource "aws_lambda_function" "api" {
 - **Custom runtimes**: LLRT, Bun
 - **AWS-provided layers**: Lambda Powertools, AWS SDK extensions
 - **Deployment optimization**: As described above
-
-### Terraform Pattern for Layer-Based Deployment
-```hcl
-locals {
-  deps_hash = filebase64sha256("${path.module}/package-lock.json")
-}
-
-# Check if dependencies changed
-data "aws_lambda_layer_version" "existing" {
-  layer_name = "${local.name_prefix}-deps"
-  count      = can(data.aws_lambda_layer_version.existing[0]) ? 1 : 0
-}
-
-resource "aws_lambda_layer_version" "dependencies" {
-  # Only create new version if hash changed
-  filename            = data.archive_file.deps.output_path
-  layer_name          = "${local.name_prefix}-deps"
-  compatible_runtimes = ["python3.11"]
-  source_code_hash    = local.deps_hash
-}
-```
 
 ---
 
@@ -264,8 +210,6 @@ lambda_client.invoke(
 
 ### Failure Handling: Use Destinations, Not Lambda DLQ
 
-> Source: [Implementing error handling patterns](https://aws.amazon.com/blogs/compute/implementing-aws-lambda-error-handling-patterns/)
-
 Lambda Destinations replace the legacy `dead_letter_config`:
 
 | | Legacy DLQ (`dead_letter_config`) | Destinations (`destination_config`) |
@@ -323,8 +267,6 @@ resource "aws_lambda_provisioned_concurrency_config" "critical" {
 ```
 
 ### Scheduled Provisioned Concurrency for Predictable Peaks
-
-> Source: [Scheduling AWS Lambda Provisioned Concurrency for recurring peak usage](https://aws.amazon.com/blogs/compute/scheduling-aws-lambda-provisioned-concurrency-for-recurring-peak-usage/)
 
 Always-on PC is expensive. For predictable peaks (lunch rush, daily batch, market open), use Application Auto Scaling scheduled actions to activate PC only during the window.
 
@@ -456,18 +398,6 @@ The execution output contains a `visualization` URL — open it. The interactive
 - **Elbow point**: where adding memory stops reducing duration proportionally → optimal setting is just past this point
 - **Cost inversion**: if the cost curve dips below the starting point at higher memory, you're in CPU-bound territory — higher memory is both faster and cheaper
 
-```json
-{
-  "power": 1024,
-  "cost": 0.0000002083,
-  "duration": 134.6,
-  "stateMachine": {
-    "executionCost": 0.00045,
-    "visualization": "https://lambda-power-tuning.show/#..."
-  }
-}
-```
-
 ### Apply the Result in Terraform
 
 ```hcl
@@ -521,41 +451,29 @@ def handler(event, context):
 
 ### Lambda-to-Lambda: Synchronous Calls
 
-> Source: [Are Lambda-to-Lambda calls really so bad?](https://theburningmonk.com/2020/07/are-lambda-to-lambda-calls-really-so-bad/) — Yan Cui
+**Lambda is not a stable interface.** Synchronous invocation couples the caller to the callee's function name, region, and account ID. Renaming a function, splitting it, going multi-region, or moving it to another account all require a coordinated caller deploy. For cross-service calls, put a stable interface in front: API Gateway or a Lambda Function URL behind a custom CloudFront domain.
 
-Two failure modes that are silent in dev and only surface at scale:
+**You pay twice.** The caller is billed for its full duration including idle time spent waiting for the callee. That idle time produces no compute value.
 
-**Concurrency slot deadlock** — caller and callee each hold a slot simultaneously. Under load, callers exhaust the account limit waiting for callees that can never start:
-```
-Account concurrency limit: 1000
-500 in-flight callers → 500 slots held, waiting
-Callee throttled → callers time out → entire chain stalls
-```
-Adding concurrency doesn't fix this; it just raises the ceiling before the same deadlock. The fix is to not hold a slot across a service boundary.
+**Concurrency starvation under load.** Caller and callee each hold a concurrency slot simultaneously. Under a traffic spike, callers exhaust the account limit while waiting for a throttled callee — the entire chain stalls. Raising concurrency limits defers this, it doesn't prevent it.
 
-**Retry amplification** — retries multiply, not add, across the chain:
-```
-Caller retries: 3  ×  Callee retries: 3  =  9 invocations per original request
-Three layers deep:                           27 invocations
-```
-This shows up as unexplained cost spikes and DLQ floods during incidents, not during normal operation.
+**What to use instead depends on whether you need a response:**
 
-**The async pattern that avoids both** — fire-and-forget releases the caller slot immediately:
+| Scenario | Replace with |
+|---|---|
+| Don't need a response — offload work | Async invocation (`InvocationType="Event"`) — caller slot released immediately |
+| Need a response — multi-step orchestration | Step Functions — see `event-driven.md` |
+| Need a response — cross-service call | Stable HTTP interface (API Gateway or Function URL + CloudFront) |
+
 ```python
+# Fire-and-forget: caller slot freed on 202, not on callee completion
 lambda_client.invoke(
     FunctionName="downstream",
-    InvocationType="Event",       # Returns 202, caller slot freed immediately
+    InvocationType="Event",
     Payload=json.dumps(payload).encode(),
 )
 # Always pair with on_failure destination on the callee — see Async Invocations section
 ```
-
-**When synchronous calls are acceptable:**
-- Both functions owned and deployed by the same team — function name coupling is a non-issue
-- GraphQL resolvers: Apollo Server on Lambda requires synchronous sub-resolution
-- Behind a Function URL + CloudFront: stable domain replaces raw function name coupling
-
-For orchestrating multi-step workflows that need synchronous results, use Step Functions — see `event-driven.md`.
 
 ---
 

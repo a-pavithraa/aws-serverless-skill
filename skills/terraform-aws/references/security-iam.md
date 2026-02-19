@@ -229,8 +229,6 @@ ephemeral "aws_secretsmanager_secret_version" "db" {
 }
 ```
 
-> `use_lockfile = true` on the S3 backend (Terraform ≥ 1.10) replaces the deprecated `dynamodb_table` attribute for state locking.
-
 ---
 
 ## KMS Key Policy: Default IAM Delegation

@@ -238,8 +238,6 @@ terraform init \
 ```
 
 > `-reconfigure` is needed in CI because each run may target a different backend key. It reinitializes the backend from scratch without attempting state migration. Always pair with `-input=false` to prevent interactive prompts.
->
-> — [HashiCorp: Backend Configuration](https://developer.hashicorp.com/terraform/language/backend)
 
 ### Resource Naming with Environment Suffix
 
@@ -302,8 +300,6 @@ provider "aws" {
 > - Never pass the same tag key via both `default_tags` and a resource/module `tags` variable — causes perpetual plan diffs ([hashicorp/terraform-provider-aws#18311](https://github.com/hashicorp/terraform-provider-aws/issues/18311)).
 > - Never use computed values (`timestamp()`, `formatdate()`) in `default_tags` — use static strings only.
 > - Use `tags_all` (not `tags`) in outputs/references that need the full merged tag set.
->
-> — [HashiCorp: Default Tags in the AWS Provider](https://www.hashicorp.com/en/blog/default-tags-in-the-terraform-aws-provider)
 
 Pass branch name from CI:
 
@@ -357,9 +353,7 @@ jobs:
           soft_fail: false   # block the pipeline on failures
 ```
 
-> - `setup-tflint@v6` caches plugins and supports problem matchers for PR annotations — [terraform-linters/setup-tflint](https://github.com/terraform-linters/setup-tflint)
-> - `checkov-action` scans for misconfigurations and supports plan-mode scanning for cross-resource checks — [bridgecrewio/checkov-action](https://github.com/bridgecrewio/checkov-action)
-> - For Lambda container image deployments, replace the Checkov HCL step with `trivy-action` (image + config scan) and keep Checkov for plan-mode only. See `security-iam.md` → "CI Integration" for the container scenario pipeline.
+> For Lambda container image deployments, replace the Checkov HCL step with `trivy-action` (image + config scan) and keep Checkov for plan-mode only. See `security-iam.md` → "CI Integration" for the container scenario pipeline.
 
 ---
 
@@ -386,8 +380,6 @@ jobs:
 ```
 
 > Concurrency keys support `needs` context. `cancel-in-progress: false` is critical — cancelling a running `terraform apply` can leave state locked or resources half-created.
->
-> — [GitHub: Control concurrency of workflows and jobs](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs)
 
 ### Environment Protection for Apply
 
@@ -412,8 +404,6 @@ jobs:
 ```
 
 Configure required reviewers in GitHub repo Settings → Environments → select environment → Required reviewers (up to 6; only 1 needs to approve).
-
-> — [GitHub: Managing environments for deployment](https://docs.github.com/en/actions/managing-workflow-runs-and-deployments/managing-deployments/managing-environments-for-deployment)
 
 ### Destroy Controls
 
@@ -542,8 +532,6 @@ done
 ```
 
 > `get-resources` uses AND logic across tag filters, OR logic across values within a filter.
->
-> — [AWS CLI: get-resources](https://docs.aws.amazon.com/cli/latest/reference/resourcegroupstaggingapi/get-resources.html)
 
 To automate fully, pair with a scheduled workflow that runs the cleanup script and triggers `terraform destroy` for each orphaned environment:
 
