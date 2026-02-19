@@ -101,6 +101,14 @@ Add the above to `~/.claude/claude_desktop_config.json` (Claude Desktop) or `.cl
 
 ---
 
+## Version Matrix
+
+| Feature | AWS GA | Supported Runtimes |
+|---------|--------|--------------------|
+| SnapStart | Nov 2021 (Java); Oct 2024 (Python, .NET) | Java 11+, Python 3.12+, .NET 8+ — not Node, Ruby, or container images |
+
+---
+
 ## Reference Loading Strategy
 
 Load references based on what the user is asking:

@@ -53,7 +53,7 @@ response = table.query(
 
 ## Multi-Attribute Composite Keys
 
-> Requires Terraform AWS Provider **v6.29.0+** ([PR #45357](https://github.com/hashicorp/terraform-provider-aws/pull/45357))
+> AWS GA: Nov 2025 · Requires Terraform AWS Provider **v6.29.0+** ([PR #45357](https://github.com/hashicorp/terraform-provider-aws/pull/45357)) · verified 2026-02-19
 
 GSI partition and sort keys can now be composed from **up to 4 attributes each** (8 total per GSI). DynamoDB handles hashing and sort ordering natively — no synthetic concatenated keys needed.
 

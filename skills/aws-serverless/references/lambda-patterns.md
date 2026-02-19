@@ -56,7 +56,9 @@ Key characteristics:
 - **Java (JVM)**: Needs 1–3k warm invocations for C1 JIT; use SnapStart instead of trying to optimize JVM cold start manually
 - **GraalVM native**: Stable warm performance comparable to Go; needs 256 MB+; perform worse on arm64 unless rebuilt for that target
 
-### SnapStart (Java 11, 17, 21 only)
+### SnapStart (Java 11+, Python 3.12+, .NET 8+)
+
+> *Source: [AWS Lambda SnapStart](https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html) · verified 2026-02-19*
 
 Snapshots the fully initialized execution environment after the init phase and restores it on cold start. Cuts Java cold start from 3–10 s to typically under 1 s — without provisioned concurrency costs.
 
@@ -184,13 +186,13 @@ Client → API Gateway → Lambda (returns immediately)
 ## Async Invocations: Throttling Behavior
 
 ### Critical Insight
-**Async invocations NEVER fail due to throttling.**
+**Async invocations are not immediately rejected due to throttling — they are queued and retried.**
 
 When you invoke Lambda asynchronously (SNS, EventBridge, or `InvocationType: Event`):
-1. Request goes to internal queue (always succeeds)
+1. Request goes to internal queue (always succeeds at intake)
 2. Internal poller invokes function synchronously
 3. If throttled, request returns to queue
-4. **Retries continue for up to 6 hours**
+4. **Retries continue for up to 6 hours** — but the event *will* fail if the retry window expires or maximum attempts are exhausted without a successful execution
 
 ### Implications
 ```python
@@ -484,18 +486,20 @@ These are hard limits — no configuration changes them. The only escape is S3 o
 | Invocation type | Request limit | Response limit |
 |---|---|---|
 | Synchronous (`RequestResponse`) | 6 MB | 6 MB |
-| Asynchronous (`Event`) | 256 KB | — |
+| Asynchronous (`Event`) | 1 MB | — |
 | SQS message body | 256 KB | — |
 | Kinesis record | 1 MB | — |
 | EventBridge event | 256 KB | — |
 
-**The trap**: Async invocations (SNS, EventBridge, SQS) all have a 256 KB limit. If you're passing large payloads event-to-event and only test synchronously, you won't hit this during dev — only in production under realistic data.
+> *Source: [AWS Lambda quotas](https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-limits.html) · verified 2026-02-19*
+
+**The trap**: Direct async Lambda invocations accept up to 1 MB, but SNS, EventBridge, and SQS messages that *trigger* Lambda still have their own 256 KB limits. If you're passing large payloads event-to-event and only test synchronously, you won't hit this during dev — only in production under realistic data.
 
 **S3 claim-check pattern** for oversized payloads:
 ```python
 def invoke_async(function_name: str, payload: dict) -> None:
     body = json.dumps(payload).encode()
-    if len(body) > 200_000:  # Stay under 256KB with margin
+    if len(body) > 900_000:  # Stay under 1 MB async limit with margin
         key = f"invocation-payloads/{uuid.uuid4()}.json"
         s3.put_object(Bucket=PAYLOAD_BUCKET, Key=key, Body=body,
                       ServerSideEncryption="aws:kms")

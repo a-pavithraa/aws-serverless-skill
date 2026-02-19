@@ -390,8 +390,8 @@ jobs:
   terraform-apply:
     needs: terraform-plan
     if: needs.terraform-plan.outputs.has_changes == 'true'
-    # Object format required for dynamic environment names from needs context.
-    # Shorthand (environment: ${{ ... }}) does NOT work with needs.
+    # Object format is the explicit, unambiguous choice for dynamic environment names.
+    # Both string and object forms accept expressions; prefer object form for clarity.
     environment:
       name: ${{ needs.terraform-plan.outputs.protected_environment }}
     concurrency:

@@ -70,7 +70,7 @@
 
 ### Performance
 
-- **Keep Lambda timeout ≤ 3s** for user-facing APIs. API Gateway has a hard 29s integration timeout. For long operations, use the [async/decoupled pattern](event-driven.md#storage-first-pattern-api-gateway--sqs).
+- **Keep Lambda timeout ≤ 3s** for user-facing APIs. HTTP APIs have a hard 29s integration timeout. Regional and Private REST APIs can be configured above 29s (requires reducing account-level throttle quota; [AWS, Jun 2024](https://aws.amazon.com/about-aws/whats-new/2024/06/amazon-api-gateway-integration-timeout-limit-29-seconds/)). For long operations, prefer the [async/decoupled pattern](event-driven.md#storage-first-pattern-api-gateway--sqs).
 - **Cache at the edge** with CloudFront where possible. For REST API, enable stage-level response caching for read-heavy endpoints.
 
 ### Resilience
@@ -143,7 +143,7 @@ For Powertools handler setup and X-Ray tracing, see `lambda-powertools.md`. For 
 ## Anti-Patterns
 
 - **Don't** use API Gateway to fan-out to multiple Lambda functions for the same request — use SNS/EventBridge internally
-- **Don't** set Lambda timeout equal to or longer than 29s (API Gateway will time out the connection first)
+- **Don't** set Lambda timeout equal to or longer than 29s when using HTTP APIs (hard ceiling); for Regional/Private REST APIs the timeout can be raised above 29s at the cost of reduced throttle quota
 - **Don't** use REST API when HTTP API satisfies requirements — the cost difference is significant at scale
 - **Don't** put API keys in query string params — they appear in access logs and browser history
 - **Don't** rely on Lambda error handling to set HTTP status codes — configure API Gateway responses or use structured response objects

@@ -43,7 +43,7 @@ description: "Patterns and best practices for AWS infrastructure as code with Te
 - **Don't** run `terraform apply` directly on push to main — require plan review in PR
 - **Don't** use `cancel-in-progress: true` on apply/destroy jobs — cancelling mid-apply corrupts state
 - **Don't** skip `default_tags` with `Branch` tag — orphaned resources become untrackable
-- **Don't** use shorthand `environment: ${{ needs.x.outputs.y }}` — must use object format `environment: name:`
+- **Prefer** object format `environment: { name: ${{ needs.x.outputs.y }} }` for dynamic environment names — more explicit, avoids ambiguity in YAML parsers
 - **Don't** rely on dynamic `environment: name:` without pre-creating the environment in repo settings — non-existent names silently create unprotected environments with no reviewers
 
 ## Decision Frameworks
@@ -54,6 +54,13 @@ description: "Patterns and best practices for AWS infrastructure as code with Te
 | 3+ resources always deployed together | Single resource with no dependencies |
 | Reused across 2+ environments or repos | One-off resource |
 | Encapsulates non-obvious wiring (IAM + resource) | Simple resource with standard config |
+
+## Version Matrix
+
+| Feature | Terraform Core | Terraform AWS Provider |
+|---------|---------------|------------------------|
+| S3-native state locking (no DynamoDB lock table) | 1.10+ | any |
+| Ephemeral resources for secrets | 1.10+ | any |
 
 ## Cost Analysis
 

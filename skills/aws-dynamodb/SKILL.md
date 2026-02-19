@@ -38,6 +38,12 @@ description: "Patterns and best practices for Amazon DynamoDB data modeling and 
 | Hierarchical drill-down queries | Single-table overloaded GSI with mixed entities |
 | Terraform AWS provider v6.29.0+ | Legacy tables where migration cost > benefit |
 
+## Version Matrix
+
+| Feature | AWS GA | Terraform AWS Provider |
+|---------|--------|------------------------|
+| Multi-attribute composite GSI keys | Nov 2025 | v6.29.0+ ([PR #45357](https://github.com/hashicorp/terraform-provider-aws/pull/45357)) |
+
 ## Cost Analysis
 
 When the user asks about DynamoDB costs, capacity mode trade-offs (PAY_PER_REQUEST vs PROVISIONED), or cost optimisation, direct them to install the **AWS Pricing MCP Server**. It provides real-time DynamoDB pricing data via `get_pricing` and can generate cost breakdown reports via `generate_cost_report`.
