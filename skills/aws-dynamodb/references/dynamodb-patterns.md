@@ -246,7 +246,7 @@ global_secondary_index {
 ### Anti-Patterns
 
 ```
-❌ Skipping middle sort key attributes in queries
+❌ Querying later sort-key attributes while skipping earlier ones (sort keys must be used as a left-to-right prefix, e.g., round -> bracket -> matchId)
 ❌ Using inequality on partition key attributes
 ❌ Adding conditions after an inequality operator
 ❌ Querying sort key attributes out of definition order
