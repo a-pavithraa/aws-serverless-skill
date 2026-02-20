@@ -1,18 +1,5 @@
 # Monitoring & Alerting Reference
 
-## Monitoring Philosophy
-
-**Alert on symptoms, not causes.** Users don't care if CPU is high—they care if requests are failing.
-
-| Don't Alert On | Do Alert On |
-|----------------|-------------|
-| CPU > 80% | Error rate > 1% |
-| Memory usage high | P99 latency > 3s |
-| Queue depth increasing | DLQ has messages |
-| Concurrent executions high | Throttling occurring |
-
----
-
 ## Lambda: Essential Metrics & Alarms
 
 ### Key CloudWatch Metrics

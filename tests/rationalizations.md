@@ -40,10 +40,10 @@ Documents agent excuses observed during RED phase testing and the skill counters
 
 | Scenario | Rationalization | Skill Counter | Status |
 |----------|----------------|---------------|--------|
-| 7 | "Layers reduce package size and speed up deployment" | `lambda-patterns.md` → Layers add cold start latency; don't use as package manager | Needs verification |
-| 7 | "AWS specifically designed Layers for this use case" | `lambda-patterns.md` → Valid Layer uses vs package manager misuse | Needs verification |
+| 7 | "Layers reduce package size and speed up deployment" | `lambda-patterns.md` → Each layer adds a separate mount+init step in the INIT phase (AWS-sourced); INIT is now billed (Aug 2025) — unnecessary layers increase both latency and cost | Needs verification |
+| 7 | "AWS specifically designed Layers for this use case" | `lambda-patterns.md` → Valid Layer uses: binary deps, custom runtimes, Powertools, deployment optimization — not shared app libraries; misuse breaks local dev, blinds vuln scanners, 5-layer limit | Needs verification |
 | 8 | "SQS has built-in retry, do I really need a DLQ?" | `event-driven.md` → DLQ required; retries without DLQ lose messages after maxReceiveCount | Needs verification |
-| 8 | "I'll add error handling in the application code" | `event-driven.md` → bisect_batch_on_function_error + ReportBatchItemFailures | Needs verification |
+| 8 | "I'll add error handling in the application code" | `event-driven.md` → `function_response_types = ["ReportBatchItemFailures"]` needed for partial batch success; app-level error handling alone doesn't prevent re-delivery of the whole batch | Needs verification |
 
 ---
 

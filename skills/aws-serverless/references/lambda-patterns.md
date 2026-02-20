@@ -1,6 +1,35 @@
 # Lambda Patterns Reference
 
+## Contents
+
+1. [Cold Starts](#cold-starts-the-real-problem) — INIT phase, per-execution behavior, mitigation (SnapStart, Provisioned Concurrency)
+2. [Lambda Layers](#lambda-layers-deployment-optimization-not-package-manager) — cold start impact, valid uses, anti-patterns
+3. [Concurrency & Scaling](#concurrency--scaling) — reserved vs provisioned, scheduled PC, sizing formula
+4. [Memory Sizing](#memory-sizing-aws-lambda-power-tuning) — power tuning tool, CPU boundary, interpret output
+5. [Timeouts](#timeouts-context-aware-strategy) — limits table, context-aware pattern, async for long ops
+6. [Async Invocations](#async-invocations-throttling-behavior) — queue behavior, Destinations vs DLQ
+7. [Function Design Patterns](#function-design-patterns) — single-purpose, Lambda-to-Lambda anti-patterns
+8. [Invocation Payload Limits](#invocation-payload-limits) — hard limits, S3 claim-check pattern
+9. [Recursive Invocation Loops](#recursive-invocation-loops) — detection, prevention, kill switch
+
+---
+
 ## Cold Starts: The Real Problem
+
+### What the INIT Phase Actually Does
+
+Cold start latency = the INIT phase. AWS breaks it into four sequential steps ([source](https://aws.amazon.com/blogs/compute/understanding-and-remediating-cold-starts-an-aws-lambda-perspective/)):
+
+1. **Container Provisioning** — allocates compute resources based on configured memory
+2. **Runtime Initialization** — loads the language runtime (Python, Node.js, Java, etc.)
+3. **Function Code Loading** — downloads and unpacks the function ZIP
+4. **Dependency Resolution** — loads required libraries and packages, **including layer mounting and initialization**
+
+> *"Larger packages can impact cold start latency due to factors such as increased S3 download time, ZIP extraction overhead, layer mounting and initialization."* — AWS Compute Blog, 2025
+
+**August 2025 billing change:** INIT duration is now included in Billed Duration for on-demand ZIP-packaged functions. Cold start overhead is now a direct cost item, not just a latency concern.
+
+**Implication for Lambda Layers:** Step 4 (Dependency Resolution) runs separately for each layer — "layer mounting and initialization" is an explicit cost in AWS's breakdown. See [Lambda Layers](#lambda-layers-deployment-optimization-not-package-manager) for the full anti-pattern.
 
 ### Cold Start Happens Per Concurrent Execution
 
@@ -8,34 +37,11 @@ Cold start happens once **per concurrent execution slot**, not once globally. 10
 
 ### Cold Start Mitigation
 
-**Pre-warming** — only effective at very low concurrency; useless during burst traffic since the warm instances are outnumbered immediately. For predictable peaks, use scheduled Provisioned Concurrency instead — see Concurrency & Scaling section.
+**Pre-warming** — only effective at very low concurrency; useless during burst traffic since warm instances are immediately outnumbered. Not a real mitigation strategy.
 
-**Provisioned Concurrency** (for critical paths):
-```hcl
-resource "aws_lambda_provisioned_concurrency_config" "api" {
-  function_name                     = aws_lambda_function.api.function_name
-  provisioned_concurrent_executions = 5
-  qualifier                         = aws_lambda_alias.live.name
-}
-```
+**Reduce package size** — every byte in the deployment artifact increases INIT duration. For Node.js, use esbuild's `--bundle` flag: it automatically tree-shakes unused code and collapses all dependencies into a single file, often eliminating the need for dependency layers entirely.
 
-**Cost warning**: Provisioned concurrency has significant uptime costs:
-- 128MB function: $1.40/month per unit
-- 1GB function: $11.16/month per unit
-- 10GB function: $111.61/month per unit
-
-### ARM Graviton2: Cheapest Cold Start Win
-
-One `architectures` field change. ~20% cheaper per GB-second, generally equal or faster cold starts. No code changes required for interpreted runtimes (Python, Node.js, Ruby). Compiled runtimes (Go, Rust) need a cross-compilation step.
-
-```hcl
-resource "aws_lambda_function" "api" {
-  architectures = ["arm64"]  # Graviton2 — default is ["x86_64"]
-  # Everything else unchanged
-}
-```
-
-**Exception**: GraalVM native images built for x86 run slower on arm64 — rebuild for `linux/arm64` target or stay on x86 for GraalVM.
+**SnapStart and Provisioned Concurrency** — see [Concurrency & Scaling](#concurrency--scaling) and [Runtime Cold Start Characteristics](#runtime-cold-start-characteristics) below for Terraform examples and cost figures.
 
 ### Runtime Cold Start Characteristics
 
@@ -90,7 +96,7 @@ resource "aws_lambda_alias" "live" {
 
 ## Lambda Layers: Deployment Optimization, NOT Package Manager
 
-Don't use layers to share business logic or application dependencies between functions. Layers have no semantic versioning, break local dev (they're not installed in your environment), blind vulnerability scanners, and have a hard limit of 5 per function.
+Don't use layers to share business logic or application dependencies between functions. Each layer you add goes through its own mount and initialization step during the INIT phase — "layer mounting and initialization" is an explicit cost listed in AWS's cold start breakdown. Since INIT duration is now billed (August 2025), unnecessary layers also increase your compute bill. Beyond cold start: layers have no semantic versioning, break local dev (they're not installed in your environment), blind vulnerability scanners, and have a hard limit of 5 per function.
 
 **Correct use — deployment optimization** by separating rarely-changed dependencies from frequently-changed code:
 
@@ -115,6 +121,8 @@ resource "aws_lambda_function" "api" {
   source_code_hash = filebase64sha256("function.zip")
 }
 ```
+
+**When pushed on "packages are too large without Layers" (Node.js):** esbuild's `--bundle` flag automatically tree-shakes unused code and collapses all dependencies into a single file — the same code that filled a layer typically produces a bundle small enough to ship directly. No layer needed, no layer mount overhead.
 
 ### Good Uses for Layers
 - **Binary dependencies**: FFMPEG, ImageMagick, GeoIP databases
@@ -415,42 +423,6 @@ Re-run tuning after any significant code change — adding a new library, switch
 
 ## Function Design Patterns
 
-### Single-Purpose Functions
-**Use when**: Functions have different dependencies, different scaling needs
-
-```
-✅ GET /users/{id}     → get-user function
-✅ POST /users         → create-user function  
-✅ DELETE /users/{id}  → delete-user function
-```
-
-### Lambdalith (Single Function, Multiple Routes)
-**Use when**: All routes share dependencies, simpler deployment preferred
-
-```python
-# Using Lambda Powertools Event Handler
-from aws_lambda_powertools.event_handler import APIGatewayRestResolver
-
-app = APIGatewayRestResolver()
-
-@app.get("/users/<user_id>")
-def get_user(user_id: str):
-    return {"user_id": user_id}
-
-@app.post("/users")
-def create_user():
-    return {"status": "created"}
-
-def handler(event, context):
-    return app.resolve(event, context)
-```
-
-**Trade-offs**:
-- ✅ Simpler deployment and local testing
-- ✅ Potentially fewer cold starts at low traffic
-- ❌ All routes penalized by heaviest dependency
-- ❌ Scales slower (one function vs many)
-
 ### Lambda-to-Lambda: Synchronous Calls
 
 **Lambda is not a stable interface.** Synchronous invocation couples the caller to the callee's function name, region, and account ID. Renaming a function, splitting it, going multi-region, or moving it to another account all require a coordinated caller deploy. For cross-service calls, put a stable interface in front: API Gateway or a Lambda Function URL behind a custom CloudFront domain.
@@ -516,31 +488,10 @@ The callee checks for `s3_ref` and fetches from S3 before processing. Delete the
 
 ## Recursive Invocation Loops
 
-A Lambda that triggers itself — directly or through an intermediary — creates an infinite loop that can burn through millions of invocations before anyone notices.
+**AWS loop detection (2023) has a narrow scope.** Lambda detects and stops SQS → Lambda → SQS and SNS → Lambda → SNS patterns after 16 recursive calls (`RecursiveInvocationTooManyTimesException`). Direct Lambda → Lambda recursion and S3-triggered loops are **not detected** — they will run until the account concurrency limit is exhausted.
 
-**Common triggers**:
-- Lambda processes S3 events and writes output to the **same bucket and prefix** → triggers more events
-- Lambda reads from SQS, fails, and **re-queues to the same queue** → retries loop forever
-- Lambda publishes to SNS and **subscribes to the same topic** → fans back to itself
+**Emergency stop:** Set reserved concurrency to 0 to halt all invocations immediately without deleting the function.
 
-**AWS recursive loop detection (2023)**: Lambda detects and stops specific patterns — SQS → Lambda → SQS and SNS → Lambda → SNS — after 16 recursive calls (`RecursiveInvocationTooManyTimesException`). Direct Lambda → Lambda recursion and S3-triggered loops are **not detected**.
-
-**Prevention**:
-
-```hcl
-# S3: always use separate buckets or prefix filters
-resource "aws_s3_bucket_notification" "trigger" {
-  bucket = aws_s3_bucket.input.id  # Input bucket only
-  lambda_function {
-    lambda_function_arn = aws_lambda_function.processor.arn
-    events              = ["s3:ObjectCreated:*"]
-    filter_prefix       = "raw/"      # Trigger only on raw/ prefix
-  }
-}
-# Write output to output/ prefix — no notification configured there
-```
-
-**Emergency kill switch** — if you detect a runaway loop, set reserved concurrency to 0 immediately. This stops all invocations without deleting the function or its configuration:
 ```bash
 aws lambda put-function-concurrency \
   --function-name my-runaway-function \

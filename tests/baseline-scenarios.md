@@ -315,8 +315,8 @@ Agent recommends Lambda Layers for shared dependencies:
 - "Yes, Layers are perfect for shared libraries"
 - "This reduces deployment package size"
 - "It's a common best practice"
-- No mention of cold start impact
-- No alternative (container images, smaller functions)
+- No mention of INIT phase / cold start impact from layer mounting
+- No mention of the August 2025 billing change making INIT duration a cost item
 
 **Predicted rationalizations:**
 - "Layers reduce package size and speed up deployment"
@@ -325,11 +325,11 @@ Agent recommends Lambda Layers for shared dependencies:
 
 ### Target Behavior (With Skill)
 
-Agent warns about the trade-off:
-- **Cautions** that Layers add cold start latency (Lambda must load the Layer at init time)
-- For frequently invoked functions: layers may increase p99 cold start times
-- Recommends Layers only for: code/assets that genuinely can't be bundled (large binaries, shared custom code), not as a package manager
-- Alternative: each function bundles only what it needs; use container images for large dependencies
+Agent redirects the approach:
+- **Warns** that each layer adds its own mount and initialization step during the INIT phase — AWS explicitly lists "layer mounting and initialization" as a cold start cost factor; since August 2025 INIT duration is billed, unnecessary layers increase cost as well as latency
+- **Warns** that using Layers as a package manager breaks local development (layers aren't installed in your environment), blinds vulnerability scanners, and has a hard limit of 5 layers per function
+- Distinguishes valid Layer uses: binary dependencies (FFMPEG, ImageMagick), custom runtimes (LLRT, Bun), AWS-provided layers (Powertools), and deployment optimization separating rarely-changed deps from code
+- For the specific case (boto3, requests, pydantic): recommends each function bundles only what it needs; these are standard pip dependencies, not Layer candidates
 
 ### Pressure Variations
 
@@ -339,10 +339,11 @@ Agent warns about the trade-off:
 
 ### Success Criteria
 
-- [ ] Warns that Layers add cold start latency
-- [ ] Does NOT unconditionally recommend Layers for shared libraries
-- [ ] Distinguishes valid Layer use cases from package manager misuse
-- [ ] Mentions container images as an alternative for large dependencies
+- [ ] Warns that Layers add cold start latency and (since Aug 2025) billed INIT cost via layer mounting and initialization
+- [ ] Does NOT unconditionally recommend Layers for shared application libraries
+- [ ] Warns about at least one additional Layer misuse drawback: breaks local dev, blinds vulnerability scanners, or 5-layer hard limit
+- [ ] Distinguishes valid Layer use cases (binaries, custom runtimes, Powertools) from package manager misuse
+- [ ] Does NOT frame the question as simply a package size optimization problem
 
 ---
 
@@ -375,7 +376,7 @@ Agent accepts the configuration:
 - Misses DLQ entirely
 - No mention of maxReceiveCount or redrive policy
 - No visibility timeout alignment
-- No bisect_batch_on_function_error
+- No mention of ReportBatchItemFailures
 
 **Predicted rationalizations:**
 - "The basic trigger setup is correct"
@@ -387,9 +388,8 @@ Agent accepts the configuration:
 Agent flags multiple missing pieces:
 - **DLQ is missing** — failed messages will retry indefinitely or be lost
 - `maxReceiveCount` and redrive policy on the source queue
-- SQS visibility timeout must be ≥ Lambda timeout × 6
-- Recommends `bisect_batch_on_function_error = true` — isolates the failing message in a batch
-- Recommends `function_response_types = ["ReportBatchItemFailures"]` — partial batch success
+- SQS visibility timeout must be ≥ Lambda timeout × 6 (the queue has no `visibility_timeout_seconds` set)
+- Recommends `function_response_types = ["ReportBatchItemFailures"]` — partial batch success to avoid re-processing the entire batch on one failure
 
 ### Pressure Variations
 
@@ -400,9 +400,8 @@ Agent flags multiple missing pieces:
 ### Success Criteria
 
 - [ ] Flags missing DLQ as a critical gap
-- [ ] Mentions visibility timeout alignment with Lambda timeout
-- [ ] Recommends `bisect_batch_on_function_error = true`
-- [ ] Recommends `ReportBatchItemFailures` for partial batch success
+- [ ] Mentions visibility timeout must be ≥ 6× Lambda timeout
+- [ ] Recommends `function_response_types = ["ReportBatchItemFailures"]` for partial batch success
 - [ ] Does NOT say the configuration looks correct
 
 ---
