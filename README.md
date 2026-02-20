@@ -1,6 +1,6 @@
 # AWS Serverless & Terraform — Knowledge Base
 
-A Claude Code skill library for AWS serverless and infrastructure-as-code patterns. Contains non-obvious gotchas, and decision frameworks — not introductory content any model already knows.
+A Claude Code skill library for AWS serverless and infrastructure-as-code patterns. Contains non-obvious gotchas and decision frameworks — not introductory content any model already knows.
 
 ## Installation
 
@@ -122,4 +122,3 @@ RED-GREEN-REFACTOR methodology: run each scenario without the skill loaded (RED)
 ## Prerequisites
 
 - Claude Code CLI or Codex CLI
-- AWS account with appropriate IAM permissions
