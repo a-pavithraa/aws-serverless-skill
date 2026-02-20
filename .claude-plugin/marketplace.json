@@ -3,50 +3,18 @@
   "owner": { "name": "Pavithra" },
   "metadata": {
     "description": "Claude Code skills for AWS serverless and Terraform infrastructure-as-code patterns — non-obvious gotchas, decision frameworks, and CI/CD patterns.",
-    "version": "1.0.0",
-    "pluginRoot": "./skills"
+    "version": "1.0.0"
   },
   "plugins": [
     {
-      "name": "terraform-aws",
-      "source": "./skills/terraform-aws",
-      "description": "Terraform patterns for AWS: state backend bootstrap, SSE-KMS encryption, multi-environment CI/CD pipeline, IAM patterns, drift detection.",
-      "version": "1.0.0",
-      "author": { "name": "Pavithra" },
-      "repository": "https://github.com/a-pavithraa/aws-serverless-skill",
-      "category": "aws",
-      "tags": ["terraform", "iac", "aws", "s3", "kms", "cicd", "github-actions"],
+      "name": "aws-infrastructure-skills",
+      "description": "AWS serverless, DynamoDB, and Terraform patterns for Claude Code — Lambda, API Gateway, DynamoDB single-table design, and Terraform IaC best practices.",
+      "source": "./",
       "strict": false,
-      "agents": [
-        "./SKILL.md"
-      ]
-    },
-    {
-      "name": "aws-dynamodb",
-      "source": "./skills/aws-dynamodb",
-      "description": "DynamoDB data modeling: single-table design, GSI patterns, multi-attribute composite keys (Nov 2025), filter expression cost gotchas.",
-      "version": "1.0.0",
-      "author": { "name": "Pavithra" },
-      "repository": "https://github.com/a-pavithraa/aws-serverless-skill",
-      "category": "aws",
-      "tags": ["dynamodb", "aws", "single-table-design", "gsi", "data-modeling"],
-      "strict": false,
-      "agents": [
-        "./SKILL.md"
-      ]
-    },
-    {
-      "name": "aws-serverless",
-      "source": "./skills/aws-serverless",
-      "description": "Lambda, API Gateway, SQS/SNS/EventBridge patterns: cold starts, concurrency, DLQ configuration, Lambda Powertools, X-Ray tracing.",
-      "version": "1.0.0",
-      "author": { "name": "Pavithra" },
-      "repository": "https://github.com/a-pavithraa/aws-serverless-skill",
-      "category": "aws",
-      "tags": ["lambda", "api-gateway", "sqs", "sns", "eventbridge", "serverless", "aws"],
-      "strict": false,
-      "agents": [
-        "./SKILL.md"
+      "skills": [
+        "./skills/terraform-aws",
+        "./skills/aws-dynamodb",
+        "./skills/aws-serverless"
       ]
     }
   ]
