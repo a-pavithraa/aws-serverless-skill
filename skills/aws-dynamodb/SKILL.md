@@ -7,12 +7,20 @@ description: "Patterns and best practices for Amazon DynamoDB data modeling and 
 
 ## Quick Reference
 
-| Topic | Reference File | Key Insight |
-|-------|---------------|-------------|
-| Data modeling | `references/dynamodb-patterns.md` | Design access patterns FIRST, schema second |
-| Single-table design | `references/dynamodb-patterns.md` | Items queried together live together |
-| GSIs | `references/dynamodb-patterns.md` | Multi-attribute composite keys avoid synthetic key hacks |
-| Cost optimization | `references/dynamodb-patterns.md` | Filter expressions do NOT reduce read costs |
+> All patterns are in [`references/dynamodb-patterns.md`](references/dynamodb-patterns.md).
+
+| Topic | Key Insight |
+|-------|-------------|
+| Data modeling | Design access patterns FIRST, schema second |
+| Single-table design | Items queried together live together |
+| GSIs | Multi-attribute composite keys avoid synthetic key hacks |
+| Cost optimization | Filter expressions do NOT reduce read costs |
+| Sort order control | `#` prefix positions parent at sort boundary; numeric difference enables reverse integer ordering |
+| Sparse indexes | Entity-type filter (always-on attr) vs conditional filter (add/remove attr on state change) |
+| Reference counts | TransactWriteItems: child PutItem (attribute_not_exists) + parent UpdateItem increment |
+| Hot partitions | Timestamp-shard GSI PK by day; read-shard caches across N copies |
+| Many-to-many | Adjacency list: link item in base table + GSI projects into second parent's collection |
+| Uniqueness enforcement | Uniqueness tracking item (no data) + TransactWriteItems with attribute_not_exists on each |
 
 ## Critical Anti-Patterns
 
@@ -22,6 +30,9 @@ description: "Patterns and best practices for Amazon DynamoDB data modeling and 
 - **Don't** manually concatenate synthetic GSI keys (`TOURNAMENT#X#REGION#Y`) — use [multi-attribute composite keys](references/dynamodb-patterns.md#multi-attribute-composite-keys) (provider v6.29.0+)
 - **Don't** put bare integers in sort keys — `ISSUE#9` sorts after `ISSUE#100` lexicographically; zero-pad to fixed width (`ISSUE#00000009`)
 - **Don't** use a filter expression when its hit rate is poor — a partition with 10,000 open issues and 5 closed ones: filtering for closed reads all 10,005 items and returns 5; embed status in the sort key instead (`ISSUE#CLOSED#<id>`)
+- **Don't** count children at read time via Query+count — store a reference count on the parent and increment atomically via TransactWriteItems
+- **Don't** assume TTL-expired items are gone immediately — DynamoDB TTL has a 48h deletion window; guard reads with `FilterExpression: TTL > current_epoch`
+- **Don't** put two entity types in the same PK namespace without a shared-namespace decision — if names must be globally unique (e.g., users vs orgs), use the same PK prefix intentionally and let `attribute_not_exists` enforce the constraint
 
 ## Decision Frameworks
 
