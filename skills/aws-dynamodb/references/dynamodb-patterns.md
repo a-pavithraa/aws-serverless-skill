@@ -4,8 +4,18 @@
 1. [Single-Table Design](#single-table-design)
 2. [Access Pattern Gotcha: Filter Expressions](#access-pattern-gotcha-filter-expressions)
 3. [Multi-Attribute Composite Keys](#multi-attribute-composite-keys)
-4. [Cost Optimization](#cost-optimization)
-5. [Terraform Examples](#terraform-examples)
+4. [# Prefix Trick: Controlling Parent Position in Sort Order](#-prefix-trick-controlling-parent-position-in-sort-order)
+5. [Numeric Difference Trick: Reverse-Order Integers on Forward Scans](#numeric-difference-trick-reverse-order-integers-on-forward-scans)
+6. [Sparse Indexes](#sparse-indexes)
+7. [Reference Counts](#reference-counts)
+8. [TTL Guard on Reads](#ttl-guard-on-reads)
+9. [Many-to-Many: Adjacency List](#many-to-many-adjacency-list)
+10. [Multi-Attribute Uniqueness](#multi-attribute-uniqueness)
+11. [Timestamp-Sharded Partitions (Hot Partition Prevention)](#timestamp-sharded-partitions-hot-partition-prevention)
+12. [Shared Namespace (Two Entity Types, Same Key Space)](#shared-namespace-two-entity-types-same-key-space)
+13. [Denormalization Decision Threshold](#denormalization-decision-threshold)
+14. [Cost Optimization](#cost-optimization)
+15. [Terraform Examples](#terraform-examples)
 
 ---
 
@@ -253,6 +263,221 @@ global_secondary_index {
 ❌ Forgetting ExpressionAttributeNames for reserved words (region, status, etc.)
 ❌ Using multi-attribute keys when you need begins_with() across entity types
 ```
+
+---
+
+## # Prefix Trick: Controlling Parent Position in Sort Order
+
+`#` (ASCII 35) sorts before all letters and digits. Prefix child sort keys with `#` to position them *before* the parent in ascending sort — enabling "fetch parent + most recent children" in a single reverse scan.
+
+```mermaid
+flowchart LR
+    c1["#ORDER#001"] --- c2["#ORDER#002"] --- c3["#ORDER#003"] --- p["CUSTOMER#alice"]
+    p -. "ScanIndexForward=False, Limit=4" .-> c3
+
+    style p fill:#fff3cd
+```
+
+```python
+# ScanIndexForward=False, Limit=11 → Customer + 10 most recent Orders in one Query
+table.query(
+    KeyConditionExpression=Key("PK").eq("CUSTOMER#alice"),
+    ScanIndexForward=False,
+    Limit=11,
+)
+```
+
+**Two one-to-many in one item collection**: give one child type a `#` prefix and leave the other without. The parent sits between them — reverse scan fetches parent + `#`-prefixed children; forward scan from the parent SK fetches the other set.
+
+---
+
+## Numeric Difference Trick: Reverse-Order Integers on Forward Scans
+
+To query sequential integers (issue numbers, PR numbers) in descending order without `ScanIndexForward=False`, store `MAX_VALUE - actualValue` in the sort key. Forward scan then returns items in descending integer order.
+
+```python
+MAX_VALUE = 99_999_999  # 8-digit fixed width
+
+# issue #1   → ISSUE#OPEN#99999998  (sorts last)
+# issue #15  → ISSUE#OPEN#99999984
+# issue #100 → ISSUE#OPEN#99999900  (sorts first → returned first on forward scan)
+sort_key = f"ISSUE#OPEN#{MAX_VALUE - issue_number:08d}"
+```
+
+Use when: descending integer order is needed AND `ScanIndexForward=False` is unavailable (e.g., because a `begins_with` prefix or composite SK comparison is required on the same index).
+
+---
+
+## Sparse Indexes
+
+Items without a GSI attribute are **excluded from the index automatically**. Use this to project only a subset of items without a filter expression.
+
+### Variant 1 — Entity-type filter (find all items of one type)
+
+Add the GSI attribute only when writing items of the target entity type.
+
+```python
+# Only User items get UserIndex — Orgs never appear in that GSI
+item = {
+    "PK": "ACCOUNT#alice",
+    "Type": "User",
+    "UserIndex": "USER#alice",  # absent on Org items
+}
+```
+
+### Variant 2 — Conditional filter (subset within one entity type)
+
+Add the GSI attribute when an item enters the target state; **remove it** when it exits.
+
+```python
+# Mark message as unread: set GSI attributes → item enters sparse index
+update_expr = "SET GSI1PK = :pk, GSI1SK = :sk"
+
+# Mark message as read: remove GSI attributes → item exits sparse index
+update_expr = "REMOVE GSI1PK, GSI1SK"
+```
+
+---
+
+## Reference Counts
+
+Store a running count on the parent item — never count children at read time. `TransactWriteItems` atomically creates the child and increments the counter. The `attribute_not_exists` condition ensures idempotency — the counter only moves for genuinely new relationships.
+
+```python
+dynamodb.transact_write_items(TransactItems=[
+    {
+        "Put": {
+            "TableName": "AppTable",
+            "Item": {"PK": {"S": f"STAR#{repo}#{username}"}, "SK": {"S": "STAR"}},
+            "ConditionExpression": "attribute_not_exists(PK)",
+        }
+    },
+    {
+        "Update": {
+            "TableName": "AppTable",
+            "Key": {"PK": {"S": f"REPO#{repo}"}, "SK": {"S": f"REPO#{repo}"}},
+            "UpdateExpression": "SET StarCount = StarCount + :one",
+            "ExpressionAttributeValues": {":one": {"N": "1"}},
+        }
+    },
+])
+```
+
+To decrement, reverse: `DeleteItem` with `attribute_exists(PK)` condition + `StarCount - :one`.
+
+---
+
+## TTL Guard on Reads
+
+DynamoDB TTL deletes expired items **within 48 hours** — not instantly. Guard reads with a `FilterExpression` to reject recently-expired items:
+
+```python
+import time
+
+response = table.query(
+    KeyConditionExpression=Key("PK").eq(f"SESSION#{token}"),
+    FilterExpression=Attr("TTL").gt(int(time.time())),
+)
+```
+
+Store both timestamps on the item:
+
+| Attribute   | Format                   | Purpose                        |
+|-------------|--------------------------|--------------------------------|
+| `TTL`       | `1705916200` (epoch int) | DynamoDB auto-deletion trigger |
+| `ExpiresAt` | `2024-01-22T10:30:00Z`   | Human-readable for app/debug   |
+
+---
+
+## Many-to-Many: Adjacency List
+
+Create a **link item** that belongs to both parent item collections. The traversal direction you query most frequently lives in the base table; a GSI projects the link into the other parent's collection.
+
+```mermaid
+flowchart TB
+    q1(["App → Repos  base table PK=APP#X"]) --> link
+    q2(["Repo → Apps  GSI1 GSI1PK=REPO#Y"]) --> link
+
+    link["AppInstallation  PK=APP#X  GSI1PK=REPO#Y"]
+
+    style link fill:#ddeeff
+```
+
+The link item's `PK` determines the primary traversal (base table). Its GSI attributes enable the reverse. Which side goes in the base table: whichever direction you query more frequently, or where transactional consistency matters more.
+
+---
+
+## Multi-Attribute Uniqueness
+
+To enforce uniqueness across multiple attributes (e.g., username **and** email), create a **uniqueness tracking item** per attribute in the same `TransactWriteItems`. The tracking item holds no data — it exists solely to occupy the key space.
+
+```python
+dynamodb.transact_write_items(TransactItems=[
+    {
+        "Put": {
+            "Item": {"PK": {"S": f"USER#{username}"}, "SK": {"S": f"USER#{username}"}, ...},
+            "ConditionExpression": "attribute_not_exists(PK)",
+        }
+    },
+    {
+        "Put": {
+            "Item": {"PK": {"S": f"USEREMAIL#{email}"}, "SK": {"S": f"USEREMAIL#{email}"}},
+            "ConditionExpression": "attribute_not_exists(PK)",  # no user data here
+        }
+    },
+])
+```
+
+If either condition fails, the entire transaction rolls back. On deletion, remove both items.
+
+---
+
+## Timestamp-Sharded Partitions (Hot Partition Prevention)
+
+When all writes for a time-series entity funnel into one partition, shard by truncated timestamp so each day is a separate partition:
+
+```python
+from datetime import date
+
+gsi_pk = f"DEALS#{date.today().isoformat()}"   # "DEALS#2024-01-22"
+```
+
+To fetch "last N items overall", query 2–3 date partitions in parallel and merge in application code.
+
+**Read-sharding cache**: for read-heavy hot data (e.g., front-page cache), write N identical copies and read from a random shard:
+
+```python
+import random
+
+shard = random.randint(1, N)
+table.get_item(Key={"PK": f"DEALSCACHE#{shard}", "SK": f"DEALSCACHE#{shard}"})
+```
+
+---
+
+## Shared Namespace (Two Entity Types, Same Key Space)
+
+When two entity types must share a globally unique namespace (e.g., GitHub usernames and org names cannot collide), give them the same PK prefix. A `Type` attribute distinguishes them at read time; `attribute_not_exists(PK)` enforces uniqueness at write time.
+
+```
+PK                  | SK                  | Type
+--------------------|---------------------|-------------
+ACCOUNT#alice       | ACCOUNT#alice       | User
+ACCOUNT#acme-corp   | ACCOUNT#acme-corp   | Organization
+```
+
+Attempting to create `ACCOUNT#alice` as an Org fails the condition — same namespace, same enforcement.
+
+---
+
+## Denormalization Decision Threshold
+
+Store a one-to-many relationship as a **complex attribute (map/list) on the parent** only when both are true:
+
+1. No direct access pattern for the child entity outside the parent context
+2. The child data is bounded (a known maximum, e.g., ≤ 20 addresses)
+
+If either is "yes", co-locate child items in the same partition using the primary key + Query approach instead.
 
 ---
 
