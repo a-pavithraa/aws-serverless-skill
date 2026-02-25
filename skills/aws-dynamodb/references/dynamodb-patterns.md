@@ -273,13 +273,13 @@ global_secondary_index {
 ```mermaid
 flowchart LR
     c1["#ORDER#001"] --- c2["#ORDER#002"] --- c3["#ORDER#003"] --- p["CUSTOMER#alice"]
-    p -. "ScanIndexForward=False, Limit=4" .-> c3
+    p -.->|"ScanIndexForward=False Limit=4"| c3
 
     style p fill:#fff3cd
 ```
 
 ```python
-# ScanIndexForward=False, Limit=11 → Customer + 10 most recent Orders in one Query
+# ScanIndexForward=False, Limit=11 -> Customer + 10 most recent Orders in one Query
 table.query(
     KeyConditionExpression=Key("PK").eq("CUSTOMER#alice"),
     ScanIndexForward=False,
@@ -298,9 +298,9 @@ To query sequential integers (issue numbers, PR numbers) in descending order wit
 ```python
 MAX_VALUE = 99_999_999  # 8-digit fixed width
 
-# issue #1   → ISSUE#OPEN#99999998  (sorts last)
-# issue #15  → ISSUE#OPEN#99999984
-# issue #100 → ISSUE#OPEN#99999900  (sorts first → returned first on forward scan)
+# issue #1   -> ISSUE#OPEN#99999998  (sorts last)
+# issue #15  -> ISSUE#OPEN#99999984
+# issue #100 -> ISSUE#OPEN#99999900  (sorts first -> returned first on forward scan)
 sort_key = f"ISSUE#OPEN#{MAX_VALUE - issue_number:08d}"
 ```
 
@@ -330,10 +330,10 @@ item = {
 Add the GSI attribute when an item enters the target state; **remove it** when it exits.
 
 ```python
-# Mark message as unread: set GSI attributes → item enters sparse index
+# Mark message as unread: set GSI attributes -> item enters sparse index
 update_expr = "SET GSI1PK = :pk, GSI1SK = :sk"
 
-# Mark message as read: remove GSI attributes → item exits sparse index
+# Mark message as read: remove GSI attributes -> item exits sparse index
 update_expr = "REMOVE GSI1PK, GSI1SK"
 ```
 
@@ -395,8 +395,8 @@ Create a **link item** that belongs to both parent item collections. The travers
 
 ```mermaid
 flowchart TB
-    q1(["App → Repos  base table PK=APP#X"]) --> link
-    q2(["Repo → Apps  GSI1 GSI1PK=REPO#Y"]) --> link
+    q1(["App -> Repos  base table PK=APP#X"]) --> link
+    q2(["Repo -> Apps  GSI1 GSI1PK=REPO#Y"]) --> link
 
     link["AppInstallation  PK=APP#X  GSI1PK=REPO#Y"]
 
@@ -506,9 +506,9 @@ If either is "yes", co-locate child items in the same partition using the primar
 
 **Item size** — rounds up per KB per operation:
 ```
-Read  20KB item  →  5 RCUs  (ceil(20/4))
-Write 10KB item  →  10 WCUs (ceil(10/1))
-Write same item to a GSI → another 10 WCUs
+Read  20KB item  ->  5 RCUs  (ceil(20/4))
+Write 10KB item  ->  10 WCUs (ceil(10/1))
+Write same item to a GSI -> another 10 WCUs
 ```
 
 **Secondary indexes** — every write to the base table propagates to each GSI:
