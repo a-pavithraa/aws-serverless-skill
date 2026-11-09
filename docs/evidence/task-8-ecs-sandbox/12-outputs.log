@@ -1,0 +1,14 @@
+account_id = "123456789012"
+alarm_names = [
+  "lf-web-dev-http-5xx",
+  "lf-web-dev-running-tasks",
+  "lf-web-dev-cpu-high",
+]
+alarm_topic_arn = "arn:aws:sns:us-east-1:123456789012:lf-web-dev-alarms"
+ecr_repository_url = "123456789012.dkr.ecr.us-east-1.amazonaws.com/lf-web-dev"
+ecs_cluster_name = "lf-web-dev"
+ecs_service_name = "lf-web-dev-web"
+image_digest = "sha256:fcce5459b307d3882c33d94b930376c6883eccd5a5b55ff2ad4a1d5b5c5c96c7"
+log_group = "/ecs/lf-web-dev"
+region = "us-east-1"
+service_url = "https://lf-c3522009c45e4ca28c5bb8bb6be883af.ecs.us-east-1.on.aws"

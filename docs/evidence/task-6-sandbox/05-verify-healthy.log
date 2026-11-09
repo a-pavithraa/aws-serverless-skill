@@ -1,0 +1,12 @@
+Downloading botocore (15.5MiB)
+ Downloading botocore
+Installed 7 packages in 3.08s
+PASS       target                   123456789012 us-east-1
+PASS       artifact                 version 1, CodeSha256 s+KwjjCT1lWtHedImAO6fD+vn/6VPDq06BQysFq1FBw=
+PASS       probe:hello              200
+PASS       auth-rejection:hello     unsigned request got 403, expected 403
+PASS       logs:hello               1 event(s) for request e595968a-132d-423a-8249-70af18b76532
+PASS       trace:hello              1-6af0b5d0-76c702c935992ae67d0194a7 (reported)
+PASS       alarms                   lf-sandbox-dev-api-5xx=OK, lf-sandbox-dev-lambda-duration-p99=INSUFFICIENT_DATA, lf-sandbox-dev-lambda-errors=INSUFFICIENT_DATA, lf-sandbox-dev-lambda-throttles=INSUFFICIENT_DATA (reported)
+UNVERIFIED alerting                 no confirmed subscriber on the alarm topic: alarms notify no one (reported)
+verify-deployment: PASS (pass 7, fail 0, unverified 1)

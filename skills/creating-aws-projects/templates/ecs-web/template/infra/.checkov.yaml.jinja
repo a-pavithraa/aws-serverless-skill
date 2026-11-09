@@ -1,0 +1,15 @@
+# Each skipped check states why it does not apply to this pattern.
+# Changing this list is a policy decision: review it like code.
+framework:
+  - terraform
+skip-check:
+  # Log group CMK: logs are encrypted at rest by CloudWatch; a CMK adds cost and key policy work.
+  - CKV_AWS_158
+  # One-year log retention: retention is explicit and chosen per environment for cost.
+  - CKV_AWS_338
+  # Secret with the AWS managed key aws/secretsmanager: no key policy to maintain and no KMS grant on
+  # the execution role. A customer managed key adds both, and about 1 USD a month, for no new reader limit.
+  - CKV_AWS_149
+  # Automatic rotation: it needs a rotation function that knows each credential's system. The runbook
+  # rotates by hand: put-secret-value, then a new deployment.
+  - CKV2_AWS_57

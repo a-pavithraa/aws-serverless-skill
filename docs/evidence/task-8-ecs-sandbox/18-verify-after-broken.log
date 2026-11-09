@@ -1,0 +1,9 @@
+PASS       target                   123456789012 us-east-1
+FAIL       artifact                 rollout not complete: PRIMARY=IN_PROGRESS; tasks run sha256:fcce5459b307d3882c33d94b930376c6883eccd5a5b55ff2ad4a1d5b5c5c96c7, not sha256:50e8a39ea2041b2ebb2cb8b0e23765d975d0937aeb1730dae8ce4cf6cb65dd4f
+PASS       health                   1 healthy target(s)
+PASS       probe:hello              200
+PASS       logs:hello               1 event(s) for request 7bbe2e44-2b4a-477c-a37e-97d2792a590c
+UNVERIFIED trace:hello              response carried no trace ID (reported)
+PASS       alarms                   lf-web-dev-cpu-high=OK, lf-web-dev-http-5xx=OK, lf-web-dev-running-tasks=OK (reported)
+UNVERIFIED alerting                 no confirmed subscriber on the alarm topic: alarms notify no one (reported)
+verify-deployment: FAIL (pass 5, fail 1, unverified 2)

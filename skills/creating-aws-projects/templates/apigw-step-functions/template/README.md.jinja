@@ -1,0 +1,71 @@
+# {{ project_name }}
+
+REST API → synchronous Express workflow (Step Functions), generated from the `apigw-step-functions` template. `POST /orders` starts the workflow with `StartSyncExecution` and waits for it to finish. {% if auth_mode == 'iam' %}Callers sign requests with SigV4 (IAM).{% else %}The API is public: {{ public_reason }}.{% endif %}
+
+## How it works
+
+The response reflects how the execution ended:
+
+| Execution | HTTP status | Body |
+| --- | --- | --- |
+| `SUCCEEDED` | 200 | the workflow output |
+| `FAILED` with error `OrderRejected` | 422 | `error`, `cause`, `execution_arn` |
+| `TIMED_OUT` (after {{ workflow_timeout_seconds }} s) | 504 | `error`, `execution_arn` |
+| any other failure | 500 | `error`, `execution_arn` |
+| `StartSyncExecution` itself fails | 500 | `{"error": "StartExecutionFailed"}` |
+
+`StartSyncExecution` answers 200 for every execution that finishes, whatever its status. The integration response template in `infra/main.tf` reads the status and sets the HTTP status.
+
+Every response carries `x-correlation-id`. A caller's `x-correlation-id` is used when it is 1-64 letters, digits or hyphens; otherwise the API request ID is used. The workflow input is `{"correlation_id": ..., "order": <request body>}`, so the correlation ID is in every execution log entry.
+
+The workflow is Express: at most 5 minutes, billed by duration, with no execution history in the console. The log group (level `ALL`) is the history. It does not keep the order itself, which can hold customer data; each execution is named by its correlation ID instead. The workflow timeout is {{ workflow_timeout_seconds }} s, below API Gateway's 29 s integration timeout, so the workflow times out first and the caller gets the 504 from the template.
+
+The workflow stub has two test paths that the verifier uses: `"action": "fail"` ends in `OrderRejected`, and `"action": "slow"` waits past the timeout. Keep them, or change `.verify/probes.json` with them.
+
+## Layout
+
+| Path | What |
+| --- | --- |
+| `workflow/definition.asl.json` | The state machine (Amazon States Language, JSONPath) |
+| `infra/` | Terraform root: REST API, state machine, IAM, logs, alarms |
+| `infra/envs/{{ environment }}.tfvars` | Values for the `{{ environment }}` environment |
+| `infra/tests/plan.tftest.hcl` | Mocked tests; no AWS credentials needed |
+| `.verify/probes.json` | Requests the deployment verifier sends after a deploy |
+| `docs/runbook.md` | What each alarm means and what to do |
+
+## Prerequisites
+
+Terraform ≥ 1.10 (tested with 1.14.4). An administrator must set the account's API Gateway CloudWatch role once per region; stage logging fails without it. Check with `aws apigateway get-account`: `cloudwatchRoleArn` must be set. This project does not manage the role, because every REST API in the account and region shares it. {% if backend == 's3' %}The state bucket `{{ state_bucket }}` must exist before `init`; state locking uses the S3 lock file.{% else %}State is local (`infra/terraform.tfstate`): fine for a sandbox, not for a team. Switch to an S3 backend before sharing.{% endif %}
+
+## Test
+
+```bash
+terraform -chdir=infra init -backend=false
+terraform -chdir=infra test
+```
+
+To try a definition change locally before you deploy it, use the Step Functions `TestState` API on one state.
+
+## Deploy
+
+The first `init` writes the provider versions and their hashes to `infra/.terraform.lock.hcl`. Commit `infra/.terraform.lock.hcl`: the checks then run `init` with `-lockfile=readonly`, so a provider cannot change without a reviewed commit. If CI runs on another OS, add its hashes first: `terraform -chdir=infra providers lock -platform=linux_amd64 -platform=darwin_arm64 -platform=windows_amd64`.
+
+Deploy from a saved plan, and read the plan before applying it:
+
+```bash
+terraform -chdir=infra init
+terraform -chdir=infra plan -var-file=envs/{{ environment }}.tfvars -out=tfplan
+terraform -chdir=infra show tfplan
+terraform -chdir=infra apply tfplan
+```
+
+## Verify
+
+A deploy is not working until the verifier says so. It checks the account and region, and that the deployed definition equals `workflow/definition.asl.json`. It then sends the requests in `.verify/probes.json`: one order must succeed with 200, one must be rejected with 422, and one must time out with 504.{% if auth_mode == 'iam' %} Unsigned requests must get 403.{% endif %} The timeout probe trips the `api-5xx` and `executions-timed-out` alarms on purpose. `UNVERIFIED` is not a pass.
+
+## Remove
+
+```bash
+terraform -chdir=infra plan -destroy -var-file=envs/{{ environment }}.tfvars -out=destroy.tfplan
+terraform -chdir=infra apply destroy.tfplan
+```

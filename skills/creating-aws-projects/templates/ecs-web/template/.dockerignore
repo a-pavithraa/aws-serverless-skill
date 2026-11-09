@@ -1,0 +1,4 @@
+*
+!app/
+app/tests/
+**/__pycache__/

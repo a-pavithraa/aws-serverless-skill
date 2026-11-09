@@ -1,0 +1,21 @@
+# Each skipped check states why it does not apply to this pattern.
+# Changing this list is a policy decision: review it like code.
+framework:
+  - terraform
+skip-check:
+  # Log group CMK: logs are encrypted at rest by CloudWatch; a CMK adds cost and key policy work.
+  - CKV_AWS_158
+  # One-year log retention: retention is explicit and chosen per environment for cost.
+  - CKV_AWS_338
+  # Load balancer access logs: they need an S3 bucket with its own policy and retention. Each request
+  # is logged by the application with its correlation ID and the load balancer's trace ID instead.
+  - CKV_AWS_91
+  # Deletion protection: destroy must work for sandboxes and short-lived environments. Turn it on
+  # (enable_deletion_protection) for an environment that must outlive a mistaken destroy.
+  - CKV_AWS_150
+  # WAF: not in this template. A web ACL costs per month and its rules are team policy; add one in
+  # front of a public service.
+  - CKV2_AWS_28
+  # Public IP on instances: they install packages and send logs over the internet, with no NAT
+  # gateway. The instance security group admits only the load balancer, and nothing allows SSH.
+  - CKV_AWS_88

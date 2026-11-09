@@ -1,0 +1,20 @@
+# Runbook: {{ project_name }}-{{ environment }}
+
+Dashboard: CloudWatch → Dashboards → `{{ project_name }}-{{ environment }}`. Alarms notify the SNS topic `{{ project_name }}-{{ environment }}-alarms`.{% if alarm_email %} Email `{{ alarm_email }}` is subscribed; the subscription does nothing until the confirmation link in AWS's email is clicked.{% else %} Nothing is subscribed to it yet: add a subscription, or no one is told when an alarm fires.{% endif %}
+
+Logs: function `/aws/lambda/{{ project_name }}-{{ environment }}` (JSON; `requestId`, `correlation_id`), API access `/aws/apigateway/{{ project_name }}-{{ environment }}/access`. Both keep {{ log_retention_days }} days.
+
+Find one request: take `x-lambda-request-id` from the response (or `correlationId` from the access log) and run, in Logs Insights on the function log group:
+
+```
+fields @timestamp, level, message, correlation_id | filter requestId = "<id>"
+```
+
+| Alarm | Fires when | First checks |
+| --- | --- | --- |
+| `{{ project_name }}-{{ environment }}-lambda-errors` | any invocation error in a minute | "Recent errors" widget; the last deploy (`function_version` output); roll the `live` alias back to the previous version if the deploy caused it |
+| `{{ project_name }}-{{ environment }}-lambda-throttles` | any throttled invocation | account concurrency (`aws lambda get-account-settings`): new accounts can start at 10; API stage throttling (rate/burst variables) |
+| `{{ project_name }}-{{ environment }}-lambda-duration-p99` | p99 over 80 % of the timeout for 5 minutes | slow downstream calls in logs/traces; memory size (more memory is more CPU) |
+| `{{ project_name }}-{{ environment }}-api-5xx` | any 5xx from the API in a minute | access log `integrationError`, `integrationStatus`; a 5xx with no Lambda error is a permission or integration problem |
+
+Missing data counts as not breaching for all four, so an idle function is quiet. A quiet dashboard is not proof the service works: run the verifier.

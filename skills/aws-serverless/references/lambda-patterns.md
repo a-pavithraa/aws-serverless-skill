@@ -98,14 +98,23 @@ resource "aws_lambda_alias" "live" {
 
 Don't use layers to share business logic or application dependencies between functions. Each layer you add goes through its own mount and initialization step during the INIT phase — "layer mounting and initialization" is an explicit cost listed in AWS's cold start breakdown. Since INIT duration is now billed (August 2025), unnecessary layers also increase your compute bill. Beyond cold start: layers have no semantic versioning, break local dev (they're not installed in your environment), blind vulnerability scanners, and have a hard limit of 5 per function.
 
-**Correct use — deployment optimization** by separating rarely-changed dependencies from frequently-changed code:
+### Good uses for layers
+- **Binary dependencies**: FFmpeg, ImageMagick, GeoIP databases
+- **Custom runtimes**: LLRT, Bun
+- **AWS-provided layers**: Lambda Powertools, AWS SDK extensions
+
+Ordinary pip or npm libraries (`requests`, `pydantic`, `axios`) are not on this list, even when several functions share them. Each function bundles what it imports, built from one lockfile. Shared libraries in a layer cost every cold start to save a few megabytes of upload.
+
+### Deployment optimization: the narrow exception
+
+A layer of rarely-changed dependencies can shorten code-only deploys. Use it only when slow uploads are a measured problem and the dependencies change much less often than the code. Pin each function to an explicit layer version:
 
 ```hcl
 # Layer contains node_modules (changes rarely)
 resource "aws_lambda_layer_version" "dependencies" {
   filename            = "dependencies.zip"
   layer_name          = "${local.name_prefix}-deps"
-  compatible_runtimes = ["nodejs18.x"]
+  compatible_runtimes = ["nodejs24.x"]
   
   # Only redeploy when package-lock.json changes
   source_code_hash = filebase64sha256("package-lock.json")
@@ -116,19 +125,13 @@ resource "aws_lambda_function" "api" {
   filename         = "function.zip"  # Small, just your code
   function_name    = "${local.name_prefix}-api"
   handler          = "index.handler"
-  runtime          = "nodejs18.x"
+  runtime          = "nodejs24.x"
   layers           = [aws_lambda_layer_version.dependencies.arn]
   source_code_hash = filebase64sha256("function.zip")
 }
 ```
 
 **When pushed on "packages are too large without Layers" (Node.js):** esbuild's `--bundle` flag automatically tree-shakes unused code and collapses all dependencies into a single file — the same code that filled a layer typically produces a bundle small enough to ship directly. No layer needed, no layer mount overhead.
-
-### Good Uses for Layers
-- **Binary dependencies**: FFMPEG, ImageMagick, GeoIP databases
-- **Custom runtimes**: LLRT, Bun
-- **AWS-provided layers**: Lambda Powertools, AWS SDK extensions
-- **Deployment optimization**: As described above
 
 ---
 
@@ -459,13 +462,12 @@ These are hard limits — no configuration changes them. The only escape is S3 o
 |---|---|---|
 | Synchronous (`RequestResponse`) | 6 MB | 6 MB |
 | Asynchronous (`Event`) | 1 MB | — |
-| SQS message body | 256 KB | — |
+| SQS message body | 1 MiB | — |
 | Kinesis record | 1 MB | — |
-| EventBridge event | 256 KB | — |
 
-> *Source: [AWS Lambda quotas](https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-limits.html) · verified 2026-02-19*
+> *Sources: [AWS Lambda quotas](https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-limits.html) · verified 2026-02-19; [SQS message quotas](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/quotas-messages.html) · verified 2026-11-08*
 
-**The trap**: Direct async Lambda invocations accept up to 1 MB, but SNS, EventBridge, and SQS messages that *trigger* Lambda still have their own 256 KB limits. If you're passing large payloads event-to-event and only test synchronously, you won't hit this during dev — only in production under realistic data.
+**The trap**: each service in an event chain has its own size limit, and a payload that passes a synchronous test can fail between two services in production. Check the limit of every hop: the [EventBridge quotas page](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-quota.html) and the SNS quotas list theirs. For SQS payloads above 1 MiB, AWS provides the Extended Client Library, which stores the body in S3.
 
 **S3 claim-check pattern** for oversized payloads:
 ```python
@@ -488,7 +490,9 @@ The callee checks for `s3_ref` and fetches from S3 before processing. Delete the
 
 ## Recursive Invocation Loops
 
-**AWS loop detection (2023) has a narrow scope.** Lambda detects and stops SQS → Lambda → SQS and SNS → Lambda → SNS patterns after 16 recursive calls (`RecursiveInvocationTooManyTimesException`). Direct Lambda → Lambda recursion and S3-triggered loops are **not detected** — they will run until the account concurrency limit is exhausted.
+**Lambda stops most loops by itself.** Recursive loop detection is on by default. It covers loops between your functions and SQS, S3, SNS and EventBridge custom event buses, and loops of Lambda functions that call each other. After about 16 invocations in one request chain, Lambda stops the next invocation and notifies you. It needs a minimum AWS SDK version (for example boto3 1.24.46, JavaScript SDK v3 3.105.0). It cannot see loops that pass through other services, such as DynamoDB Streams. Do not turn it off (`aws_lambda_function_recursion_config` with `recursive_loop = "Allow"`) unless the loop is intended.
+
+> *Source: [Lambda recursive loop detection](https://docs.aws.amazon.com/lambda/latest/dg/invocation-recursion.html) · verified 2026-11-08*
 
 **Emergency stop:** Set reserved concurrency to 0 to halt all invocations immediately without deleting the function.
 

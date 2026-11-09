@@ -27,3 +27,10 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# Rendered template output (tests and evidence)
+tests/rendered/
+.superpowers/
+!tests/fixtures/**/*.tfvars
+__pycache__/
+*.pyc

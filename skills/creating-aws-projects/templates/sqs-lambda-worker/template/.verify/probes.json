@@ -1,0 +1,26 @@
+{
+  "probes": [
+    {
+      "name": "processed",
+      "type": "sqs-processed",
+      "message": {
+        "action": "process"
+      }
+    },
+    {
+      "name": "processed-once",
+      "type": "sqs-processed-once",
+      "message": {
+        "action": "process"
+      }
+    },
+    {
+      "name": "dead-letter",
+      "type": "sqs-dead-letter",
+      "message": {
+        "action": "fail"
+      },
+      "trips_alarm": ["dlq-messages", "lambda-errors"]
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+PASS       target                   123456789012 us-east-1
+PASS       artifact                 2 instance(s) run ami-0951c836c26e34fc8, launch template version 1
+PASS       health                   2 healthy target(s)
+PASS       probe:hello              200
+PASS       logs:hello               1 event(s) for request e7b4935f-962d-4f8f-ab63-04d2a1a8c5d7
+UNVERIFIED trace:hello              response carried no trace ID (reported)
+FAIL       alarms                   in ALARM: lf-vm-dev-healthy-hosts (reported)
+UNVERIFIED alerting                 no confirmed subscriber on the alarm topic: alarms notify no one (reported)
+verify-deployment: PASS (pass 5, fail 1, unverified 2)

@@ -1,0 +1,649 @@
+data.aws_caller_identity.current: Reading...
+aws_ecs_cluster.this: Refreshing state... [id=arn:aws:ecs:us-east-1:123456789012:cluster/lf-web-dev]
+aws_ecr_repository.app: Refreshing state... [id=lf-web-dev]
+aws_cloudwatch_log_group.app: Refreshing state... [id=/ecs/lf-web-dev]
+data.aws_caller_identity.current: Read complete after 0s [id=123456789012]
+data.aws_iam_policy_document.tasks_assume: Reading...
+data.aws_iam_policy_document.infrastructure_assume: Reading...
+aws_kms_key.alarms: Refreshing state... [id=c2da804c-3ef0-43a5-a15e-1187613a311d]
+data.aws_iam_policy_document.tasks_assume: Read complete after 0s [id=101469978]
+data.aws_iam_policy_document.infrastructure_assume: Read complete after 0s [id=266576488]
+aws_iam_role.infrastructure: Refreshing state... [id=lf-web-dev-express-infrastructure]
+aws_iam_role.task: Refreshing state... [id=lf-web-dev-task]
+aws_iam_role.execution: Refreshing state... [id=lf-web-dev-execution]
+aws_ecr_lifecycle_policy.app: Refreshing state... [id=lf-web-dev]
+aws_cloudwatch_log_metric_filter.http_5xx: Refreshing state... [id=lf-web-dev-http-5xx]
+data.aws_iam_policy_document.execution: Reading...
+data.aws_iam_policy_document.execution: Read complete after 0s [id=1987309853]
+aws_iam_role_policy_attachment.infrastructure: Refreshing state... [id=lf-web-dev-express-infrastructure/arn:aws:iam::aws:policy/service-role/AmazonECSInfrastructureRoleforExpressGatewayServices]
+aws_sns_topic.alarms: Refreshing state... [id=arn:aws:sns:us-east-1:123456789012:lf-web-dev-alarms]
+aws_iam_role_policy.execution: Refreshing state... [id=lf-web-dev-execution:pull-image-and-write-logs]
+aws_ecs_express_gateway_service.web[0]: Refreshing state...
+aws_cloudwatch_metric_alarm.cpu_high[0]: Refreshing state... [id=lf-web-dev-cpu-high]
+aws_cloudwatch_metric_alarm.http_5xx: Refreshing state... [id=lf-web-dev-http-5xx]
+aws_cloudwatch_metric_alarm.running_tasks[0]: Refreshing state... [id=lf-web-dev-running-tasks]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  - destroy
+
+Terraform will perform the following actions:
+
+  # aws_cloudwatch_log_group.app will be destroyed
+  - resource "aws_cloudwatch_log_group" "app" {
+      - arn                         = "arn:aws:logs:us-east-1:123456789012:log-group:/ecs/lf-web-dev" -> null
+      - deletion_protection_enabled = false -> null
+      - id                          = "/ecs/lf-web-dev" -> null
+      - log_group_class             = "STANDARD" -> null
+      - name                        = "/ecs/lf-web-dev" -> null
+      - region                      = "us-east-1" -> null
+      - retention_in_days           = 7 -> null
+      - skip_destroy                = false -> null
+      - tags                        = {} -> null
+      - tags_all                    = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/ecs-web"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-web"
+        } -> null
+        # (2 unchanged attributes hidden)
+    }
+
+  # aws_cloudwatch_log_metric_filter.http_5xx will be destroyed
+  - resource "aws_cloudwatch_log_metric_filter" "http_5xx" {
+      - apply_on_transformed_logs = false -> null
+      - id                        = "lf-web-dev-http-5xx" -> null
+      - log_group_name            = "/ecs/lf-web-dev" -> null
+      - name                      = "lf-web-dev-http-5xx" -> null
+      - pattern                   = "{ $.status >= 500 }" -> null
+      - region                    = "us-east-1" -> null
+
+      - metric_transformation {
+          - default_value = "0" -> null
+          - dimensions    = {} -> null
+          - name          = "Http5xx" -> null
+          - namespace     = "lf-web-dev" -> null
+          - unit          = "None" -> null
+          - value         = "1" -> null
+        }
+    }
+
+  # aws_cloudwatch_metric_alarm.cpu_high[0] will be destroyed
+  - resource "aws_cloudwatch_metric_alarm" "cpu_high" {
+      - actions_enabled                       = true -> null
+      - alarm_actions                         = [
+          - "arn:aws:sns:us-east-1:123456789012:lf-web-dev-alarms",
+        ] -> null
+      - alarm_name                            = "lf-web-dev-cpu-high" -> null
+      - arn                                   = "arn:aws:cloudwatch:us-east-1:123456789012:alarm:lf-web-dev-cpu-high" -> null
+      - comparison_operator                   = "GreaterThanThreshold" -> null
+      - datapoints_to_alarm                   = 0 -> null
+      - dimensions                            = {
+          - "ClusterName" = "lf-web-dev"
+          - "ServiceName" = "lf-web-dev-web"
+        } -> null
+      - evaluation_interval                   = 0 -> null
+      - evaluation_periods                    = 5 -> null
+      - id                                    = "lf-web-dev-cpu-high" -> null
+      - insufficient_data_actions             = [] -> null
+      - metric_name                           = "CPUUtilization" -> null
+      - namespace                             = "AWS/ECS" -> null
+      - ok_actions                            = [
+          - "arn:aws:sns:us-east-1:123456789012:lf-web-dev-alarms",
+        ] -> null
+      - period                                = 60 -> null
+      - region                                = "us-east-1" -> null
+      - statistic                             = "Average" -> null
+      - tags                                  = {} -> null
+      - tags_all                              = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/ecs-web"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-web"
+        } -> null
+      - threshold                             = 85 -> null
+      - treat_missing_data                    = "notBreaching" -> null
+        # (5 unchanged attributes hidden)
+    }
+
+  # aws_cloudwatch_metric_alarm.http_5xx will be destroyed
+  - resource "aws_cloudwatch_metric_alarm" "http_5xx" {
+      - actions_enabled                       = true -> null
+      - alarm_actions                         = [
+          - "arn:aws:sns:us-east-1:123456789012:lf-web-dev-alarms",
+        ] -> null
+      - alarm_name                            = "lf-web-dev-http-5xx" -> null
+      - arn                                   = "arn:aws:cloudwatch:us-east-1:123456789012:alarm:lf-web-dev-http-5xx" -> null
+      - comparison_operator                   = "GreaterThanThreshold" -> null
+      - datapoints_to_alarm                   = 0 -> null
+      - dimensions                            = {} -> null
+      - evaluation_interval                   = 0 -> null
+      - evaluation_periods                    = 1 -> null
+      - id                                    = "lf-web-dev-http-5xx" -> null
+      - insufficient_data_actions             = [] -> null
+      - metric_name                           = "Http5xx" -> null
+      - namespace                             = "lf-web-dev" -> null
+      - ok_actions                            = [
+          - "arn:aws:sns:us-east-1:123456789012:lf-web-dev-alarms",
+        ] -> null
+      - period                                = 60 -> null
+      - region                                = "us-east-1" -> null
+      - statistic                             = "Sum" -> null
+      - tags                                  = {} -> null
+      - tags_all                              = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/ecs-web"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-web"
+        } -> null
+      - threshold                             = 0 -> null
+      - treat_missing_data                    = "notBreaching" -> null
+        # (5 unchanged attributes hidden)
+    }
+
+  # aws_cloudwatch_metric_alarm.running_tasks[0] will be destroyed
+  - resource "aws_cloudwatch_metric_alarm" "running_tasks" {
+      - actions_enabled                       = true -> null
+      - alarm_actions                         = [
+          - "arn:aws:sns:us-east-1:123456789012:lf-web-dev-alarms",
+        ] -> null
+      - alarm_name                            = "lf-web-dev-running-tasks" -> null
+      - arn                                   = "arn:aws:cloudwatch:us-east-1:123456789012:alarm:lf-web-dev-running-tasks" -> null
+      - comparison_operator                   = "LessThanThreshold" -> null
+      - datapoints_to_alarm                   = 0 -> null
+      - dimensions                            = {
+          - "ClusterName" = "lf-web-dev"
+          - "ServiceName" = "lf-web-dev-web"
+        } -> null
+      - evaluation_interval                   = 0 -> null
+      - evaluation_periods                    = 3 -> null
+      - id                                    = "lf-web-dev-running-tasks" -> null
+      - insufficient_data_actions             = [] -> null
+      - metric_name                           = "RunningTaskCount" -> null
+      - namespace                             = "ECS/ContainerInsights" -> null
+      - ok_actions                            = [
+          - "arn:aws:sns:us-east-1:123456789012:lf-web-dev-alarms",
+        ] -> null
+      - period                                = 60 -> null
+      - region                                = "us-east-1" -> null
+      - statistic                             = "Minimum" -> null
+      - tags                                  = {} -> null
+      - tags_all                              = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/ecs-web"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-web"
+        } -> null
+      - threshold                             = 1 -> null
+      - treat_missing_data                    = "breaching" -> null
+        # (5 unchanged attributes hidden)
+    }
+
+  # aws_ecr_lifecycle_policy.app will be destroyed
+  - resource "aws_ecr_lifecycle_policy" "app" {
+      - id          = "lf-web-dev" -> null
+      - policy      = jsonencode(
+            {
+              - rules = [
+                  - {
+                      - action       = {
+                          - type = "expire"
+                        }
+                      - description  = "Keep the 20 newest images"
+                      - rulePriority = 1
+                      - selection    = {
+                          - countNumber = 20
+                          - countType   = "imageCountMoreThan"
+                          - tagStatus   = "any"
+                        }
+                    },
+                ]
+            }
+        ) -> null
+      - region      = "us-east-1" -> null
+      - registry_id = "123456789012" -> null
+      - repository  = "lf-web-dev" -> null
+    }
+
+  # aws_ecr_repository.app will be destroyed
+  - resource "aws_ecr_repository" "app" {
+      - arn                  = "arn:aws:ecr:us-east-1:123456789012:repository/lf-web-dev" -> null
+      - id                   = "lf-web-dev" -> null
+      - image_tag_mutability = "IMMUTABLE" -> null
+      - name                 = "lf-web-dev" -> null
+      - region               = "us-east-1" -> null
+      - registry_id          = "123456789012" -> null
+      - repository_url       = "123456789012.dkr.ecr.us-east-1.amazonaws.com/lf-web-dev" -> null
+      - tags                 = {} -> null
+      - tags_all             = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/ecs-web"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-web"
+        } -> null
+
+      - encryption_configuration {
+          - encryption_type = "KMS" -> null
+          - kms_key         = "arn:aws:kms:us-east-1:123456789012:key/1879a8a4-5323-4028-b2f6-3e08daf46959" -> null
+        }
+
+      - image_scanning_configuration {
+          - scan_on_push = true -> null
+        }
+    }
+
+  # aws_ecs_cluster.this will be destroyed
+  - resource "aws_ecs_cluster" "this" {
+      - arn      = "arn:aws:ecs:us-east-1:123456789012:cluster/lf-web-dev" -> null
+      - id       = "arn:aws:ecs:us-east-1:123456789012:cluster/lf-web-dev" -> null
+      - name     = "lf-web-dev" -> null
+      - region   = "us-east-1" -> null
+      - tags     = {} -> null
+      - tags_all = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/ecs-web"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-web"
+        } -> null
+
+      - setting {
+          - name  = "containerInsights" -> null
+          - value = "enabled" -> null
+        }
+    }
+
+  # aws_ecs_express_gateway_service.web[0] will be destroyed
+  - resource "aws_ecs_express_gateway_service" "web" {
+      - cluster                 = "lf-web-dev" -> null
+      - cpu                     = "256" -> null
+      - cpu_architecture        = "ARM64" -> null
+      - execution_role_arn      = "arn:aws:iam::123456789012:role/lf-web-dev-execution" -> null
+      - health_check_path       = "/health" -> null
+      - infrastructure_role_arn = "arn:aws:iam::123456789012:role/lf-web-dev-express-infrastructure" -> null
+      - ingress_paths           = [
+          - {
+              - access_type = "PUBLIC"
+              - endpoint    = "https://lf-c3522009c45e4ca28c5bb8bb6be883af.ecs.us-east-1.on.aws"
+            },
+        ] -> null
+      - memory                  = "512" -> null
+      - network_configuration   = [
+          - {
+              - subnets = [
+                  - "subnet-02d7dec8c746e298a",
+                  - "subnet-0858a2f10ef669131",
+                ]
+            },
+        ] -> null
+      - region                  = "us-east-1" -> null
+      - scaling_target          = [
+          - {
+              - auto_scaling_metric       = "AVERAGE_CPU"
+              - auto_scaling_target_value = 60
+              - max_task_count            = 2
+              - min_task_count            = 1
+            },
+        ] -> null
+      - service_arn             = "arn:aws:ecs:us-east-1:123456789012:service/lf-web-dev/lf-web-dev-web" -> null
+      - service_name            = "lf-web-dev-web" -> null
+      - service_revision_arn    = "arn:aws:ecs:us-east-1:123456789012:service-revision/lf-web-dev/lf-web-dev-web/7989649406062029078" -> null
+      - tags_all                = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/ecs-web"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-web"
+        } -> null
+      - task_role_arn           = "arn:aws:iam::123456789012:role/lf-web-dev-task" -> null
+      - wait_for_steady_state   = true -> null
+
+      - primary_container {
+          - aws_logs_configuration = [
+              - {
+                  - log_group         = "/ecs/lf-web-dev"
+                  - log_stream_prefix = "web"
+                },
+            ] -> null
+          - container_port         = 8080 -> null
+          - image                  = "123456789012.dkr.ecr.us-east-1.amazonaws.com/lf-web-dev@sha256:fcce5459b307d3882c33d94b930376c6883eccd5a5b55ff2ad4a1d5b5c5c96c7" -> null
+        }
+    }
+
+  # aws_iam_role.execution will be destroyed
+  - resource "aws_iam_role" "execution" {
+      - arn                   = "arn:aws:iam::123456789012:role/lf-web-dev-execution" -> null
+      - assume_role_policy    = jsonencode(
+            {
+              - Statement = [
+                  - {
+                      - Action    = "sts:AssumeRole"
+                      - Condition = {
+                          - StringEquals = {
+                              - "aws:SourceAccount" = "123456789012"
+                            }
+                        }
+                      - Effect    = "Allow"
+                      - Principal = {
+                          - Service = "ecs-tasks.amazonaws.com"
+                        }
+                    },
+                ]
+              - Version   = "2012-10-17"
+            }
+        ) -> null
+      - create_date           = "2026-11-09T03:51:15Z" -> null
+      - force_detach_policies = false -> null
+      - id                    = "lf-web-dev-execution" -> null
+      - managed_policy_arns   = [] -> null
+      - max_session_duration  = 3600 -> null
+      - name                  = "lf-web-dev-execution" -> null
+      - path                  = "/" -> null
+      - tags                  = {} -> null
+      - tags_all              = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/ecs-web"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-web"
+        } -> null
+      - unique_id             = "AROA2P7Z4QCOKMQKQV7SY" -> null
+        # (3 unchanged attributes hidden)
+
+      - inline_policy {
+          - name   = "pull-image-and-write-logs" -> null
+          - policy = jsonencode(
+                {
+                  - Statement = [
+                      - {
+                          - Action   = "ecr:GetAuthorizationToken"
+                          - Effect   = "Allow"
+                          - Resource = "*"
+                        },
+                      - {
+                          - Action   = [
+                              - "ecr:GetDownloadUrlForLayer",
+                              - "ecr:BatchGetImage",
+                              - "ecr:BatchCheckLayerAvailability",
+                            ]
+                          - Effect   = "Allow"
+                          - Resource = "arn:aws:ecr:us-east-1:123456789012:repository/lf-web-dev"
+                        },
+                      - {
+                          - Action   = [
+                              - "logs:PutLogEvents",
+                              - "logs:CreateLogStream",
+                            ]
+                          - Effect   = "Allow"
+                          - Resource = "arn:aws:logs:us-east-1:123456789012:log-group:/ecs/lf-web-dev:*"
+                        },
+                    ]
+                  - Version   = "2012-10-17"
+                }
+            ) -> null
+        }
+    }
+
+  # aws_iam_role.infrastructure will be destroyed
+  - resource "aws_iam_role" "infrastructure" {
+      - arn                   = "arn:aws:iam::123456789012:role/lf-web-dev-express-infrastructure" -> null
+      - assume_role_policy    = jsonencode(
+            {
+              - Statement = [
+                  - {
+                      - Action    = "sts:AssumeRole"
+                      - Condition = {
+                          - StringEquals = {
+                              - "aws:SourceAccount" = "123456789012"
+                            }
+                        }
+                      - Effect    = "Allow"
+                      - Principal = {
+                          - Service = "ecs.amazonaws.com"
+                        }
+                    },
+                ]
+              - Version   = "2012-10-17"
+            }
+        ) -> null
+      - create_date           = "2026-11-09T03:51:15Z" -> null
+      - force_detach_policies = false -> null
+      - id                    = "lf-web-dev-express-infrastructure" -> null
+      - managed_policy_arns   = [
+          - "arn:aws:iam::aws:policy/service-role/AmazonECSInfrastructureRoleforExpressGatewayServices",
+        ] -> null
+      - max_session_duration  = 3600 -> null
+      - name                  = "lf-web-dev-express-infrastructure" -> null
+      - path                  = "/" -> null
+      - tags                  = {} -> null
+      - tags_all              = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/ecs-web"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-web"
+        } -> null
+      - unique_id             = "AROA2P7Z4QCOMOV5BUDRB" -> null
+        # (3 unchanged attributes hidden)
+    }
+
+  # aws_iam_role.task will be destroyed
+  - resource "aws_iam_role" "task" {
+      - arn                   = "arn:aws:iam::123456789012:role/lf-web-dev-task" -> null
+      - assume_role_policy    = jsonencode(
+            {
+              - Statement = [
+                  - {
+                      - Action    = "sts:AssumeRole"
+                      - Condition = {
+                          - StringEquals = {
+                              - "aws:SourceAccount" = "123456789012"
+                            }
+                        }
+                      - Effect    = "Allow"
+                      - Principal = {
+                          - Service = "ecs-tasks.amazonaws.com"
+                        }
+                    },
+                ]
+              - Version   = "2012-10-17"
+            }
+        ) -> null
+      - create_date           = "2026-11-09T03:51:15Z" -> null
+      - force_detach_policies = false -> null
+      - id                    = "lf-web-dev-task" -> null
+      - managed_policy_arns   = [] -> null
+      - max_session_duration  = 3600 -> null
+      - name                  = "lf-web-dev-task" -> null
+      - path                  = "/" -> null
+      - tags                  = {} -> null
+      - tags_all              = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/ecs-web"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-web"
+        } -> null
+      - unique_id             = "AROA2P7Z4QCOLV76JNOZY" -> null
+        # (3 unchanged attributes hidden)
+    }
+
+  # aws_iam_role_policy.execution will be destroyed
+  - resource "aws_iam_role_policy" "execution" {
+      - id          = "lf-web-dev-execution:pull-image-and-write-logs" -> null
+      - name        = "pull-image-and-write-logs" -> null
+      - policy      = jsonencode(
+            {
+              - Statement = [
+                  - {
+                      - Action   = "ecr:GetAuthorizationToken"
+                      - Effect   = "Allow"
+                      - Resource = "*"
+                    },
+                  - {
+                      - Action   = [
+                          - "ecr:GetDownloadUrlForLayer",
+                          - "ecr:BatchGetImage",
+                          - "ecr:BatchCheckLayerAvailability",
+                        ]
+                      - Effect   = "Allow"
+                      - Resource = "arn:aws:ecr:us-east-1:123456789012:repository/lf-web-dev"
+                    },
+                  - {
+                      - Action   = [
+                          - "logs:PutLogEvents",
+                          - "logs:CreateLogStream",
+                        ]
+                      - Effect   = "Allow"
+                      - Resource = "arn:aws:logs:us-east-1:123456789012:log-group:/ecs/lf-web-dev:*"
+                    },
+                ]
+              - Version   = "2012-10-17"
+            }
+        ) -> null
+      - role        = "lf-web-dev-execution" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_iam_role_policy_attachment.infrastructure will be destroyed
+  - resource "aws_iam_role_policy_attachment" "infrastructure" {
+      - id         = "lf-web-dev-express-infrastructure/arn:aws:iam::aws:policy/service-role/AmazonECSInfrastructureRoleforExpressGatewayServices" -> null
+      - policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSInfrastructureRoleforExpressGatewayServices" -> null
+      - role       = "lf-web-dev-express-infrastructure" -> null
+    }
+
+  # aws_kms_key.alarms will be destroyed
+  - resource "aws_kms_key" "alarms" {
+      - arn                                = "arn:aws:kms:us-east-1:123456789012:key/c2da804c-3ef0-43a5-a15e-1187613a311d" -> null
+      - bypass_policy_lockout_safety_check = false -> null
+      - customer_master_key_spec           = "SYMMETRIC_DEFAULT" -> null
+      - deletion_window_in_days            = 7 -> null
+      - description                        = "Encrypts the lf-web-dev alarm topic" -> null
+      - enable_key_rotation                = true -> null
+      - id                                 = "c2da804c-3ef0-43a5-a15e-1187613a311d" -> null
+      - is_enabled                         = true -> null
+      - key_id                             = "c2da804c-3ef0-43a5-a15e-1187613a311d" -> null
+      - key_usage                          = "ENCRYPT_DECRYPT" -> null
+      - multi_region                       = false -> null
+      - policy                             = jsonencode(
+            {
+              - Statement = [
+                  - {
+                      - Action    = "kms:*"
+                      - Effect    = "Allow"
+                      - Principal = {
+                          - AWS = "arn:aws:iam::123456789012:root"
+                        }
+                      - Resource  = "*"
+                      - Sid       = "AccountAdministersKey"
+                    },
+                  - {
+                      - Action    = [
+                          - "kms:Decrypt",
+                          - "kms:GenerateDataKey*",
+                        ]
+                      - Condition = {
+                          - StringEquals = {
+                              - "aws:SourceAccount" = "123456789012"
+                            }
+                        }
+                      - Effect    = "Allow"
+                      - Principal = {
+                          - Service = "cloudwatch.amazonaws.com"
+                        }
+                      - Resource  = "*"
+                      - Sid       = "CloudWatchAlarmsPublish"
+                    },
+                ]
+              - Version   = "2012-10-17"
+            }
+        ) -> null
+      - region                             = "us-east-1" -> null
+      - rotation_period_in_days            = 365 -> null
+      - tags                               = {} -> null
+      - tags_all                           = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/ecs-web"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-web"
+        } -> null
+        # (2 unchanged attributes hidden)
+    }
+
+  # aws_sns_topic.alarms will be destroyed
+  - resource "aws_sns_topic" "alarms" {
+      - application_success_feedback_sample_rate = 0 -> null
+      - arn                                      = "arn:aws:sns:us-east-1:123456789012:lf-web-dev-alarms" -> null
+      - content_based_deduplication              = false -> null
+      - fifo_topic                               = false -> null
+      - firehose_success_feedback_sample_rate    = 0 -> null
+      - http_success_feedback_sample_rate        = 0 -> null
+      - id                                       = "arn:aws:sns:us-east-1:123456789012:lf-web-dev-alarms" -> null
+      - kms_master_key_id                        = "arn:aws:kms:us-east-1:123456789012:key/c2da804c-3ef0-43a5-a15e-1187613a311d" -> null
+      - lambda_success_feedback_sample_rate      = 0 -> null
+      - maximum_message_size                     = 0 -> null
+      - name                                     = "lf-web-dev-alarms" -> null
+      - owner                                    = "123456789012" -> null
+      - policy                                   = jsonencode(
+            {
+              - Id        = "__default_policy_ID"
+              - Statement = [
+                  - {
+                      - Action    = [
+                          - "SNS:GetTopicAttributes",
+                          - "SNS:SetTopicAttributes",
+                          - "SNS:AddPermission",
+                          - "SNS:RemovePermission",
+                          - "SNS:DeleteTopic",
+                          - "SNS:Subscribe",
+                          - "SNS:ListSubscriptionsByTopic",
+                          - "SNS:Publish",
+                        ]
+                      - Condition = {
+                          - StringEquals = {
+                              - "AWS:SourceOwner" = "123456789012"
+                            }
+                        }
+                      - Effect    = "Allow"
+                      - Principal = {
+                          - AWS = "*"
+                        }
+                      - Resource  = "arn:aws:sns:us-east-1:123456789012:lf-web-dev-alarms"
+                      - Sid       = "__default_statement_ID"
+                    },
+                ]
+              - Version   = "2008-10-17"
+            }
+        ) -> null
+      - region                                   = "us-east-1" -> null
+      - signature_version                        = 0 -> null
+      - sqs_success_feedback_sample_rate         = 0 -> null
+      - tags                                     = {} -> null
+      - tags_all                                 = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/ecs-web"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-web"
+        } -> null
+        # (17 unchanged attributes hidden)
+    }
+
+Plan: 0 to add, 0 to change, 16 to destroy.
+
+Changes to Outputs:
+  - account_id         = "123456789012" -> null
+  - alarm_names        = [
+      - "lf-web-dev-http-5xx",
+      - "lf-web-dev-running-tasks",
+      - "lf-web-dev-cpu-high",
+    ] -> null
+  - alarm_topic_arn    = "arn:aws:sns:us-east-1:123456789012:lf-web-dev-alarms" -> null
+  - ecr_repository_url = "123456789012.dkr.ecr.us-east-1.amazonaws.com/lf-web-dev" -> null
+  - ecs_cluster_name   = "lf-web-dev" -> null
+  - ecs_service_name   = "lf-web-dev-web" -> null
+  - image_digest       = "sha256:fcce5459b307d3882c33d94b930376c6883eccd5a5b55ff2ad4a1d5b5c5c96c7" -> null
+  - log_group          = "/ecs/lf-web-dev" -> null
+  - region             = "us-east-1" -> null
+  - service_url        = "https://lf-c3522009c45e4ca28c5bb8bb6be883af.ecs.us-east-1.on.aws" -> null
+
+─────────────────────────────────────────────────────────────────────────────
+
+Saved the plan to: destroy.tfplan
+
+To perform exactly these actions, run the following command to apply:
+    terraform apply "destroy.tfplan"

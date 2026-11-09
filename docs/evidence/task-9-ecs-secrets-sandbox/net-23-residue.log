@@ -1,0 +1,4 @@
+PASS       residue                  no live resources tagged Project=lf-net, Environment=dev
+arn:aws:ec2:us-east-1:123456789012:security-group/sg-01435576354a1d2ed deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:vpc-flow-log/fl-0664c0d2ea7c3140c deleted; the tag index has not caught up
+residue: PASS

@@ -1,0 +1,42 @@
+# Runbook: {{ project_name }}-{{ environment }}
+
+Alarms notify the SNS topic `{{ project_name }}-{{ environment }}-alarms`.{% if alarm_email %} Email `{{ alarm_email }}` is subscribed. The subscription does nothing until someone clicks the confirmation link in the email from AWS.{% else %} Nothing is subscribed to it yet. Add a subscription, or no one is told when an alarm fires.{% endif %}
+
+Logs: `/ec2/{{ project_name }}-{{ environment }}` ({{ log_retention_days }} days), one stream per instance ID. Each request, except `/health`, logs one JSON line with `status`, `path`, `correlation_id` and the load balancer's `trace_id`.
+
+Find one request, in Logs Insights on the log group:
+
+```
+fields @timestamp, @logStream, status, path | filter correlation_id = "<id>"
+```
+
+| Alarm | Fires when | First checks |
+| --- | --- | --- |
+| `{{ project_name }}-{{ environment }}-target-5xx` | an instance answers 5xx in a minute | the log lines with `status >= 500`; which `@logStream` (instance) they come from |
+| `{{ project_name }}-{{ environment }}-unhealthy-hosts` | a target fails `/health` for 3 minutes | EC2 → Auto Scaling group → Activity: the group should be replacing it; the instance's console output (`aws ec2 get-console-output`) for cloud-init errors |
+| `{{ project_name }}-{{ environment }}-healthy-hosts` | fewer than {{ min_instances }} healthy targets for 3 minutes, or no data | Activity history for failed launches (capacity, quota); a refresh in progress |
+
+`healthy-hosts` also fires for a few minutes after the first deploy, while the instances boot: it treats missing data as breaching. It returns to OK once {{ min_instances }} target(s) have been healthy for 3 minutes.
+
+## An instance that never becomes healthy
+
+cloud-init installs packages at boot. If the repositories cannot be reached, the service never starts. Read `/var/log/cloud-init-output.log` through the console output. A refresh whose new instances stay unhealthy trips `unhealthy-hosts`, fails, and rolls back to the previous launch template version.
+
+Two rules follow from the alarm:
+
+- A refresh cannot start while `unhealthy-hosts` is in ALARM (`A CloudWatch monitor is in alarm`). Fix the cause and wait for OK. That apply still moved the group to the new launch template version, so the next plan shows no change and starts nothing. Start the refresh yourself. Automatic rollback needs the target launch template version (`DesiredConfiguration`), so name it:
+
+  ```bash
+  LT_ID=$(terraform -chdir=infra output -raw launch_template_id)
+  LT_VERSION=$(terraform -chdir=infra output -raw launch_template_version)
+  aws autoscaling start-instance-refresh --auto-scaling-group-name {{ project_name }}-{{ environment }}-web \
+    --desired-configuration "{\"LaunchTemplate\":{\"LaunchTemplateId\":\"$LT_ID\",\"Version\":\"$LT_VERSION\"}}" \
+    --preferences '{"MinHealthyPercentage":100,"MaxHealthyPercentage":200,"InstanceWarmup":300,"AutoRollback":true,"AlarmSpecification":{"Alarms":["{{ project_name }}-{{ environment }}-unhealthy-hosts"]}}'
+  ```
+
+  The verifier reports the gap until then: `not on launch template version`.
+- While a refresh runs, the group refuses other changes (`An active instance refresh with a desired configuration exists`). To stop a refresh that is going wrong, roll it back: `aws autoscaling rollback-instance-refresh --auto-scaling-group-name {{ project_name }}-{{ environment }}-web`.
+
+## Patch
+
+Run a plan. If AWS published a new AL2023 AMI, the plan shows a new launch template version. Apply it, wait for the instance refresh, then run the verifier: it fails while any instance runs the previous AMI.

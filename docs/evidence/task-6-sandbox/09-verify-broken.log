@@ -1,0 +1,7 @@
+PASS       target                   123456789012 us-east-1
+PASS       artifact                 version 2, CodeSha256 KsaynbIdbgnTBycbMYSpBYrFBfodo3VvTdJl3CL0T5Y=
+FAIL       probe:hello              status 500, expected 200: {"message":"Internal Server Error"}
+PASS       alarms                   lf-sandbox-dev-api-5xx=OK, lf-sandbox-dev-lambda-duration-p99=OK, lf-sandbox-dev-lambda-errors=OK, lf-sandbox-dev-lambda-throttles=OK (reported)
+UNVERIFIED alerting                 no confirmed subscriber on the alarm topic: alarms notify no one (reported)
+verify-deployment: FAIL (pass 3, fail 1, unverified 1)
+exit=1

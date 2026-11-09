@@ -1,0 +1,67 @@
+data.aws_caller_identity.current: Reading...
+aws_ecs_cluster.this: Refreshing state... [id=arn:aws:ecs:us-east-1:123456789012:cluster/lf-web-dev]
+aws_ecr_repository.app: Refreshing state... [id=lf-web-dev]
+aws_cloudwatch_log_group.app: Refreshing state... [id=/ecs/lf-web-dev]
+data.aws_caller_identity.current: Read complete after 0s [id=123456789012]
+aws_kms_key.alarms: Refreshing state... [id=c2da804c-3ef0-43a5-a15e-1187613a311d]
+data.aws_iam_policy_document.tasks_assume: Reading...
+data.aws_iam_policy_document.infrastructure_assume: Reading...
+data.aws_iam_policy_document.tasks_assume: Read complete after 0s [id=101469978]
+data.aws_iam_policy_document.infrastructure_assume: Read complete after 0s [id=266576488]
+aws_iam_role.task: Refreshing state... [id=lf-web-dev-task]
+aws_iam_role.execution: Refreshing state... [id=lf-web-dev-execution]
+aws_iam_role.infrastructure: Refreshing state... [id=lf-web-dev-express-infrastructure]
+aws_cloudwatch_log_metric_filter.http_5xx: Refreshing state... [id=lf-web-dev-http-5xx]
+aws_ecr_lifecycle_policy.app: Refreshing state... [id=lf-web-dev]
+data.aws_iam_policy_document.execution: Reading...
+data.aws_iam_policy_document.execution: Read complete after 0s [id=1987309853]
+aws_sns_topic.alarms: Refreshing state... [id=arn:aws:sns:us-east-1:123456789012:lf-web-dev-alarms]
+aws_iam_role_policy_attachment.infrastructure: Refreshing state... [id=lf-web-dev-express-infrastructure/arn:aws:iam::aws:policy/service-role/AmazonECSInfrastructureRoleforExpressGatewayServices]
+aws_iam_role_policy.execution: Refreshing state... [id=lf-web-dev-execution:pull-image-and-write-logs]
+aws_ecs_express_gateway_service.web[0]: Refreshing state...
+aws_cloudwatch_metric_alarm.cpu_high[0]: Refreshing state... [id=lf-web-dev-cpu-high]
+aws_cloudwatch_metric_alarm.running_tasks[0]: Refreshing state... [id=lf-web-dev-running-tasks]
+aws_cloudwatch_metric_alarm.http_5xx: Refreshing state... [id=lf-web-dev-http-5xx]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  ~ update in-place
+
+Terraform will perform the following actions:
+
+  # aws_ecs_express_gateway_service.web[0] will be updated in-place
+  ~ resource "aws_ecs_express_gateway_service" "web" {
+      + current_deployment      = (known after apply)
+      ~ ingress_paths           = [
+          - {
+              - access_type = "PUBLIC"
+              - endpoint    = "https://lf-c3522009c45e4ca28c5bb8bb6be883af.ecs.us-east-1.on.aws"
+            },
+        ] -> (known after apply)
+      ~ network_configuration   = [
+          ~ {
+              + security_groups = []
+                # (1 unchanged attribute hidden)
+            },
+        ]
+      ~ service_revision_arn    = "arn:aws:ecs:us-east-1:123456789012:service-revision/lf-web-dev/lf-web-dev-web/9032014090361133516" -> (known after apply)
+        # (14 unchanged attributes hidden)
+
+      ~ primary_container {
+          ~ image                  = "123456789012.dkr.ecr.us-east-1.amazonaws.com/lf-web-dev@sha256:fcce5459b307d3882c33d94b930376c6883eccd5a5b55ff2ad4a1d5b5c5c96c7" -> "123456789012.dkr.ecr.us-east-1.amazonaws.com/lf-web-dev@sha256:50e8a39ea2041b2ebb2cb8b0e23765d975d0937aeb1730dae8ce4cf6cb65dd4f"
+            # (2 unchanged attributes hidden)
+        }
+    }
+
+Plan: 0 to add, 1 to change, 0 to destroy.
+
+Changes to Outputs:
+  ~ image_digest       = "sha256:fcce5459b307d3882c33d94b930376c6883eccd5a5b55ff2ad4a1d5b5c5c96c7" -> "sha256:50e8a39ea2041b2ebb2cb8b0e23765d975d0937aeb1730dae8ce4cf6cb65dd4f"
+  ~ service_url        = "https://lf-c3522009c45e4ca28c5bb8bb6be883af.ecs.us-east-1.on.aws" -> (known after apply)
+
+─────────────────────────────────────────────────────────────────────────────
+
+Saved the plan to: tfplan
+
+To perform exactly these actions, run the following command to apply:
+    terraform apply "tfplan"

@@ -1,0 +1,59 @@
+aws_iam_role_policy.api: Destroying... [id=lf-flow-dev-api:start-sync-execution]
+aws_api_gateway_method_settings.all: Destroying... [id=hpslaw9de0-dev-*/*]
+aws_cloudwatch_metric_alarm.api_5xx: Destroying... [id=lf-flow-dev-api-5xx]
+aws_cloudwatch_metric_alarm.executions_timed_out: Destroying... [id=lf-flow-dev-executions-timed-out]
+aws_api_gateway_method_settings.all: Destruction complete after 1s
+aws_iam_role_policy.api: Destruction complete after 1s
+aws_cloudwatch_metric_alarm.api_5xx: Destruction complete after 1s
+aws_api_gateway_stage.api: Destroying... [id=ags-hpslaw9de0-dev]
+aws_cloudwatch_metric_alarm.executions_timed_out: Destruction complete after 1s
+aws_sns_topic.alarms: Destroying... [id=arn:aws:sns:us-east-1:123456789012:lf-flow-dev-alarms]
+aws_api_gateway_stage.api: Destruction complete after 0s
+aws_api_gateway_deployment.orders: Destroying... [id=k8ydil]
+aws_cloudwatch_log_group.api_access: Destroying... [id=/aws/apigateway/lf-flow-dev-access]
+aws_api_gateway_deployment.orders: Destruction complete after 1s
+aws_api_gateway_integration_response.execution: Destroying... [id=agir-hpslaw9de0-427f6e-POST-200]
+aws_api_gateway_integration_response.integration_error: Destroying... [id=agir-hpslaw9de0-427f6e-POST-500]
+aws_api_gateway_integration_response.integration_error: Destruction complete after 0s
+aws_api_gateway_integration_response.execution: Destruction complete after 0s
+aws_api_gateway_method_response.post_orders["500"]: Destroying... [id=agmr-hpslaw9de0-427f6e-POST-500]
+aws_api_gateway_method_response.post_orders["200"]: Destroying... [id=agmr-hpslaw9de0-427f6e-POST-200]
+aws_api_gateway_method_response.post_orders["504"]: Destroying... [id=agmr-hpslaw9de0-427f6e-POST-504]
+aws_api_gateway_method_response.post_orders["422"]: Destroying... [id=agmr-hpslaw9de0-427f6e-POST-422]
+aws_api_gateway_integration.start_sync: Destroying... [id=agi-hpslaw9de0-427f6e-POST]
+aws_sns_topic.alarms: Destruction complete after 1s
+aws_kms_key.alarms: Destroying... [id=6759a924-d34a-4ec9-bef2-01e13450b6c1]
+aws_api_gateway_method_response.post_orders["500"]: Destruction complete after 0s
+aws_api_gateway_method_response.post_orders["504"]: Destruction complete after 0s
+aws_api_gateway_method_response.post_orders["200"]: Destruction complete after 0s
+aws_api_gateway_integration.start_sync: Destruction complete after 0s
+aws_api_gateway_method_response.post_orders["422"]: Destruction complete after 0s
+aws_iam_role.api: Destroying... [id=lf-flow-dev-api]
+aws_sfn_state_machine.orders: Destroying... [id=arn:aws:states:us-east-1:123456789012:stateMachine:lf-flow-dev]
+aws_api_gateway_method.post_orders: Destroying... [id=agm-hpslaw9de0-427f6e-POST]
+aws_cloudwatch_log_group.api_access: Destruction complete after 1s
+aws_api_gateway_method.post_orders: Destruction complete after 1s
+aws_api_gateway_request_validator.body: Destroying... [id=fk7bln]
+aws_api_gateway_resource.orders: Destroying... [id=427f6e]
+aws_api_gateway_model.order: Destroying... [id=ayri2z]
+aws_api_gateway_request_validator.body: Destruction complete after 0s
+aws_api_gateway_resource.orders: Destruction complete after 0s
+aws_api_gateway_model.order: Destruction complete after 0s
+aws_api_gateway_rest_api.orders: Destroying... [id=hpslaw9de0]
+aws_kms_key.alarms: Destruction complete after 1s
+aws_iam_role.api: Destruction complete after 1s
+aws_api_gateway_rest_api.orders: Destruction complete after 1s
+aws_sfn_state_machine.orders: Still destroying... [id=arn:aws:states:us-east-1:123456789012:stateMachine:lf-flow-dev, 00m10s elapsed]
+aws_sfn_state_machine.orders: Still destroying... [id=arn:aws:states:us-east-1:123456789012:stateMachine:lf-flow-dev, 00m20s elapsed]
+aws_sfn_state_machine.orders: Still destroying... [id=arn:aws:states:us-east-1:123456789012:stateMachine:lf-flow-dev, 00m30s elapsed]
+aws_sfn_state_machine.orders: Still destroying... [id=arn:aws:states:us-east-1:123456789012:stateMachine:lf-flow-dev, 00m40s elapsed]
+aws_sfn_state_machine.orders: Still destroying... [id=arn:aws:states:us-east-1:123456789012:stateMachine:lf-flow-dev, 00m50s elapsed]
+aws_sfn_state_machine.orders: Destruction complete after 57s
+aws_iam_role_policy.workflow: Destroying... [id=lf-flow-dev-workflow:logs-and-traces]
+aws_cloudwatch_log_group.workflow: Destroying... [id=/aws/vendedlogs/states/lf-flow-dev]
+aws_iam_role_policy.workflow: Destruction complete after 0s
+aws_iam_role.workflow: Destroying... [id=lf-flow-dev-workflow]
+aws_cloudwatch_log_group.workflow: Destruction complete after 1s
+aws_iam_role.workflow: Destruction complete after 1s
+
+Apply complete! Resources: 0 added, 0 changed, 26 destroyed.

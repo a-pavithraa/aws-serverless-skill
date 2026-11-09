@@ -1,0 +1,13 @@
+project_name       = "{{ project_name }}"
+environment        = "{{ environment }}"
+aws_region         = "{{ aws_region }}"
+allowed_account_id = "{{ allowed_account_id }}"
+log_retention_days = {{ log_retention_days }}
+alarm_email        = "{{ alarm_email }}"
+cpu                = {{ cpu }}
+memory             = {{ memory }}
+min_tasks          = {{ min_tasks }}
+max_tasks          = {{ max_tasks }}
+network_name       = "{{ network_name }}"
+subnet_ids         = [{% for s in subnet_ids.split(",") if s %}"{{ s }}"{% if not loop.last %}, {% endif %}{% endfor %}]
+secret_names       = [{% for s in secret_names.split(",") if s %}"{{ s }}"{% if not loop.last %}, {% endif %}{% endfor %}]

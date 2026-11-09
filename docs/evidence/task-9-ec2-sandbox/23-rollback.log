@@ -1,0 +1,4 @@
+t+3s probe 200 refresh RollbackInProgress	25	Rollback triggered due to user request.
+t+36s probe 200 refresh RollbackInProgress	0	Waiting for instances to warm up before continuing. For example: i-02463db53461bb100 is warming up.
+t+69s probe 200 refresh RollbackInProgress	0	Waiting for instances to warm up before continuing. For example: i-02463db53461bb100 is warming up.
+t+102s probe 200 refresh RollbackSuccessful	0	None

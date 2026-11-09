@@ -1,0 +1,46 @@
+{
+  "id": "apigw-lambda.python3.13-arm64-zip",
+  "status": "candidate",
+  "pattern": "apigw-lambda",
+  "template": "templates/apigw-lambda",
+  "lambda_variant": "event-function-on-demand",
+  "runtime": {
+    "identifier": "python3.13",
+    "os": "Amazon Linux 2023",
+    "preview": false,
+    "lifecycle": {
+      "deprecation": "2029-06-30",
+      "block_create": "2029-07-31",
+      "block_update": "2029-08-31"
+    },
+    "source": "https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html",
+    "checked": "2026-11-08"
+  },
+  "architecture": "arm64",
+  "packaging": "zip",
+  "dependencies": [],
+  "native_dependencies": false,
+  "instrumentation": {
+    "logging": "Lambda native JSON log format (logging_config.log_format = JSON), stdlib logging",
+    "tracing": "Lambda active tracing; no tracing SDK in the handler",
+    "powertools": "not used: the handler has no dependencies; add per utility when a pattern needs it"
+  },
+  "regions": [
+    "us-east-1"
+  ],
+  "tools": {
+    "copier": "9.19.1",
+    "terraform": "1.14.4",
+    "aws_provider": "6.72.0",
+    "archive_provider": "2.8.1",
+    "tflint": "0.65.0",
+    "tflint_ruleset_aws": "0.50.0",
+    "checkov": "3.4.3"
+  },
+  "evidence": {
+    "render": "docs/evidence/task-2-template/README.md",
+    "checks": "docs/evidence/task-3-5-checks/README.md",
+    "sandbox": "docs/evidence/task-6-sandbox/README.md"
+  },
+  "review": "pending: promote status to supported after a person reviews the sandbox evidence"
+}

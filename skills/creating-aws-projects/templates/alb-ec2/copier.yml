@@ -1,0 +1,94 @@
+_subdirectory: template
+_templates_suffix: .jinja
+
+project_name:
+  type: str
+  help: Lowercase name, 3-32 chars, letters, digits and hyphens
+  validator: "{% if not (project_name | regex_search('^[a-z][a-z0-9-]{1,30}[a-z0-9]$')) %}invalid project_name{% endif %}"
+
+aws_region:
+  type: str
+  default: us-east-1
+
+environment:
+  type: str
+  default: dev
+  validator: "{% if not (environment | regex_search('^[a-z][a-z0-9]{1,15}$')) %}invalid environment{% elif (project_name ~ '-' ~ environment) | length > 32 %}environment: <project_name>-<environment> names the load balancer, which allows at most 32 characters{% endif %}"
+
+runtime:
+  type: str
+  choices: [python3.13]
+  default: python3.13
+
+architecture:
+  type: str
+  choices: [arm64]
+  default: arm64
+
+instance_type:
+  type: str
+  default: t4g.micro
+  validator: "{% if not (instance_type | regex_search('^(t4g|m7g|m8g|c7g|c8g|r7g|r8g)[.]')) %}instance_type: a Graviton (arm64) type such as t4g.micro; the AMI is arm64{% endif %}"
+
+min_instances:
+  type: int
+  default: 2
+  help: Two or more, in different Availability Zones, so one can be replaced while the other serves
+  validator: "{% if min_instances < 1 %}min_instances: at least 1{% endif %}"
+
+max_instances:
+  type: int
+  default: 3
+  validator: "{% if max_instances <= min_instances or max_instances > 20 %}max_instances: more than min_instances, so a refresh can add an instance before it removes one; at most 20{% endif %}"
+
+certificate_arn:
+  type: str
+  default: ""
+  help: ACM certificate ARN for HTTPS; empty serves plain HTTP
+
+plain_http_reason:
+  type: str
+  default: ""
+  help: Why plain HTTP is acceptable; required without certificate_arn
+  validator: "{% if not certificate_arn and (plain_http_reason | trim | length) < 10 %}plain_http_reason: without certificate_arn the load balancer serves plain HTTP; give a reason of at least 10 characters{% endif %}"
+
+network_name:
+  type: str
+  default: ""
+  help: A network made with the network template (<project>-<environment>). Leave empty only to give subnet_ids
+  validator: "{% if network_name and not (network_name | regex_search('^[a-z][a-z0-9-]{1,48}$')) %}network_name: the network project's <project>-<environment>{% endif %}"
+
+subnet_ids:
+  type: str
+  default: ""
+  help: Comma-separated subnet IDs from your platform team, in at least two zones, when there is no network project
+  validator: "{% if network_name and subnet_ids %}subnet_ids: give network_name or subnet_ids, not both{% elif not network_name and not (subnet_ids | regex_search('^subnet-[0-9a-f]+(,subnet-[0-9a-f]+)+$')) %}subnet_ids: give network_name (a network made with the network template) or at least two subnet IDs; the default VPC is not used{% endif %}"
+
+log_retention_days:
+  type: int
+  default: 14
+  validator: "{% if log_retention_days not in [1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653] %}log_retention_days: not a value CloudWatch Logs accepts{% endif %}"
+
+alarm_email:
+  type: str
+  default: ""
+
+allowed_account_id:
+  type: str
+  default: ""
+  validator: "{% if allowed_account_id and not (allowed_account_id | regex_search('^[0-9]{12}$')) %}allowed_account_id: empty or a 12-digit account ID{% endif %}"
+
+backend:
+  type: str
+  choices: [local, s3]
+  default: local
+
+state_bucket:
+  type: str
+  default: ""
+  validator: "{% if backend == 's3' and not state_bucket %}state_bucket: required for the s3 backend{% endif %}"
+
+state_key:
+  type: str
+  default: ""
+  validator: "{% if backend == 's3' and not state_key %}state_key: required for the s3 backend{% endif %}"

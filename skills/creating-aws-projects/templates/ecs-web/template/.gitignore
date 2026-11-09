@@ -1,0 +1,9 @@
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+plan.json
+infra/build/
+__pycache__/
+.verify/results/

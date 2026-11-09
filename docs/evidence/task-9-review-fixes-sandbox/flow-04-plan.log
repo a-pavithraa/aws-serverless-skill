@@ -1,0 +1,731 @@
+data.aws_iam_policy_document.workflow: Reading...
+data.aws_iam_policy_document.api_assume: Reading...
+data.aws_caller_identity.current: Reading...
+data.aws_iam_policy_document.api_assume: Read complete after 0s [id=1595325114]
+data.aws_iam_policy_document.workflow: Read complete after 0s [id=1857310022]
+data.aws_caller_identity.current: Read complete after 0s [id=123456789012]
+data.aws_iam_policy_document.workflow_assume: Reading...
+data.aws_iam_policy_document.workflow_assume: Read complete after 0s [id=2035679204]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+ <= read (data resources)
+
+Terraform will perform the following actions:
+
+  # data.aws_iam_policy_document.api will be read during apply
+  # (config refers to values not yet known)
+ <= data "aws_iam_policy_document" "api" {
+      + id            = (known after apply)
+      + json          = (known after apply)
+      + minified_json = (known after apply)
+
+      + statement {
+          + actions   = [
+              + "states:StartSyncExecution",
+            ]
+          + resources = [
+              + (known after apply),
+            ]
+        }
+    }
+
+  # aws_api_gateway_deployment.orders will be created
+  + resource "aws_api_gateway_deployment" "orders" {
+      + created_date = (known after apply)
+      + id           = (known after apply)
+      + region       = "us-east-1"
+      + rest_api_id  = (known after apply)
+      + triggers     = (known after apply)
+    }
+
+  # aws_api_gateway_integration.start_sync will be created
+  + resource "aws_api_gateway_integration" "start_sync" {
+      + cache_namespace         = (known after apply)
+      + connection_type         = "INTERNET"
+      + credentials             = (known after apply)
+      + http_method             = "POST"
+      + id                      = (known after apply)
+      + integration_http_method = "POST"
+      + passthrough_behavior    = "NEVER"
+      + region                  = "us-east-1"
+      + request_templates       = (known after apply)
+      + resource_id             = (known after apply)
+      + response_transfer_mode  = (known after apply)
+      + rest_api_id             = (known after apply)
+      + timeout_milliseconds    = 29000
+      + type                    = "AWS"
+      + uri                     = "arn:aws:apigateway:us-east-1:states:action/StartSyncExecution"
+    }
+
+  # aws_api_gateway_integration_response.execution will be created
+  + resource "aws_api_gateway_integration_response" "execution" {
+      + http_method        = "POST"
+      + id                 = (known after apply)
+      + region             = "us-east-1"
+      + resource_id        = (known after apply)
+      + response_templates = {
+          + "application/json" = <<-EOT
+                #set($r = $input.path('$'))
+                #set($in = $util.parseJson($r.input))
+                #set($context.responseOverride.header.x-correlation-id = $in.correlation_id)
+                #set($context.responseOverride.header.x-trace-id = $context.xrayTraceId)
+                #if($r.status == "SUCCEEDED")
+                $r.output
+                #elseif($r.status == "TIMED_OUT")
+                #set($context.responseOverride.status = 504)
+                {"error": "WorkflowTimedOut", "execution_arn": "$r.executionArn"}
+                #elseif($r.error == "OrderRejected")
+                #set($context.responseOverride.status = 422)
+                {"error": "OrderRejected", "cause": "$util.escapeJavaScript($r.cause)", "execution_arn": "$r.executionArn"}
+                #else
+                #set($context.responseOverride.status = 500)
+                {"error": "WorkflowFailed", "execution_arn": "$r.executionArn"}
+                #end
+            EOT
+        }
+      + rest_api_id        = (known after apply)
+      + status_code        = "200"
+    }
+
+  # aws_api_gateway_integration_response.integration_error will be created
+  + resource "aws_api_gateway_integration_response" "integration_error" {
+      + http_method        = "POST"
+      + id                 = (known after apply)
+      + region             = "us-east-1"
+      + resource_id        = (known after apply)
+      + response_templates = {
+          + "application/json" = jsonencode(
+                {
+                  + error = "StartExecutionFailed"
+                }
+            )
+        }
+      + rest_api_id        = (known after apply)
+      + selection_pattern  = "[45]\\d{2}"
+      + status_code        = "500"
+    }
+
+  # aws_api_gateway_method.post_orders will be created
+  + resource "aws_api_gateway_method" "post_orders" {
+      + api_key_required     = false
+      + authorization        = "AWS_IAM"
+      + http_method          = "POST"
+      + id                   = (known after apply)
+      + region               = "us-east-1"
+      + request_models       = {
+          + "application/json" = "Order"
+        }
+      + request_validator_id = (known after apply)
+      + resource_id          = (known after apply)
+      + rest_api_id          = (known after apply)
+    }
+
+  # aws_api_gateway_method_response.post_orders["200"] will be created
+  + resource "aws_api_gateway_method_response" "post_orders" {
+      + http_method         = "POST"
+      + id                  = (known after apply)
+      + region              = "us-east-1"
+      + resource_id         = (known after apply)
+      + response_parameters = {
+          + "method.response.header.x-correlation-id" = true
+          + "method.response.header.x-trace-id"       = true
+        }
+      + rest_api_id         = (known after apply)
+      + status_code         = "200"
+    }
+
+  # aws_api_gateway_method_response.post_orders["422"] will be created
+  + resource "aws_api_gateway_method_response" "post_orders" {
+      + http_method         = "POST"
+      + id                  = (known after apply)
+      + region              = "us-east-1"
+      + resource_id         = (known after apply)
+      + response_parameters = {
+          + "method.response.header.x-correlation-id" = true
+          + "method.response.header.x-trace-id"       = true
+        }
+      + rest_api_id         = (known after apply)
+      + status_code         = "422"
+    }
+
+  # aws_api_gateway_method_response.post_orders["500"] will be created
+  + resource "aws_api_gateway_method_response" "post_orders" {
+      + http_method         = "POST"
+      + id                  = (known after apply)
+      + region              = "us-east-1"
+      + resource_id         = (known after apply)
+      + response_parameters = {
+          + "method.response.header.x-correlation-id" = true
+          + "method.response.header.x-trace-id"       = true
+        }
+      + rest_api_id         = (known after apply)
+      + status_code         = "500"
+    }
+
+  # aws_api_gateway_method_response.post_orders["504"] will be created
+  + resource "aws_api_gateway_method_response" "post_orders" {
+      + http_method         = "POST"
+      + id                  = (known after apply)
+      + region              = "us-east-1"
+      + resource_id         = (known after apply)
+      + response_parameters = {
+          + "method.response.header.x-correlation-id" = true
+          + "method.response.header.x-trace-id"       = true
+        }
+      + rest_api_id         = (known after apply)
+      + status_code         = "504"
+    }
+
+  # aws_api_gateway_method_settings.all will be created
+  + resource "aws_api_gateway_method_settings" "all" {
+      + id          = (known after apply)
+      + method_path = "*/*"
+      + region      = "us-east-1"
+      + rest_api_id = (known after apply)
+      + stage_name  = "dev"
+
+      + settings {
+          + cache_data_encrypted                       = (known after apply)
+          + cache_ttl_in_seconds                       = (known after apply)
+          + caching_enabled                            = (known after apply)
+          + data_trace_enabled                         = (known after apply)
+          + logging_level                              = "ERROR"
+          + metrics_enabled                            = true
+          + require_authorization_for_cache_control    = (known after apply)
+          + throttling_burst_limit                     = 100
+          + throttling_rate_limit                      = 50
+          + unauthorized_cache_control_header_strategy = (known after apply)
+        }
+    }
+
+  # aws_api_gateway_model.order will be created
+  + resource "aws_api_gateway_model" "order" {
+      + content_type = "application/json"
+      + id           = (known after apply)
+      + name         = "Order"
+      + region       = "us-east-1"
+      + rest_api_id  = (known after apply)
+      + schema       = jsonencode(
+            {
+              + "$schema" = "http://json-schema.org/draft-04/schema#"
+              + type      = "object"
+            }
+        )
+    }
+
+  # aws_api_gateway_request_validator.body will be created
+  + resource "aws_api_gateway_request_validator" "body" {
+      + id                          = (known after apply)
+      + name                        = "body"
+      + region                      = "us-east-1"
+      + rest_api_id                 = (known after apply)
+      + validate_request_body       = true
+      + validate_request_parameters = false
+    }
+
+  # aws_api_gateway_resource.orders will be created
+  + resource "aws_api_gateway_resource" "orders" {
+      + id          = (known after apply)
+      + parent_id   = (known after apply)
+      + path        = (known after apply)
+      + path_part   = "orders"
+      + region      = "us-east-1"
+      + rest_api_id = (known after apply)
+    }
+
+  # aws_api_gateway_rest_api.orders will be created
+  + resource "aws_api_gateway_rest_api" "orders" {
+      + api_key_source               = (known after apply)
+      + arn                          = (known after apply)
+      + binary_media_types           = (known after apply)
+      + created_date                 = (known after apply)
+      + description                  = (known after apply)
+      + disable_execute_api_endpoint = (known after apply)
+      + execution_arn                = (known after apply)
+      + id                           = (known after apply)
+      + minimum_compression_size     = (known after apply)
+      + name                         = "lf-flow-dev"
+      + policy                       = (known after apply)
+      + region                       = "us-east-1"
+      + root_resource_id             = (known after apply)
+      + security_policy              = (known after apply)
+      + tags_all                     = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/apigw-step-functions"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-flow"
+        }
+
+      + endpoint_configuration {
+          + ip_address_type  = (known after apply)
+          + types            = [
+              + "REGIONAL",
+            ]
+          + vpc_endpoint_ids = (known after apply)
+        }
+    }
+
+  # aws_api_gateway_stage.api will be created
+  + resource "aws_api_gateway_stage" "api" {
+      + arn                  = (known after apply)
+      + deployment_id        = (known after apply)
+      + execution_arn        = (known after apply)
+      + id                   = (known after apply)
+      + invoke_url           = (known after apply)
+      + region               = "us-east-1"
+      + rest_api_id          = (known after apply)
+      + stage_name           = "dev"
+      + tags_all             = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/apigw-step-functions"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-flow"
+        }
+      + web_acl_arn          = (known after apply)
+      + xray_tracing_enabled = true
+
+      + access_log_settings {
+          + destination_arn = (known after apply)
+          + format          = jsonencode(
+                {
+                  + integrationError  = "$context.integration.error"
+                  + integrationStatus = "$context.integration.status"
+                  + latencyMs         = "$context.responseLatency"
+                  + requestId         = "$context.requestId"
+                  + resourcePath      = "$context.resourcePath"
+                  + sourceIp          = "$context.identity.sourceIp"
+                  + status            = "$context.status"
+                  + xrayTraceId       = "$context.xrayTraceId"
+                }
+            )
+        }
+    }
+
+  # aws_cloudwatch_log_group.api_access will be created
+  + resource "aws_cloudwatch_log_group" "api_access" {
+      + arn                         = (known after apply)
+      + deletion_protection_enabled = (known after apply)
+      + id                          = (known after apply)
+      + log_group_class             = (known after apply)
+      + name                        = "/aws/apigateway/lf-flow-dev-access"
+      + name_prefix                 = (known after apply)
+      + region                      = "us-east-1"
+      + retention_in_days           = 7
+      + skip_destroy                = false
+      + tags_all                    = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/apigw-step-functions"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-flow"
+        }
+    }
+
+  # aws_cloudwatch_log_group.workflow will be created
+  + resource "aws_cloudwatch_log_group" "workflow" {
+      + arn                         = (known after apply)
+      + deletion_protection_enabled = (known after apply)
+      + id                          = (known after apply)
+      + log_group_class             = (known after apply)
+      + name                        = "/aws/vendedlogs/states/lf-flow-dev"
+      + name_prefix                 = (known after apply)
+      + region                      = "us-east-1"
+      + retention_in_days           = 7
+      + skip_destroy                = false
+      + tags_all                    = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/apigw-step-functions"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-flow"
+        }
+    }
+
+  # aws_cloudwatch_metric_alarm.api_5xx will be created
+  + resource "aws_cloudwatch_metric_alarm" "api_5xx" {
+      + actions_enabled                       = true
+      + alarm_actions                         = (known after apply)
+      + alarm_name                            = "lf-flow-dev-api-5xx"
+      + arn                                   = (known after apply)
+      + comparison_operator                   = "GreaterThanThreshold"
+      + dimensions                            = {
+          + "ApiName" = "lf-flow-dev"
+          + "Stage"   = "dev"
+        }
+      + evaluate_low_sample_count_percentiles = (known after apply)
+      + evaluation_periods                    = 1
+      + id                                    = (known after apply)
+      + metric_name                           = "5XXError"
+      + namespace                             = "AWS/ApiGateway"
+      + ok_actions                            = (known after apply)
+      + period                                = 60
+      + region                                = "us-east-1"
+      + statistic                             = "Sum"
+      + tags_all                              = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/apigw-step-functions"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-flow"
+        }
+      + threshold                             = 0
+      + treat_missing_data                    = "notBreaching"
+    }
+
+  # aws_cloudwatch_metric_alarm.executions_timed_out will be created
+  + resource "aws_cloudwatch_metric_alarm" "executions_timed_out" {
+      + actions_enabled                       = true
+      + alarm_actions                         = (known after apply)
+      + alarm_name                            = "lf-flow-dev-executions-timed-out"
+      + arn                                   = (known after apply)
+      + comparison_operator                   = "GreaterThanThreshold"
+      + dimensions                            = (known after apply)
+      + evaluate_low_sample_count_percentiles = (known after apply)
+      + evaluation_periods                    = 1
+      + id                                    = (known after apply)
+      + metric_name                           = "ExecutionsTimedOut"
+      + namespace                             = "AWS/States"
+      + ok_actions                            = (known after apply)
+      + period                                = 60
+      + region                                = "us-east-1"
+      + statistic                             = "Sum"
+      + tags_all                              = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/apigw-step-functions"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-flow"
+        }
+      + threshold                             = 0
+      + treat_missing_data                    = "notBreaching"
+    }
+
+  # aws_iam_role.api will be created
+  + resource "aws_iam_role" "api" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "apigateway.amazonaws.com"
+                        }
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "lf-flow-dev-api"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + tags_all              = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/apigw-step-functions"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-flow"
+        }
+      + unique_id             = (known after apply)
+
+      + inline_policy (known after apply)
+    }
+
+  # aws_iam_role.workflow will be created
+  + resource "aws_iam_role" "workflow" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Condition = {
+                          + StringEquals = {
+                              + "aws:SourceAccount" = "123456789012"
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "states.amazonaws.com"
+                        }
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "lf-flow-dev-workflow"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + tags_all              = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/apigw-step-functions"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-flow"
+        }
+      + unique_id             = (known after apply)
+
+      + inline_policy (known after apply)
+    }
+
+  # aws_iam_role_policy.api will be created
+  + resource "aws_iam_role_policy" "api" {
+      + id          = (known after apply)
+      + name        = "start-sync-execution"
+      + name_prefix = (known after apply)
+      + policy      = (known after apply)
+      + role        = (known after apply)
+    }
+
+  # aws_iam_role_policy.workflow will be created
+  + resource "aws_iam_role_policy" "workflow" {
+      + id          = (known after apply)
+      + name        = "logs-and-traces"
+      + name_prefix = (known after apply)
+      + policy      = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action   = [
+                          + "logs:UpdateLogDelivery",
+                          + "logs:PutResourcePolicy",
+                          + "logs:ListLogDeliveries",
+                          + "logs:GetLogDelivery",
+                          + "logs:DescribeResourcePolicies",
+                          + "logs:DescribeLogGroups",
+                          + "logs:DeleteLogDelivery",
+                          + "logs:CreateLogDelivery",
+                        ]
+                      + Effect   = "Allow"
+                      + Resource = "*"
+                    },
+                  + {
+                      + Action   = [
+                          + "xray:PutTraceSegments",
+                          + "xray:PutTelemetryRecords",
+                          + "xray:GetSamplingTargets",
+                          + "xray:GetSamplingRules",
+                        ]
+                      + Effect   = "Allow"
+                      + Resource = "*"
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + role        = (known after apply)
+    }
+
+  # aws_kms_key.alarms will be created
+  + resource "aws_kms_key" "alarms" {
+      + arn                                = (known after apply)
+      + bypass_policy_lockout_safety_check = false
+      + customer_master_key_spec           = "SYMMETRIC_DEFAULT"
+      + deletion_window_in_days            = 7
+      + description                        = "Encrypts the lf-flow-dev alarm topic"
+      + enable_key_rotation                = true
+      + id                                 = (known after apply)
+      + is_enabled                         = true
+      + key_id                             = (known after apply)
+      + key_usage                          = "ENCRYPT_DECRYPT"
+      + multi_region                       = (known after apply)
+      + policy                             = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "kms:*"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + AWS = "arn:aws:iam::123456789012:root"
+                        }
+                      + Resource  = "*"
+                      + Sid       = "AccountAdministersKey"
+                    },
+                  + {
+                      + Action    = [
+                          + "kms:Decrypt",
+                          + "kms:GenerateDataKey*",
+                        ]
+                      + Condition = {
+                          + StringEquals = {
+                              + "aws:SourceAccount" = "123456789012"
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "cloudwatch.amazonaws.com"
+                        }
+                      + Resource  = "*"
+                      + Sid       = "CloudWatchAlarmsPublish"
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + region                             = "us-east-1"
+      + rotation_period_in_days            = (known after apply)
+      + tags_all                           = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/apigw-step-functions"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-flow"
+        }
+    }
+
+  # aws_sfn_state_machine.orders will be created
+  + resource "aws_sfn_state_machine" "orders" {
+      + arn                       = (known after apply)
+      + creation_date             = (known after apply)
+      + definition                = jsonencode(
+            {
+              + Comment        = "Validates an order and returns a result. The probes use action fail (rejected) and slow (timed out)."
+              + StartAt        = "Validate"
+              + States         = {
+                  + Process  = {
+                      + End        = true
+                      + Parameters = {
+                          + "correlation_id.$" = "$.correlation_id"
+                          + "order_id.$"       = "$.order.order_id"
+                          + status             = "processed"
+                        }
+                      + Type       = "Pass"
+                    }
+                  + Reject   = {
+                      + Cause = "The order has no order_id, or it asked to fail."
+                      + Error = "OrderRejected"
+                      + Type  = "Fail"
+                    }
+                  + Slow     = {
+                      + Next    = "Process"
+                      + Seconds = 15
+                      + Type    = "Wait"
+                    }
+                  + Validate = {
+                      + Choices = [
+                          + {
+                              + Next = "Reject"
+                              + Not  = {
+                                  + IsPresent = true
+                                  + Variable  = "$.order.order_id"
+                                }
+                            },
+                          + {
+                              + And  = [
+                                  + {
+                                      + IsPresent = true
+                                      + Variable  = "$.order.action"
+                                    },
+                                  + {
+                                      + StringEquals = "fail"
+                                      + Variable     = "$.order.action"
+                                    },
+                                ]
+                              + Next = "Reject"
+                            },
+                          + {
+                              + And  = [
+                                  + {
+                                      + IsPresent = true
+                                      + Variable  = "$.order.action"
+                                    },
+                                  + {
+                                      + StringEquals = "slow"
+                                      + Variable     = "$.order.action"
+                                    },
+                                ]
+                              + Next = "Slow"
+                            },
+                        ]
+                      + Default = "Process"
+                      + Type    = "Choice"
+                    }
+                }
+              + TimeoutSeconds = 10
+            }
+        )
+      + description               = (known after apply)
+      + id                        = (known after apply)
+      + name                      = "lf-flow-dev"
+      + name_prefix               = (known after apply)
+      + publish                   = false
+      + region                    = "us-east-1"
+      + revision_id               = (known after apply)
+      + role_arn                  = (known after apply)
+      + state_machine_version_arn = (known after apply)
+      + status                    = (known after apply)
+      + tags_all                  = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/apigw-step-functions"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-flow"
+        }
+      + type                      = "EXPRESS"
+      + version_description       = (known after apply)
+
+      + encryption_configuration (known after apply)
+
+      + logging_configuration {
+          + include_execution_data = false
+          + level                  = "ALL"
+          + log_destination        = (known after apply)
+        }
+
+      + tracing_configuration {
+          + enabled = true
+        }
+    }
+
+  # aws_sns_topic.alarms will be created
+  + resource "aws_sns_topic" "alarms" {
+      + arn                         = (known after apply)
+      + beginning_archive_time      = (known after apply)
+      + content_based_deduplication = false
+      + fifo_throughput_scope       = (known after apply)
+      + fifo_topic                  = false
+      + id                          = (known after apply)
+      + kms_master_key_id           = (known after apply)
+      + maximum_message_size        = (known after apply)
+      + name                        = "lf-flow-dev-alarms"
+      + name_prefix                 = (known after apply)
+      + owner                       = (known after apply)
+      + policy                      = (known after apply)
+      + region                      = "us-east-1"
+      + signature_version           = (known after apply)
+      + tags_all                    = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/apigw-step-functions"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-flow"
+        }
+      + tracing_config              = (known after apply)
+    }
+
+Plan: 26 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + account_id           = "123456789012"
+  + alarm_names          = [
+      + "lf-flow-dev-api-5xx",
+      + "lf-flow-dev-executions-timed-out",
+    ]
+  + alarm_topic_arn      = (known after apply)
+  + api_access_log_group = "/aws/apigateway/lf-flow-dev-access"
+  + api_url              = (known after apply)
+  + auth_mode            = "iam"
+  + log_group            = "/aws/vendedlogs/states/lf-flow-dev"
+  + region               = "us-east-1"
+  + state_machine_arn    = (known after apply)
+
+─────────────────────────────────────────────────────────────────────────────
+
+Saved the plan to: tfplan
+
+To perform exactly these actions, run the following command to apply:
+    terraform apply "tfplan"

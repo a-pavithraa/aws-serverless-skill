@@ -1,0 +1,14 @@
+account_id = "123456789012"
+availability_zones = tolist([
+  "us-east-1a",
+  "us-east-1b",
+])
+network_name = "lf-net-dev"
+private_subnet_ids = []
+public_subnet_ids = [
+  "subnet-0959ab920100a95b9",
+  "subnet-07f66f20ae5237970",
+]
+region = "us-east-1"
+ssm_prefix = "/landform/network/lf-net-dev"
+vpc_id = "vpc-07ea8d6521ed99fb2"

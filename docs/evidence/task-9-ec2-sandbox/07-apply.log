@@ -1,0 +1,88 @@
+aws_cloudwatch_log_group.app: Creating...
+aws_security_group.alb: Creating...
+aws_security_group.instances: Creating...
+aws_kms_key.alarms: Creating...
+aws_iam_role.instances: Creating...
+aws_lb_target_group.web: Creating...
+aws_cloudwatch_log_group.app: Creation complete after 2s [id=/ec2/lf-vm-dev]
+data.aws_iam_policy_document.instances: Reading...
+data.aws_iam_policy_document.instances: Read complete after 0s [id=1310382941]
+aws_iam_role.instances: Creation complete after 2s [id=lf-vm-dev-instances]
+aws_iam_instance_profile.instances: Creating...
+aws_iam_role_policy.instances: Creating...
+aws_iam_role_policy.instances: Creation complete after 1s [id=lf-vm-dev-instances:write-app-logs]
+aws_lb_target_group.web: Creation complete after 4s [id=arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/lf-vm-dev/81447a95bc78fca0]
+aws_security_group.instances: Creation complete after 5s [id=sg-0735a6f14bf11ba43]
+aws_security_group.alb: Creation complete after 5s [id=sg-0a2c0fd55f0bcb6f3]
+aws_vpc_security_group_egress_rule.instances_https: Creating...
+aws_lb.web: Creating...
+aws_vpc_security_group_ingress_rule.instances_from_alb: Creating...
+aws_vpc_security_group_egress_rule.alb_to_instances: Creating...
+aws_vpc_security_group_ingress_rule.alb_listener: Creating...
+aws_vpc_security_group_ingress_rule.instances_from_alb: Creation complete after 1s [id=sgr-0052c4869da1c0415]
+aws_vpc_security_group_egress_rule.instances_https: Creation complete after 1s [id=sgr-0efc6eefc7c526439]
+aws_vpc_security_group_ingress_rule.alb_listener: Creation complete after 1s [id=sgr-0229d379ee2163029]
+aws_vpc_security_group_egress_rule.alb_to_instances: Creation complete after 1s [id=sgr-04b6248ae9741f96c]
+aws_iam_instance_profile.instances: Creation complete after 8s [id=lf-vm-dev-instances]
+aws_launch_template.web: Creating...
+aws_kms_key.alarms: Still creating... [00m10s elapsed]
+aws_lb.web: Still creating... [00m10s elapsed]
+aws_launch_template.web: Creation complete after 7s [id=lt-0a5648b36b4d64ace]
+aws_autoscaling_group.web: Creating...
+aws_kms_key.alarms: Creation complete after 18s [id=af52c7ab-aba9-424e-bf5e-9f10e169dde8]
+aws_sns_topic.alarms: Creating...
+aws_sns_topic.alarms: Creation complete after 3s [id=arn:aws:sns:us-east-1:123456789012:lf-vm-dev-alarms]
+aws_lb.web: Still creating... [00m20s elapsed]
+aws_autoscaling_group.web: Still creating... [00m10s elapsed]
+aws_lb.web: Still creating... [00m30s elapsed]
+aws_autoscaling_group.web: Still creating... [00m20s elapsed]
+aws_lb.web: Still creating... [00m40s elapsed]
+aws_autoscaling_group.web: Still creating... [00m30s elapsed]
+aws_lb.web: Still creating... [00m50s elapsed]
+aws_autoscaling_group.web: Still creating... [00m40s elapsed]
+aws_lb.web: Still creating... [01m00s elapsed]
+aws_autoscaling_group.web: Still creating... [00m50s elapsed]
+aws_lb.web: Still creating... [01m10s elapsed]
+aws_autoscaling_group.web: Still creating... [01m00s elapsed]
+aws_lb.web: Still creating... [01m20s elapsed]
+aws_autoscaling_group.web: Still creating... [01m10s elapsed]
+aws_lb.web: Still creating... [01m30s elapsed]
+aws_autoscaling_group.web: Still creating... [01m20s elapsed]
+aws_lb.web: Still creating... [01m40s elapsed]
+aws_autoscaling_group.web: Still creating... [01m30s elapsed]
+aws_lb.web: Still creating... [01m50s elapsed]
+aws_autoscaling_group.web: Still creating... [01m40s elapsed]
+aws_lb.web: Still creating... [02m00s elapsed]
+aws_autoscaling_group.web: Still creating... [01m50s elapsed]
+aws_lb.web: Creation complete after 2m6s [id=arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/app/lf-vm-dev/074c0bf5d2c7ba4c]
+aws_cloudwatch_metric_alarm.healthy_hosts: Creating...
+aws_cloudwatch_metric_alarm.target_5xx: Creating...
+aws_cloudwatch_metric_alarm.unhealthy_hosts: Creating...
+aws_lb_listener.web: Creating...
+aws_lb_listener.web: Creation complete after 1s [id=arn:aws:elasticloadbalancing:us-east-1:123456789012:listener/app/lf-vm-dev/074c0bf5d2c7ba4c/f287885ea0819607]
+aws_cloudwatch_metric_alarm.unhealthy_hosts: Creation complete after 1s [id=lf-vm-dev-unhealthy-hosts]
+aws_cloudwatch_metric_alarm.target_5xx: Creation complete after 1s [id=lf-vm-dev-target-5xx]
+aws_cloudwatch_metric_alarm.healthy_hosts: Creation complete after 1s [id=lf-vm-dev-healthy-hosts]
+aws_autoscaling_group.web: Still creating... [02m00s elapsed]
+aws_autoscaling_group.web: Still creating... [02m10s elapsed]
+aws_autoscaling_group.web: Creation complete after 2m19s [id=lf-vm-dev-web]
+
+Apply complete! Resources: 20 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+account_id = "123456789012"
+alarm_names = [
+  "lf-vm-dev-target-5xx",
+  "lf-vm-dev-unhealthy-hosts",
+  "lf-vm-dev-healthy-hosts",
+]
+alarm_topic_arn = "arn:aws:sns:us-east-1:123456789012:lf-vm-dev-alarms"
+ami_id = "ami-0951c836c26e34fc8"
+asg_name = "lf-vm-dev-web"
+launch_template_version = 1
+log_group = "/ec2/lf-vm-dev"
+region = "us-east-1"
+service_url = "http://lf-vm-dev-613813036.us-east-1.elb.amazonaws.com"
+target_group_arn = "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/lf-vm-dev/81447a95bc78fca0"
+apply took 163 s

@@ -1,0 +1,13 @@
+project_name       = "{{ project_name }}"
+environment        = "{{ environment }}"
+aws_region         = "{{ aws_region }}"
+allowed_account_id = "{{ allowed_account_id }}"
+log_retention_days = {{ log_retention_days }}
+alarm_email        = "{{ alarm_email }}"
+instance_type      = "{{ instance_type }}"
+min_instances      = {{ min_instances }}
+max_instances      = {{ max_instances }}
+certificate_arn    = "{{ certificate_arn }}"
+plain_http_reason  = "{{ plain_http_reason }}"
+network_name       = "{{ network_name }}"
+subnet_ids         = [{% for s in subnet_ids.split(",") if s %}"{{ s }}"{% if not loop.last %}, {% endif %}{% endfor %}]

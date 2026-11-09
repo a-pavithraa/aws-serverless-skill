@@ -1,0 +1,10 @@
+/landform/network/lf-net-dev/nat-mode	none
+/landform/network/lf-net-dev/public-subnet-ids	subnet-0478b72d44dad5966,subnet-07c6b2db61803dca1
+/landform/network/lf-net-dev/vpc-id	vpc-0316eaacbffec1be1
+--- EC2
+vpc-0316eaacbffec1be1	10.42.0.0/16	available
+vpc-0316eaacbffec1be1	available
+subnet-0478b72d44dad5966	vpc-0316eaacbffec1be1	us-east-1a	True
+subnet-07c6b2db61803dca1	vpc-0316eaacbffec1be1	us-east-1b	True
+igw-0b245308b683214a3	active
+fl-081977486e5fe3f85	ACTIVE	cloud-watch-logs

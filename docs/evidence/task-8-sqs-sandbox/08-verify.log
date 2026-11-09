@@ -1,0 +1,11 @@
+PASS       target                   123456789012 us-east-1
+PASS       artifact                 version 1, CodeSha256 ij2ShCrw5e1A4f6L4TivUUZSDPu6M+YosoDvunvRT0A=
+PASS       probe:processed          sent order verify-4e23c70b-0a7c-4cbd-be92-e2e482be0826 1 time(s)
+PASS       probe:processed-once     sent order verify-1d360907-9dea-41fb-bec3-1cf283e892c3 2 time(s)
+PASS       probe:dead-letter        sent order verify-b7142eae-dd60-41b1-b545-d821eeac30bb 1 time(s)
+PASS       logs:processed           order verify-4e23c70b-0a7c-4cbd-be92-e2e482be0826: 1 delivery(ies), processed once
+PASS       logs:processed-once      order verify-1d360907-9dea-41fb-bec3-1cf283e892c3: 2 delivery(ies), processed once
+PASS       dead-letter:dead-letter  order verify-b7142eae-dd60-41b1-b545-d821eeac30bb reached the dead-letter queue (receive count 4); probe message deleted
+FAIL       alarms                   in ALARM: lf-sqs-dev-lambda-errors (reported)
+UNVERIFIED alerting                 no confirmed subscriber on the alarm topic: alarms notify no one (reported)
+verify-deployment: PASS (pass 8, fail 1, unverified 1)

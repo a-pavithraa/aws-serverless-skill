@@ -1,0 +1,364 @@
+[
+  {
+    "id": "create-1",
+    "model": "sonnet",
+    "expect": "creating-aws-projects",
+    "loaded": [
+      "creating-aws-projects"
+    ],
+    "passed": true,
+    "cost_usd": 0.0797751
+  },
+  {
+    "id": "create-2",
+    "model": "sonnet",
+    "expect": "creating-aws-projects",
+    "loaded": [
+      "creating-aws-projects"
+    ],
+    "passed": true,
+    "cost_usd": 0.0758472
+  },
+  {
+    "id": "create-3",
+    "model": "sonnet",
+    "expect": "creating-aws-projects",
+    "loaded": [
+      "creating-aws-projects"
+    ],
+    "passed": true,
+    "cost_usd": 0.0743412
+  },
+  {
+    "id": "harness-1",
+    "model": "sonnet",
+    "expect": "aws-iac-team-harness",
+    "loaded": [
+      "aws-iac-team-harness"
+    ],
+    "passed": true,
+    "cost_usd": 0.0733195
+  },
+  {
+    "id": "harness-2",
+    "model": "sonnet",
+    "expect": "aws-iac-team-harness",
+    "loaded": [
+      "aws-iac-team-harness"
+    ],
+    "passed": true,
+    "cost_usd": 0.0714455
+  },
+  {
+    "id": "harness-3",
+    "model": "sonnet",
+    "expect": "aws-iac-team-harness",
+    "loaded": [
+      "aws-iac-team-harness"
+    ],
+    "passed": true,
+    "cost_usd": 0.0571624
+  },
+  {
+    "id": "terraform-1",
+    "model": "sonnet",
+    "expect": "terraform-aws",
+    "loaded": [
+      "terraform-aws"
+    ],
+    "passed": true,
+    "cost_usd": 0.09312039999999999
+  },
+  {
+    "id": "terraform-2",
+    "model": "sonnet",
+    "expect": "terraform-aws",
+    "loaded": [],
+    "passed": false,
+    "cost_usd": 0.05962580000000001
+  },
+  {
+    "id": "terraform-3",
+    "model": "sonnet",
+    "expect": "terraform-aws",
+    "loaded": [
+      "terraform-aws"
+    ],
+    "passed": true,
+    "cost_usd": 0.1318661
+  },
+  {
+    "id": "serverless-1",
+    "model": "sonnet",
+    "expect": "aws-serverless",
+    "loaded": [
+      "aws-serverless"
+    ],
+    "passed": true,
+    "cost_usd": 0.1084777
+  },
+  {
+    "id": "serverless-2",
+    "model": "sonnet",
+    "expect": "aws-serverless",
+    "loaded": [],
+    "passed": false,
+    "cost_usd": 0.0337571
+  },
+  {
+    "id": "serverless-3",
+    "model": "sonnet",
+    "expect": "aws-serverless",
+    "loaded": [],
+    "passed": false,
+    "cost_usd": 0.039369100000000004
+  },
+  {
+    "id": "dynamodb-1",
+    "model": "sonnet",
+    "expect": "aws-dynamodb",
+    "loaded": [
+      "aws-dynamodb"
+    ],
+    "passed": true,
+    "cost_usd": 0.1117726
+  },
+  {
+    "id": "dynamodb-2",
+    "model": "sonnet",
+    "expect": "aws-dynamodb",
+    "loaded": [
+      "aws-dynamodb"
+    ],
+    "passed": true,
+    "cost_usd": 0.07028910000000001
+  },
+  {
+    "id": "dynamodb-3",
+    "model": "sonnet",
+    "expect": "aws-dynamodb",
+    "loaded": [
+      "aws-dynamodb"
+    ],
+    "passed": true,
+    "cost_usd": 0.0632088
+  },
+  {
+    "id": "none-1",
+    "model": "sonnet",
+    "expect": null,
+    "loaded": [],
+    "passed": true,
+    "cost_usd": 0.0328871
+  },
+  {
+    "id": "none-2",
+    "model": "sonnet",
+    "expect": null,
+    "loaded": [],
+    "passed": true,
+    "cost_usd": 0.0623547
+  },
+  {
+    "id": "none-3",
+    "model": "sonnet",
+    "expect": null,
+    "loaded": [],
+    "passed": true,
+    "cost_usd": 0.031033099999999997
+  },
+  {
+    "id": "none-4",
+    "model": "sonnet",
+    "expect": null,
+    "loaded": [],
+    "passed": true,
+    "cost_usd": 0.09409290000000001
+  },
+  {
+    "id": "none-5",
+    "model": "sonnet",
+    "expect": null,
+    "loaded": [],
+    "passed": true,
+    "cost_usd": 0.046612999999999995
+  },
+  {
+    "id": "create-1",
+    "model": "haiku",
+    "expect": "creating-aws-projects",
+    "loaded": [
+      "creating-aws-projects"
+    ],
+    "passed": true,
+    "cost_usd": 0.0066159800000000005
+  },
+  {
+    "id": "create-2",
+    "model": "haiku",
+    "expect": "creating-aws-projects",
+    "loaded": [
+      "creating-aws-projects"
+    ],
+    "passed": true,
+    "cost_usd": 0.0053244600000000005
+  },
+  {
+    "id": "create-3",
+    "model": "haiku",
+    "expect": "creating-aws-projects",
+    "loaded": [
+      "creating-aws-projects"
+    ],
+    "passed": true,
+    "cost_usd": 0.005832190000000001
+  },
+  {
+    "id": "harness-1",
+    "model": "haiku",
+    "expect": "aws-iac-team-harness",
+    "loaded": [
+      "aws-iac-team-harness"
+    ],
+    "passed": true,
+    "cost_usd": 0.00631006
+  },
+  {
+    "id": "harness-2",
+    "model": "haiku",
+    "expect": "aws-iac-team-harness",
+    "loaded": [
+      "aws-iac-team-harness"
+    ],
+    "passed": true,
+    "cost_usd": 0.00607182
+  },
+  {
+    "id": "harness-3",
+    "model": "haiku",
+    "expect": "aws-iac-team-harness",
+    "loaded": [
+      "aws-iac-team-harness"
+    ],
+    "passed": true,
+    "cost_usd": 0.0035868800000000006
+  },
+  {
+    "id": "terraform-1",
+    "model": "haiku",
+    "expect": "terraform-aws",
+    "loaded": [],
+    "passed": false,
+    "cost_usd": 0.00721351
+  },
+  {
+    "id": "terraform-2",
+    "model": "haiku",
+    "expect": "terraform-aws",
+    "loaded": [],
+    "passed": false,
+    "cost_usd": 0.00538571
+  },
+  {
+    "id": "terraform-3",
+    "model": "haiku",
+    "expect": "terraform-aws",
+    "loaded": [
+      "terraform-aws"
+    ],
+    "passed": true,
+    "cost_usd": 0.01286223
+  },
+  {
+    "id": "serverless-1",
+    "model": "haiku",
+    "expect": "aws-serverless",
+    "loaded": [],
+    "passed": false,
+    "cost_usd": 0.004734650000000001
+  },
+  {
+    "id": "serverless-2",
+    "model": "haiku",
+    "expect": "aws-serverless",
+    "loaded": [],
+    "passed": false,
+    "cost_usd": 0.00193471
+  },
+  {
+    "id": "serverless-3",
+    "model": "haiku",
+    "expect": "aws-serverless",
+    "loaded": [],
+    "passed": false,
+    "cost_usd": 0.0021944100000000004
+  },
+  {
+    "id": "dynamodb-1",
+    "model": "haiku",
+    "expect": "aws-dynamodb",
+    "loaded": [
+      "aws-dynamodb"
+    ],
+    "passed": true,
+    "cost_usd": 0.00757736
+  },
+  {
+    "id": "dynamodb-2",
+    "model": "haiku",
+    "expect": "aws-dynamodb",
+    "loaded": [],
+    "passed": false,
+    "cost_usd": 0.00556572
+  },
+  {
+    "id": "dynamodb-3",
+    "model": "haiku",
+    "expect": "aws-dynamodb",
+    "loaded": [
+      "aws-dynamodb"
+    ],
+    "passed": true,
+    "cost_usd": 0.0049532299999999994
+  },
+  {
+    "id": "none-1",
+    "model": "haiku",
+    "expect": null,
+    "loaded": [],
+    "passed": true,
+    "cost_usd": 0.0019621100000000004
+  },
+  {
+    "id": "none-2",
+    "model": "haiku",
+    "expect": null,
+    "loaded": [],
+    "passed": true,
+    "cost_usd": 0.0035774100000000005
+  },
+  {
+    "id": "none-3",
+    "model": "haiku",
+    "expect": null,
+    "loaded": [],
+    "passed": true,
+    "cost_usd": 0.0017621100000000001
+  },
+  {
+    "id": "none-4",
+    "model": "haiku",
+    "expect": null,
+    "loaded": [],
+    "passed": true,
+    "cost_usd": 0.00861568
+  },
+  {
+    "id": "none-5",
+    "model": "haiku",
+    "expect": null,
+    "loaded": [],
+    "passed": true,
+    "cost_usd": 0.0038888100000000004
+  }
+]

@@ -1,0 +1,17 @@
+PASS       target                   123456789012 us-east-1
+PASS       artifact                 EXPRESS state machine runs the local definition
+PASS       probe:processed          200
+PASS       auth-rejection:processed unsigned request got 403, expected 403
+PASS       probe:rejected           422
+PASS       auth-rejection:rejected  unsigned request got 403, expected 403
+PASS       probe:timed-out          504
+PASS       auth-rejection:timed-out unsigned request got 403, expected 403
+PASS       logs:processed           6 event(s) for request 394df35a-b763-4434-be85-ce02dff0c120
+UNVERIFIED trace:processed          response carried no trace ID (reported)
+PASS       logs:rejected            4 event(s) for request 9cb87524-0ca7-4eb1-926f-e380a7874d11
+UNVERIFIED trace:rejected           response carried no trace ID (reported)
+PASS       logs:timed-out           4 event(s) for request f4e62905-d4b6-4038-8180-5261571f61e9
+UNVERIFIED trace:timed-out          response carried no trace ID (reported)
+PASS       alarms                   lf-flow-dev-api-5xx=ALARM, lf-flow-dev-executions-timed-out=OK (lf-flow-dev-api-5xx expected: a probe trips it) (reported)
+UNVERIFIED alerting                 no confirmed subscriber on the alarm topic: alarms notify no one (reported)
+verify-deployment: PASS (pass 12, fail 0, unverified 4)

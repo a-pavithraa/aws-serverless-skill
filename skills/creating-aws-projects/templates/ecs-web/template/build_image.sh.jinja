@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Builds and pushes the image, then prints its digest and nothing else on stdout.
+# Stops at the first failure, so a failed push never hands an old digest to the deploy.
+set -euo pipefail
+
+REPO=$(terraform -chdir=infra output -raw ecr_repository_url)
+SOURCE=$(python harness/verify_deployment.py source-hash .)
+# The repository refuses to overwrite a tag. A new base image in the Dockerfile with the same app/
+# needs its own tag, so the tag names both.
+BASE=$(python -c "import hashlib; print(hashlib.sha256(open('Dockerfile', 'rb').read()).hexdigest())")
+TAG=${SOURCE:0:12}-${BASE:0:8}
+
+aws ecr get-login-password --region {{ aws_region }} | docker login --username AWS --password-stdin "${REPO%%/*}" >&2
+docker buildx build --platform linux/arm64 --provenance=false --build-arg SOURCE_SHA256="$SOURCE" \
+  -t "$REPO:$TAG" --push . >&2
+aws ecr describe-images --region {{ aws_region }} --repository-name "${REPO#*/}" \
+  --image-ids imageTag=$TAG --query 'imageDetails[0].imageDigest' --output text

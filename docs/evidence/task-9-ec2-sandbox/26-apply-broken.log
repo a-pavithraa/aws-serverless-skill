@@ -1,0 +1,23 @@
+aws_launch_template.web: Modifying... [id=lt-0a5648b36b4d64ace]
+aws_launch_template.web: Modifications complete after 8s [id=lt-0a5648b36b4d64ace]
+aws_autoscaling_group.web: Modifying... [id=lf-vm-dev-web]
+aws_autoscaling_group.web: Modifications complete after 3s [id=lf-vm-dev-web]
+
+Apply complete! Resources: 0 added, 2 changed, 0 destroyed.
+
+Outputs:
+
+account_id = "123456789012"
+alarm_names = [
+  "lf-vm-dev-target-5xx",
+  "lf-vm-dev-unhealthy-hosts",
+  "lf-vm-dev-healthy-hosts",
+]
+alarm_topic_arn = "arn:aws:sns:us-east-1:123456789012:lf-vm-dev-alarms"
+ami_id = "ami-0951c836c26e34fc8"
+asg_name = "lf-vm-dev-web"
+launch_template_version = 4
+log_group = "/ec2/lf-vm-dev"
+region = "us-east-1"
+service_url = "http://lf-vm-dev-613813036.us-east-1.elb.amazonaws.com"
+target_group_arn = "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/lf-vm-dev/81447a95bc78fca0"

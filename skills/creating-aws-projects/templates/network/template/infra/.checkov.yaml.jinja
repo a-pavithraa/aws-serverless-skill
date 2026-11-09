@@ -1,0 +1,15 @@
+# Each skipped check states why it does not apply to this pattern.
+# Changing this list is a policy decision: review it like code.
+framework:
+  - terraform
+skip-check:
+  # Log group CMK: flow logs are encrypted at rest by CloudWatch; a CMK adds cost and key policy work.
+  - CKV_AWS_158
+  # One-year log retention: retention is explicit and chosen per environment for cost.
+  - CKV_AWS_338
+  # Zone lookup without zone identity: the lookup only seeds a new network; the zones variable pins
+  # the zones after the first apply, and a pinned network never reads the lookup's result.
+  - CKV_AWS_394
+  # SSM parameter encryption: the parameters hold a VPC ID, subnet IDs and the NAT mode. They are not
+  # secrets, and services read them at plan time.
+  - CKV2_AWS_34

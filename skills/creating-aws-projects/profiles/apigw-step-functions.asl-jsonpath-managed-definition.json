@@ -1,0 +1,50 @@
+{
+  "id": "apigw-step-functions.asl-jsonpath-managed-definition",
+  "status": "candidate",
+  "pattern": "apigw-step-functions",
+  "template": "templates/apigw-step-functions",
+  "lambda_variant": "none: REST API calls StartSyncExecution on an Express state machine",
+  "runtime": {
+    "identifier": "asl-jsonpath",
+    "os": "none: AWS managed service",
+    "preview": false,
+    "lifecycle": {
+      "deprecation": "none",
+      "reason": "Step Functions has no runtime versions. The definition uses the JSONPath query language, the default for Amazon States Language."
+    },
+    "source": "https://docs.aws.amazon.com/step-functions/latest/dg/concepts-standard-vs-express.html",
+    "checked": "2026-11-09"
+  },
+  "architecture": "managed",
+  "packaging": "definition",
+  "contract": {
+    "workflow": "EXPRESS, synchronous (StartSyncExecution), TimeoutSeconds 1-25",
+    "api": "REST API, POST /orders, IAM or no authentication; SUCCEEDED 200, OrderRejected 422, TIMED_OUT 504, other failures 500",
+    "correlation": "x-correlation-id (1-64 letters, digits, hyphens) or the API request ID; returned in the response header and in the workflow input",
+    "prerequisite": "the account-level API Gateway CloudWatch role must exist for stage logging; the template does not manage it"
+  },
+  "dependencies": [],
+  "native_dependencies": false,
+  "instrumentation": {
+    "logging": "state machine log level ALL with execution data; API access log as JSON",
+    "tracing": "X-Ray on the stage and the state machine",
+    "powertools": "not used; no Lambda"
+  },
+  "regions": [
+    "us-east-1"
+  ],
+  "tools": {
+    "copier": "9.19.1",
+    "terraform": "1.14.4",
+    "aws_provider": "6.72.0",
+    "tflint": "0.65.0",
+    "tflint_ruleset_aws": "0.50.0",
+    "checkov": "3.4.3"
+  },
+  "evidence": {
+    "render": "docs/evidence/task-9-sfn-sandbox/README.md",
+    "checks": "docs/evidence/task-9-sfn-sandbox/README.md",
+    "sandbox": "docs/evidence/task-9-sfn-sandbox/README.md"
+  },
+  "review": "pending: promote status to supported after a person reviews the sandbox evidence"
+}

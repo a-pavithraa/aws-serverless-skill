@@ -1,0 +1,67 @@
+aws_cloudwatch_log_group.lambda: Creating...
+aws_iam_role.lambda: Creating...
+aws_kms_key.alarms: Creating...
+aws_sqs_queue.dead_letter: Creating...
+aws_dynamodb_table.idempotency: Creating...
+aws_cloudwatch_log_group.lambda: Creation complete after 1s [id=/aws/lambda/lf-sqs-dev]
+aws_iam_role.lambda: Creation complete after 1s [id=lf-sqs-dev-fn]
+aws_sqs_queue.dead_letter: Still creating... [00m10s elapsed]
+aws_kms_key.alarms: Still creating... [00m10s elapsed]
+aws_dynamodb_table.idempotency: Still creating... [00m10s elapsed]
+aws_kms_key.alarms: Creation complete after 17s [id=41c31c13-9030-4856-a98f-0d22e5375024]
+aws_sns_topic.alarms: Creating...
+aws_sqs_queue.dead_letter: Still creating... [00m20s elapsed]
+aws_dynamodb_table.idempotency: Still creating... [00m20s elapsed]
+aws_dynamodb_table.idempotency: Creation complete after 20s [id=lf-sqs-dev-idempotency]
+aws_sns_topic.alarms: Creation complete after 3s [id=arn:aws:sns:us-east-1:123456789012:lf-sqs-dev-alarms]
+aws_sqs_queue.dead_letter: Creation complete after 27s [id=https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-dlq]
+aws_sqs_queue.orders: Creating...
+aws_cloudwatch_metric_alarm.dead_letter_messages: Creating...
+aws_cloudwatch_metric_alarm.dead_letter_messages: Creation complete after 2s [id=lf-sqs-dev-dlq-messages]
+aws_sqs_queue.orders: Still creating... [00m10s elapsed]
+aws_sqs_queue.orders: Still creating... [00m20s elapsed]
+aws_sqs_queue.orders: Creation complete after 28s [id=https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-orders]
+data.aws_iam_policy_document.lambda: Reading...
+aws_sqs_queue_redrive_allow_policy.dead_letter: Creating...
+data.aws_iam_policy_document.lambda: Read complete after 0s [id=1649335421]
+aws_cloudwatch_metric_alarm.oldest_message_age: Creating...
+aws_iam_role_policy.lambda: Creating...
+aws_iam_role_policy.lambda: Creation complete after 0s [id=lf-sqs-dev-fn:runtime]
+aws_lambda_function.worker: Creating...
+aws_cloudwatch_metric_alarm.oldest_message_age: Creation complete after 1s [id=lf-sqs-dev-oldest-message-age]
+aws_lambda_function.worker: Creation complete after 8s [id=lf-sqs-dev]
+aws_lambda_alias.live: Creating...
+aws_cloudwatch_dashboard.service: Creating...
+aws_cloudwatch_metric_alarm.lambda_errors: Creating...
+aws_lambda_alias.live: Creation complete after 1s [id=arn:aws:lambda:us-east-1:123456789012:function:lf-sqs-dev:live]
+aws_lambda_event_source_mapping.orders: Creating...
+aws_sqs_queue_redrive_allow_policy.dead_letter: Still creating... [00m10s elapsed]
+aws_cloudwatch_dashboard.service: Creation complete after 2s [id=lf-sqs-dev]
+aws_cloudwatch_metric_alarm.lambda_errors: Creation complete after 1s [id=lf-sqs-dev-lambda-errors]
+aws_lambda_event_source_mapping.orders: Still creating... [00m10s elapsed]
+aws_sqs_queue_redrive_allow_policy.dead_letter: Still creating... [00m20s elapsed]
+aws_lambda_event_source_mapping.orders: Creation complete after 17s [id=33e72fd4-bbc4-461b-95bd-358a739223d9]
+aws_sqs_queue_redrive_allow_policy.dead_letter: Creation complete after 27s [id=https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-dlq]
+
+Apply complete! Resources: 16 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+account_id = "123456789012"
+alarm_names = [
+  "lf-sqs-dev-lambda-errors",
+  "lf-sqs-dev-dlq-messages",
+  "lf-sqs-dev-oldest-message-age",
+]
+alarm_topic_arn = "arn:aws:sns:us-east-1:123456789012:lf-sqs-dev-alarms"
+artifact_path = "./build/lambda.zip"
+dead_letter_queue_url = "https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-dlq"
+function_alias = "live"
+function_name = "lf-sqs-dev"
+function_version = "1"
+idempotency_table = "lf-sqs-dev-idempotency"
+lambda_log_group = "/aws/lambda/lf-sqs-dev"
+max_receive_count = 3
+queue_url = "https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-orders"
+region = "us-east-1"
+visibility_timeout_seconds = 60

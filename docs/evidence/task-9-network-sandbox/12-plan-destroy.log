@@ -1,0 +1,557 @@
+data.aws_availability_zones.available: Reading...
+module.vpc.data.aws_partition.current[0]: Reading...
+module.vpc.aws_vpc.this[0]: Refreshing state... [id=vpc-0316eaacbffec1be1]
+module.vpc.data.aws_caller_identity.current[0]: Reading...
+module.vpc.data.aws_iam_policy_document.flow_log_cloudwatch_assume_role[0]: Reading...
+data.aws_ec2_instance_type_offerings.zones: Reading...
+data.aws_caller_identity.current: Reading...
+module.vpc.data.aws_region.current[0]: Reading...
+aws_ssm_parameter.nat_mode: Refreshing state... [id=/landform/network/lf-net-dev/nat-mode]
+module.vpc.data.aws_region.current[0]: Read complete after 0s [id=us-east-1]
+module.vpc.data.aws_partition.current[0]: Read complete after 0s [id=aws]
+module.vpc.data.aws_iam_policy_document.flow_log_cloudwatch_assume_role[0]: Read complete after 0s [id=1021377347]
+module.vpc.aws_iam_role.vpc_flow_log_cloudwatch[0]: Refreshing state... [id=vpc-flow-log-role-8e5d2b61a9eff021c028d7ecfd]
+data.aws_caller_identity.current: Read complete after 0s [id=123456789012]
+module.vpc.data.aws_caller_identity.current[0]: Read complete after 1s [id=123456789012]
+data.aws_ec2_instance_type_offerings.zones: Read complete after 1s [id=us-east-1]
+data.aws_availability_zones.available: Read complete after 1s [id=us-east-1]
+module.vpc.aws_default_route_table.default[0]: Refreshing state... [id=rtb-0749473297cea2422]
+aws_ssm_parameter.vpc_id: Refreshing state... [id=/landform/network/lf-net-dev/vpc-id]
+module.vpc.aws_default_security_group.this[0]: Refreshing state... [id=sg-0d8b93d1930c087f1]
+module.vpc.aws_default_network_acl.this[0]: Refreshing state... [id=acl-01301ea6aa9049120]
+module.vpc.aws_route_table.public[0]: Refreshing state... [id=rtb-07dfa57831820ecf5]
+module.vpc.aws_subnet.public[1]: Refreshing state... [id=subnet-07c6b2db61803dca1]
+module.vpc.aws_subnet.public[0]: Refreshing state... [id=subnet-0478b72d44dad5966]
+module.vpc.aws_cloudwatch_log_group.flow_log[0]: Refreshing state... [id=/aws/vpc-flow-log/vpc-0316eaacbffec1be1]
+module.vpc.aws_internet_gateway.this[0]: Refreshing state... [id=igw-0b245308b683214a3]
+module.vpc.aws_route_table_association.public[1]: Refreshing state... [id=rtbassoc-0fb4ae960015f4a52]
+module.vpc.aws_route_table_association.public[0]: Refreshing state... [id=rtbassoc-0e26c7c87a9e48954]
+aws_ssm_parameter.public_subnet_ids: Refreshing state... [id=/landform/network/lf-net-dev/public-subnet-ids]
+module.vpc.aws_route.public_internet_gateway[0]: Refreshing state... [id=r-rtb-07dfa57831820ecf51080289494]
+module.vpc.data.aws_iam_policy_document.vpc_flow_log_cloudwatch[0]: Reading...
+module.vpc.aws_flow_log.this[0]: Refreshing state... [id=fl-081977486e5fe3f85]
+module.vpc.data.aws_iam_policy_document.vpc_flow_log_cloudwatch[0]: Read complete after 0s [id=841814400]
+module.vpc.aws_iam_policy.vpc_flow_log_cloudwatch[0]: Refreshing state... [id=arn:aws:iam::123456789012:policy/vpc-flow-log-to-cloudwatch-839ee125324cdc036b52fcce22]
+module.vpc.aws_iam_role_policy_attachment.vpc_flow_log_cloudwatch[0]: Refreshing state... [id=vpc-flow-log-role-8e5d2b61a9eff021c028d7ecfd/arn:aws:iam::123456789012:policy/vpc-flow-log-to-cloudwatch-839ee125324cdc036b52fcce22]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  - destroy
+
+Terraform will perform the following actions:
+
+  # aws_ssm_parameter.nat_mode will be destroyed
+  - resource "aws_ssm_parameter" "nat_mode" {
+      - arn             = "arn:aws:ssm:us-east-1:123456789012:parameter/landform/network/lf-net-dev/nat-mode" -> null
+      - data_type       = "text" -> null
+      - has_value_wo    = false -> null
+      - id              = "/landform/network/lf-net-dev/nat-mode" -> null
+      - name            = "/landform/network/lf-net-dev/nat-mode" -> null
+      - region          = "us-east-1" -> null
+      - tags            = {} -> null
+      - tags_all        = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/network"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-net"
+        } -> null
+      - tier            = "Standard" -> null
+      - type            = "String" -> null
+      - value           = (sensitive value) -> null
+      - value_wo        = (write-only attribute) -> null
+      - version         = 1 -> null
+        # (3 unchanged attributes hidden)
+    }
+
+  # aws_ssm_parameter.public_subnet_ids will be destroyed
+  - resource "aws_ssm_parameter" "public_subnet_ids" {
+      - arn             = "arn:aws:ssm:us-east-1:123456789012:parameter/landform/network/lf-net-dev/public-subnet-ids" -> null
+      - data_type       = "text" -> null
+      - has_value_wo    = false -> null
+      - id              = "/landform/network/lf-net-dev/public-subnet-ids" -> null
+      - name            = "/landform/network/lf-net-dev/public-subnet-ids" -> null
+      - region          = "us-east-1" -> null
+      - tags            = {} -> null
+      - tags_all        = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/network"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-net"
+        } -> null
+      - tier            = "Standard" -> null
+      - type            = "StringList" -> null
+      - value           = (sensitive value) -> null
+      - value_wo        = (write-only attribute) -> null
+      - version         = 1 -> null
+        # (3 unchanged attributes hidden)
+    }
+
+  # aws_ssm_parameter.vpc_id will be destroyed
+  - resource "aws_ssm_parameter" "vpc_id" {
+      - arn             = "arn:aws:ssm:us-east-1:123456789012:parameter/landform/network/lf-net-dev/vpc-id" -> null
+      - data_type       = "text" -> null
+      - has_value_wo    = false -> null
+      - id              = "/landform/network/lf-net-dev/vpc-id" -> null
+      - name            = "/landform/network/lf-net-dev/vpc-id" -> null
+      - region          = "us-east-1" -> null
+      - tags            = {} -> null
+      - tags_all        = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/network"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-net"
+        } -> null
+      - tier            = "Standard" -> null
+      - type            = "String" -> null
+      - value           = (sensitive value) -> null
+      - value_wo        = (write-only attribute) -> null
+      - version         = 1 -> null
+        # (3 unchanged attributes hidden)
+    }
+
+  # module.vpc.aws_cloudwatch_log_group.flow_log[0] will be destroyed
+  - resource "aws_cloudwatch_log_group" "flow_log" {
+      - arn                         = "arn:aws:logs:us-east-1:123456789012:log-group:/aws/vpc-flow-log/vpc-0316eaacbffec1be1" -> null
+      - deletion_protection_enabled = false -> null
+      - id                          = "/aws/vpc-flow-log/vpc-0316eaacbffec1be1" -> null
+      - log_group_class             = "STANDARD" -> null
+      - name                        = "/aws/vpc-flow-log/vpc-0316eaacbffec1be1" -> null
+      - region                      = "us-east-1" -> null
+      - retention_in_days           = 7 -> null
+      - skip_destroy                = false -> null
+      - tags                        = {} -> null
+      - tags_all                    = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/network"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-net"
+        } -> null
+        # (2 unchanged attributes hidden)
+    }
+
+  # module.vpc.aws_default_network_acl.this[0] will be destroyed
+  - resource "aws_default_network_acl" "this" {
+      - arn                    = "arn:aws:ec2:us-east-1:123456789012:network-acl/acl-01301ea6aa9049120" -> null
+      - default_network_acl_id = "acl-01301ea6aa9049120" -> null
+      - id                     = "acl-01301ea6aa9049120" -> null
+      - owner_id               = "123456789012" -> null
+      - region                 = "us-east-1" -> null
+      - subnet_ids             = [
+          - "subnet-0478b72d44dad5966",
+          - "subnet-07c6b2db61803dca1",
+        ] -> null
+      - tags                   = {
+          - "Name" = "lf-net-dev-default"
+        } -> null
+      - tags_all               = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/network"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "lf-net-dev-default"
+          - "Project"     = "lf-net"
+        } -> null
+      - vpc_id                 = "vpc-0316eaacbffec1be1" -> null
+
+      - egress {
+          - action          = "allow" -> null
+          - from_port       = 0 -> null
+          - icmp_code       = 0 -> null
+          - icmp_type       = 0 -> null
+          - ipv6_cidr_block = "::/0" -> null
+          - protocol        = "-1" -> null
+          - rule_no         = 101 -> null
+          - to_port         = 0 -> null
+            # (1 unchanged attribute hidden)
+        }
+      - egress {
+          - action          = "allow" -> null
+          - cidr_block      = "0.0.0.0/0" -> null
+          - from_port       = 0 -> null
+          - icmp_code       = 0 -> null
+          - icmp_type       = 0 -> null
+          - protocol        = "-1" -> null
+          - rule_no         = 100 -> null
+          - to_port         = 0 -> null
+            # (1 unchanged attribute hidden)
+        }
+
+      - ingress {
+          - action          = "allow" -> null
+          - from_port       = 0 -> null
+          - icmp_code       = 0 -> null
+          - icmp_type       = 0 -> null
+          - ipv6_cidr_block = "::/0" -> null
+          - protocol        = "-1" -> null
+          - rule_no         = 101 -> null
+          - to_port         = 0 -> null
+            # (1 unchanged attribute hidden)
+        }
+      - ingress {
+          - action          = "allow" -> null
+          - cidr_block      = "0.0.0.0/0" -> null
+          - from_port       = 0 -> null
+          - icmp_code       = 0 -> null
+          - icmp_type       = 0 -> null
+          - protocol        = "-1" -> null
+          - rule_no         = 100 -> null
+          - to_port         = 0 -> null
+            # (1 unchanged attribute hidden)
+        }
+    }
+
+  # module.vpc.aws_default_route_table.default[0] will be destroyed
+  - resource "aws_default_route_table" "default" {
+      - arn                    = "arn:aws:ec2:us-east-1:123456789012:route-table/rtb-0749473297cea2422" -> null
+      - default_route_table_id = "rtb-0749473297cea2422" -> null
+      - id                     = "rtb-0749473297cea2422" -> null
+      - owner_id               = "123456789012" -> null
+      - propagating_vgws       = [] -> null
+      - region                 = "us-east-1" -> null
+      - route                  = [] -> null
+      - tags                   = {
+          - "Name" = "lf-net-dev-default"
+        } -> null
+      - tags_all               = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/network"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "lf-net-dev-default"
+          - "Project"     = "lf-net"
+        } -> null
+      - vpc_id                 = "vpc-0316eaacbffec1be1" -> null
+
+      - timeouts {
+          - create = "5m" -> null
+          - update = "5m" -> null
+        }
+    }
+
+  # module.vpc.aws_default_security_group.this[0] will be destroyed
+  - resource "aws_default_security_group" "this" {
+      - arn                    = "arn:aws:ec2:us-east-1:123456789012:security-group/sg-0d8b93d1930c087f1" -> null
+      - description            = "default VPC security group" -> null
+      - egress                 = [] -> null
+      - id                     = "sg-0d8b93d1930c087f1" -> null
+      - ingress                = [] -> null
+      - name                   = "default" -> null
+      - owner_id               = "123456789012" -> null
+      - region                 = "us-east-1" -> null
+      - revoke_rules_on_delete = false -> null
+      - tags                   = {
+          - "Name" = "lf-net-dev-default"
+        } -> null
+      - tags_all               = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/network"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "lf-net-dev-default"
+          - "Project"     = "lf-net"
+        } -> null
+      - vpc_id                 = "vpc-0316eaacbffec1be1" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # module.vpc.aws_flow_log.this[0] will be destroyed
+  - resource "aws_flow_log" "this" {
+      - arn                        = "arn:aws:ec2:us-east-1:123456789012:vpc-flow-log/fl-081977486e5fe3f85" -> null
+      - iam_role_arn               = "arn:aws:iam::123456789012:role/vpc-flow-log-role-8e5d2b61a9eff021c028d7ecfd" -> null
+      - id                         = "fl-081977486e5fe3f85" -> null
+      - log_destination            = "arn:aws:logs:us-east-1:123456789012:log-group:/aws/vpc-flow-log/vpc-0316eaacbffec1be1" -> null
+      - log_destination_type       = "cloud-watch-logs" -> null
+      - log_format                 = "${version} ${account-id} ${interface-id} ${srcaddr} ${dstaddr} ${srcport} ${dstport} ${protocol} ${packets} ${bytes} ${start} ${end} ${action} ${log-status}" -> null
+      - max_aggregation_interval   = 600 -> null
+      - region                     = "us-east-1" -> null
+      - tags                       = {} -> null
+      - tags_all                   = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/network"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-net"
+        } -> null
+      - traffic_type               = "ALL" -> null
+      - vpc_id                     = "vpc-0316eaacbffec1be1" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # module.vpc.aws_iam_policy.vpc_flow_log_cloudwatch[0] will be destroyed
+  - resource "aws_iam_policy" "vpc_flow_log_cloudwatch" {
+      - arn              = "arn:aws:iam::123456789012:policy/vpc-flow-log-to-cloudwatch-839ee125324cdc036b52fcce22" -> null
+      - attachment_count = 1 -> null
+      - id               = "arn:aws:iam::123456789012:policy/vpc-flow-log-to-cloudwatch-839ee125324cdc036b52fcce22" -> null
+      - name             = "vpc-flow-log-to-cloudwatch-839ee125324cdc036b52fcce22" -> null
+      - name_prefix      = "vpc-flow-log-to-cloudwatch-" -> null
+      - path             = "/" -> null
+      - policy           = jsonencode(
+            {
+              - Statement = [
+                  - {
+                      - Action   = [
+                          - "logs:PutLogEvents",
+                          - "logs:DescribeLogStreams",
+                          - "logs:DescribeLogGroups",
+                          - "logs:CreateLogStream",
+                        ]
+                      - Effect   = "Allow"
+                      - Resource = "arn:aws:logs:us-east-1:123456789012:log-group:/aws/vpc-flow-log/vpc-0316eaacbffec1be1:*"
+                      - Sid      = "AWSVPCFlowLogsPushToCloudWatch"
+                    },
+                ]
+              - Version   = "2012-10-17"
+            }
+        ) -> null
+      - policy_id        = "ANPA2P7Z4QCOLKSIF7GFV" -> null
+      - tags             = {} -> null
+      - tags_all         = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/network"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-net"
+        } -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # module.vpc.aws_iam_role.vpc_flow_log_cloudwatch[0] will be destroyed
+  - resource "aws_iam_role" "vpc_flow_log_cloudwatch" {
+      - arn                   = "arn:aws:iam::123456789012:role/vpc-flow-log-role-8e5d2b61a9eff021c028d7ecfd" -> null
+      - assume_role_policy    = jsonencode(
+            {
+              - Statement = [
+                  - {
+                      - Action    = "sts:AssumeRole"
+                      - Effect    = "Allow"
+                      - Principal = {
+                          - Service = "vpc-flow-logs.amazonaws.com"
+                        }
+                      - Sid       = "AWSVPCFlowLogsAssumeRole"
+                    },
+                ]
+              - Version   = "2012-10-17"
+            }
+        ) -> null
+      - create_date           = "2026-11-09T06:23:04Z" -> null
+      - force_detach_policies = false -> null
+      - id                    = "vpc-flow-log-role-8e5d2b61a9eff021c028d7ecfd" -> null
+      - managed_policy_arns   = [
+          - "arn:aws:iam::123456789012:policy/vpc-flow-log-to-cloudwatch-839ee125324cdc036b52fcce22",
+        ] -> null
+      - max_session_duration  = 3600 -> null
+      - name                  = "vpc-flow-log-role-8e5d2b61a9eff021c028d7ecfd" -> null
+      - name_prefix           = "vpc-flow-log-role-" -> null
+      - path                  = "/" -> null
+      - tags                  = {} -> null
+      - tags_all              = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/network"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-net"
+        } -> null
+      - unique_id             = "AROA2P7Z4QCOKXVQKSFO3" -> null
+        # (2 unchanged attributes hidden)
+    }
+
+  # module.vpc.aws_iam_role_policy_attachment.vpc_flow_log_cloudwatch[0] will be destroyed
+  - resource "aws_iam_role_policy_attachment" "vpc_flow_log_cloudwatch" {
+      - id         = "vpc-flow-log-role-8e5d2b61a9eff021c028d7ecfd/arn:aws:iam::123456789012:policy/vpc-flow-log-to-cloudwatch-839ee125324cdc036b52fcce22" -> null
+      - policy_arn = "arn:aws:iam::123456789012:policy/vpc-flow-log-to-cloudwatch-839ee125324cdc036b52fcce22" -> null
+      - role       = "vpc-flow-log-role-8e5d2b61a9eff021c028d7ecfd" -> null
+    }
+
+  # module.vpc.aws_internet_gateway.this[0] will be destroyed
+  - resource "aws_internet_gateway" "this" {
+      - arn      = "arn:aws:ec2:us-east-1:123456789012:internet-gateway/igw-0b245308b683214a3" -> null
+      - id       = "igw-0b245308b683214a3" -> null
+      - owner_id = "123456789012" -> null
+      - region   = "us-east-1" -> null
+      - tags     = {
+          - "Name" = "lf-net-dev"
+        } -> null
+      - tags_all = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/network"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "lf-net-dev"
+          - "Project"     = "lf-net"
+        } -> null
+      - vpc_id   = "vpc-0316eaacbffec1be1" -> null
+    }
+
+  # module.vpc.aws_route.public_internet_gateway[0] will be destroyed
+  - resource "aws_route" "public_internet_gateway" {
+      - destination_cidr_block      = "0.0.0.0/0" -> null
+      - gateway_id                  = "igw-0b245308b683214a3" -> null
+      - id                          = "r-rtb-07dfa57831820ecf51080289494" -> null
+      - origin                      = "CreateRoute" -> null
+      - region                      = "us-east-1" -> null
+      - route_table_id              = "rtb-07dfa57831820ecf5" -> null
+      - state                       = "active" -> null
+        # (14 unchanged attributes hidden)
+
+      - timeouts {
+          - create = "5m" -> null
+        }
+    }
+
+  # module.vpc.aws_route_table.public[0] will be destroyed
+  - resource "aws_route_table" "public" {
+      - arn              = "arn:aws:ec2:us-east-1:123456789012:route-table/rtb-07dfa57831820ecf5" -> null
+      - id               = "rtb-07dfa57831820ecf5" -> null
+      - owner_id         = "123456789012" -> null
+      - propagating_vgws = [] -> null
+      - region           = "us-east-1" -> null
+      - route            = [
+          - {
+              - cidr_block                 = "0.0.0.0/0"
+              - gateway_id                 = "igw-0b245308b683214a3"
+                # (12 unchanged attributes hidden)
+            },
+        ] -> null
+      - tags             = {
+          - "Name" = "lf-net-dev-public"
+        } -> null
+      - tags_all         = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/network"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "lf-net-dev-public"
+          - "Project"     = "lf-net"
+        } -> null
+      - vpc_id           = "vpc-0316eaacbffec1be1" -> null
+    }
+
+  # module.vpc.aws_route_table_association.public[0] will be destroyed
+  - resource "aws_route_table_association" "public" {
+      - id             = "rtbassoc-0e26c7c87a9e48954" -> null
+      - region         = "us-east-1" -> null
+      - route_table_id = "rtb-07dfa57831820ecf5" -> null
+      - subnet_id      = "subnet-0478b72d44dad5966" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # module.vpc.aws_route_table_association.public[1] will be destroyed
+  - resource "aws_route_table_association" "public" {
+      - id             = "rtbassoc-0fb4ae960015f4a52" -> null
+      - region         = "us-east-1" -> null
+      - route_table_id = "rtb-07dfa57831820ecf5" -> null
+      - subnet_id      = "subnet-07c6b2db61803dca1" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # module.vpc.aws_subnet.public[0] will be destroyed
+  - resource "aws_subnet" "public" {
+      - arn                                            = "arn:aws:ec2:us-east-1:123456789012:subnet/subnet-0478b72d44dad5966" -> null
+      - assign_ipv6_address_on_creation                = false -> null
+      - availability_zone                              = "us-east-1a" -> null
+      - availability_zone_id                           = "use1-az1" -> null
+      - cidr_block                                     = "10.42.0.0/24" -> null
+      - enable_dns64                                   = false -> null
+      - enable_lni_at_device_index                     = 0 -> null
+      - enable_resource_name_dns_a_record_on_launch    = false -> null
+      - enable_resource_name_dns_aaaa_record_on_launch = false -> null
+      - id                                             = "subnet-0478b72d44dad5966" -> null
+      - ipv6_native                                    = false -> null
+      - map_customer_owned_ip_on_launch                = false -> null
+      - map_public_ip_on_launch                        = true -> null
+      - owner_id                                       = "123456789012" -> null
+      - private_dns_hostname_type_on_launch            = "ip-name" -> null
+      - region                                         = "us-east-1" -> null
+      - tags                                           = {
+          - "Name" = "lf-net-dev-public-us-east-1a"
+        } -> null
+      - tags_all                                       = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/network"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "lf-net-dev-public-us-east-1a"
+          - "Project"     = "lf-net"
+        } -> null
+      - vpc_id                                         = "vpc-0316eaacbffec1be1" -> null
+        # (4 unchanged attributes hidden)
+    }
+
+  # module.vpc.aws_subnet.public[1] will be destroyed
+  - resource "aws_subnet" "public" {
+      - arn                                            = "arn:aws:ec2:us-east-1:123456789012:subnet/subnet-07c6b2db61803dca1" -> null
+      - assign_ipv6_address_on_creation                = false -> null
+      - availability_zone                              = "us-east-1b" -> null
+      - availability_zone_id                           = "use1-az2" -> null
+      - cidr_block                                     = "10.42.1.0/24" -> null
+      - enable_dns64                                   = false -> null
+      - enable_lni_at_device_index                     = 0 -> null
+      - enable_resource_name_dns_a_record_on_launch    = false -> null
+      - enable_resource_name_dns_aaaa_record_on_launch = false -> null
+      - id                                             = "subnet-07c6b2db61803dca1" -> null
+      - ipv6_native                                    = false -> null
+      - map_customer_owned_ip_on_launch                = false -> null
+      - map_public_ip_on_launch                        = true -> null
+      - owner_id                                       = "123456789012" -> null
+      - private_dns_hostname_type_on_launch            = "ip-name" -> null
+      - region                                         = "us-east-1" -> null
+      - tags                                           = {
+          - "Name" = "lf-net-dev-public-us-east-1b"
+        } -> null
+      - tags_all                                       = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/network"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "lf-net-dev-public-us-east-1b"
+          - "Project"     = "lf-net"
+        } -> null
+      - vpc_id                                         = "vpc-0316eaacbffec1be1" -> null
+        # (4 unchanged attributes hidden)
+    }
+
+  # module.vpc.aws_vpc.this[0] will be destroyed
+  - resource "aws_vpc" "this" {
+      - arn                                  = "arn:aws:ec2:us-east-1:123456789012:vpc/vpc-0316eaacbffec1be1" -> null
+      - assign_generated_ipv6_cidr_block     = false -> null
+      - cidr_block                           = "10.42.0.0/16" -> null
+      - default_network_acl_id               = "acl-01301ea6aa9049120" -> null
+      - default_route_table_id               = "rtb-0749473297cea2422" -> null
+      - default_security_group_id            = "sg-0d8b93d1930c087f1" -> null
+      - dhcp_options_id                      = "dopt-25d18a5f" -> null
+      - enable_dns_hostnames                 = true -> null
+      - enable_dns_support                   = true -> null
+      - enable_network_address_usage_metrics = false -> null
+      - id                                   = "vpc-0316eaacbffec1be1" -> null
+      - instance_tenancy                     = "default" -> null
+      - ipv6_netmask_length                  = 0 -> null
+      - main_route_table_id                  = "rtb-0749473297cea2422" -> null
+      - owner_id                             = "123456789012" -> null
+      - region                               = "us-east-1" -> null
+      - tags                                 = {
+          - "Name" = "lf-net-dev"
+        } -> null
+      - tags_all                             = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/network"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "lf-net-dev"
+          - "Project"     = "lf-net"
+        } -> null
+        # (4 unchanged attributes hidden)
+    }
+
+Plan: 0 to add, 0 to change, 19 to destroy.
+
+Changes to Outputs:
+  - account_id         = "123456789012" -> null
+  - availability_zones = [
+      - "us-east-1a",
+      - "us-east-1b",
+    ] -> null
+  - network_name       = "lf-net-dev" -> null
+  - private_subnet_ids = [] -> null
+  - public_subnet_ids  = [
+      - "subnet-0478b72d44dad5966",
+      - "subnet-07c6b2db61803dca1",
+    ] -> null
+  - region             = "us-east-1" -> null
+  - ssm_prefix         = "/landform/network/lf-net-dev" -> null
+  - vpc_id             = "vpc-0316eaacbffec1be1" -> null
+
+─────────────────────────────────────────────────────────────────────────────
+
+Saved the plan to: destroy.tfplan
+
+To perform exactly these actions, run the following command to apply:
+    terraform apply "destroy.tfplan"

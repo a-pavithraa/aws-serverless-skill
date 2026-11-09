@@ -1,0 +1,23 @@
+# Each skipped check states why it does not apply to this pattern.
+# Changing this list is a policy decision: review it like code.
+framework:
+  - terraform
+skip-check:
+  # Lambda DLQ: invocations are synchronous from API Gateway; errors return to the caller.
+  - CKV_AWS_116
+  # Lambda in a VPC: the function reaches no private resources.
+  - CKV_AWS_117
+  # Reserved concurrency: new accounts can start with 10 total; reserving here can block deploys.
+  - CKV_AWS_115
+  # Code signing: not part of this pattern's supply-chain contract yet.
+  - CKV_AWS_272
+  # Environment variable CMK: the function sets no environment variables.
+  - CKV_AWS_173
+  # Log group CMK: logs are encrypted at rest by CloudWatch; a CMK adds cost and key policy work.
+  - CKV_AWS_158
+  # One-year log retention: retention is explicit and chosen per environment for cost.
+  - CKV_AWS_338
+{%- if auth_mode == 'none' %}
+  # Route authorization: public by decision. Reason: {{ public_reason }}
+  - CKV_AWS_309
+{%- endif %}

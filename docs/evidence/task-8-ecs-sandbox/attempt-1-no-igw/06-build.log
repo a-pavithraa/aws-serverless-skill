@@ -1,0 +1,51 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 472B 0.0s done
+#1 DONE 0.1s
+
+#2 [internal] load metadata for docker.io/library/python:3.13-slim@sha256:e48f59cdba69a3cbd9ed2cf0f348d90d45a8d350d98134cf1070bc106ee9ed90
+#2 ...
+
+#3 [auth] library/python:pull token for registry-1.docker.io
+#3 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/python:3.13-slim@sha256:e48f59cdba69a3cbd9ed2cf0f348d90d45a8d350d98134cf1070bc106ee9ed90
+#2 DONE 2.1s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 75B done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 2.44kB 0.0s done
+#5 DONE 0.1s
+
+#6 [1/3] FROM docker.io/library/python:3.13-slim@sha256:e48f59cdba69a3cbd9ed2cf0f348d90d45a8d350d98134cf1070bc106ee9ed90
+#6 resolve docker.io/library/python:3.13-slim@sha256:e48f59cdba69a3cbd9ed2cf0f348d90d45a8d350d98134cf1070bc106ee9ed90 0.1s done
+#6 DONE 0.2s
+
+#7 [2/3] WORKDIR /app
+#7 DONE 0.0s
+
+#8 [3/3] COPY app/ /app/
+#8 DONE 0.1s
+
+#9 exporting to image
+#9 exporting layers
+#9 exporting layers 0.2s done
+#9 exporting manifest sha256:fcce5459b307d3882c33d94b930376c6883eccd5a5b55ff2ad4a1d5b5c5c96c7 0.0s done
+#9 exporting config sha256:2486db28d1a41c10e520890e47abf953816048ce729838a58b7dd7bb4b8db4f1 0.0s done
+#9 naming to 123456789012.dkr.ecr.us-east-1.amazonaws.com/lf-web-dev:d46ef4310057 done
+#9 pushing layers
+#9 ...
+
+#10 [auth] sharing credentials for 123456789012.dkr.ecr.us-east-1.amazonaws.com
+#10 DONE 0.0s
+
+#9 exporting to image
+#9 pushing layers 21.1s done
+#9 pushing manifest for 123456789012.dkr.ecr.us-east-1.amazonaws.com/lf-web-dev:d46ef4310057@sha256:fcce5459b307d3882c33d94b930376c6883eccd5a5b55ff2ad4a1d5b5c5c96c7
+#9 pushing manifest for 123456789012.dkr.ecr.us-east-1.amazonaws.com/lf-web-dev:d46ef4310057@sha256:fcce5459b307d3882c33d94b930376c6883eccd5a5b55ff2ad4a1d5b5c5c96c7 0.8s done
+#9 DONE 22.2s
+source d46ef43100578708001c88d38336045d27aa5fd871c9af7c9486483cd946f9a2 image sha256:fcce5459b307d3882c33d94b930376c6883eccd5a5b55ff2ad4a1d5b5c5c96c7

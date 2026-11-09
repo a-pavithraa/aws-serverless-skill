@@ -1,0 +1,11 @@
+added       harness/check.py
+added       harness/baseline.py
+added       harness/plan_summary.py
+added       harness/plan_provenance.py
+added       harness/verify_deployment.py
+added       harness/.tflint.hcl
+added       harness/checkov/HARNESS_AWS_1.yaml
+added       harness/checkov/HARNESS_AWS_2.yaml
+added       harness/checkov/HARNESS_AWS_3.yaml
+added       AGENTS.md#harness
+harness install: 0 conflict(s)

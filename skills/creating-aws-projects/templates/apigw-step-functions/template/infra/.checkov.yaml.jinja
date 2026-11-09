@@ -1,0 +1,22 @@
+# Each skipped check states why it does not apply to this pattern.
+# Changing this list is a policy decision: review it like code.
+framework:
+  - terraform
+skip-check:
+  # Log group CMK: logs are encrypted at rest by CloudWatch; a CMK adds cost and key policy work.
+  - CKV_AWS_158
+  # One-year log retention: retention is explicit and chosen per environment for cost.
+  - CKV_AWS_338
+  # Stage and method caching: POST /orders starts a workflow each time; a cached answer would skip it.
+  - CKV_AWS_120
+  - CKV_AWS_225
+  # Client certificate: it authenticates API Gateway to an HTTP backend. This integration calls
+  # Step Functions with an IAM role instead.
+  - CKV2_AWS_51
+  # WAF: not in this template. Stage throttling limits request rates{% if auth_mode == 'iam' %}, and unsigned requests are rejected before the workflow{% endif %}.
+  # A web ACL costs per month and its rules are team policy; add one in front of a public API.
+  - CKV2_AWS_29
+  # Execution data in the log: the input and output are the order, which can hold customer data.
+  # Every event is still logged (level ALL), each execution is named by its correlation ID, and
+  # log_execution_data turns the data on while someone debugs.
+  - CKV_AWS_285

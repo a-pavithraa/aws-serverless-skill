@@ -1,0 +1,38 @@
+aws_lambda_permission.api: Destroying... [id=AllowHttpApiInvoke]
+aws_apigatewayv2_route.hello: Destroying... [id=lbp5nj0]
+aws_cloudwatch_metric_alarm.lambda_errors: Destroying... [id=lf-sandbox-dev-lambda-errors]
+aws_cloudwatch_dashboard.service: Destroying... [id=lf-sandbox-dev]
+aws_cloudwatch_metric_alarm.lambda_throttles: Destroying... [id=lf-sandbox-dev-lambda-throttles]
+aws_cloudwatch_metric_alarm.api_5xx: Destroying... [id=lf-sandbox-dev-api-5xx]
+aws_cloudwatch_metric_alarm.lambda_duration_p99: Destroying... [id=lf-sandbox-dev-lambda-duration-p99]
+aws_apigatewayv2_route.hello: Destruction complete after 1s
+aws_apigatewayv2_integration.lambda: Destroying... [id=q5rbefm]
+aws_lambda_permission.api: Destruction complete after 1s
+aws_cloudwatch_metric_alarm.lambda_duration_p99: Destruction complete after 1s
+aws_cloudwatch_metric_alarm.lambda_throttles: Destruction complete after 1s
+aws_cloudwatch_metric_alarm.lambda_errors: Destruction complete after 1s
+aws_cloudwatch_metric_alarm.api_5xx: Destruction complete after 1s
+aws_apigatewayv2_stage.default: Destroying... [id=$default]
+aws_sns_topic.alarms: Destroying... [id=arn:aws:sns:us-east-1:123456789012:lf-sandbox-dev-alarms]
+aws_cloudwatch_dashboard.service: Destruction complete after 1s
+aws_apigatewayv2_integration.lambda: Destruction complete after 0s
+aws_lambda_alias.live: Destroying... [id=arn:aws:lambda:us-east-1:123456789012:function:lf-sandbox-dev:live]
+aws_lambda_alias.live: Destruction complete after 0s
+aws_lambda_function.api: Destroying... [id=lf-sandbox-dev]
+aws_apigatewayv2_stage.default: Destruction complete after 0s
+aws_cloudwatch_log_group.api_access: Destroying... [id=/aws/apigateway/lf-sandbox-dev/access]
+aws_apigatewayv2_api.http: Destroying... [id=6fxwwbyska]
+aws_sns_topic.alarms: Destruction complete after 1s
+aws_kms_key.alarms: Destroying... [id=c94de63b-97df-4e69-9298-a2dc60b6943e]
+aws_apigatewayv2_api.http: Destruction complete after 1s
+aws_cloudwatch_log_group.api_access: Destruction complete after 1s
+aws_kms_key.alarms: Destruction complete after 1s
+aws_lambda_function.api: Destruction complete after 6s
+aws_iam_role_policy.lambda: Destroying... [id=lf-sandbox-dev-fn:runtime]
+aws_iam_role_policy.lambda: Destruction complete after 1s
+aws_iam_role.lambda: Destroying... [id=lf-sandbox-dev-fn]
+aws_cloudwatch_log_group.lambda: Destroying... [id=/aws/lambda/lf-sandbox-dev]
+aws_cloudwatch_log_group.lambda: Destruction complete after 0s
+aws_iam_role.lambda: Destruction complete after 1s
+
+Apply complete! Resources: 0 added, 0 changed, 18 destroyed.

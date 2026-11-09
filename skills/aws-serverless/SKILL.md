@@ -1,6 +1,6 @@
 ---
 name: aws-serverless
-description: "Patterns and best practices for AWS serverless workloads. Use when the user asks about Lambda (cold starts, memory, concurrency, timeouts), Lambda Powertools (Logger, Tracer, Metrics), observability, CloudWatch alarms, event-driven architecture (SQS, SNS, EventBridge, Step Functions), or API Gateway (HTTP vs REST API, rate limiting, WAF, X-Ray tracing, going-live checklist). Triggers on: Lambda, cold start, Powertools, SQS, SNS, EventBridge, Step Functions, ECS vs Lambda, DLQ, event-driven, serverless, concurrency, provisioned concurrency, API Gateway, HTTP API, REST API, WAF, rate limiting."
+description: "Use when designing, debugging or reviewing Lambda, API Gateway, SQS, SNS, EventBridge or Step Functions code and configuration: cold starts and INIT billing, Lambda Layers, packaging and shared dependencies, deployment package size, concurrency, runtime choice, Powertools, logging and tracing, alarms, retries and DLQs, payload limits, or choosing HTTP API or REST API, Lambda or Step Functions, Lambda or ECS. Not for creating a new service from a template (creating-aws-projects)."
 ---
 
 # AWS Serverless
@@ -10,8 +10,8 @@ description: "Patterns and best practices for AWS serverless workloads. Use when
 | Topic | Reference File | Key Insight |
 |-------|---------------|-------------|
 | Lambda internals | `references/lambda-patterns.md` | Cold start happens per concurrent execution, not just once |
-| Lambda Layers | `references/lambda-patterns.md` | Deployment optimization, NOT a package manager |
-| Observability | `references/lambda-powertools.md` | Use Powertools for Logger, Tracer, Metrics — never print() |
+| Lambda Layers | `references/lambda-patterns.md` | Binaries, custom runtimes and Powertools; NOT a package manager |
+| Observability | `references/lambda-powertools.md` | Structured JSON logs; choose tracing deliberately (X-Ray SDK is in maintenance) |
 | Monitoring/alarms | `references/monitoring.md` | Alert on symptoms (errors, latency), not causes (CPU) |
 | Event-driven | `references/event-driven.md` | Single Lambda vs Step Functions decision; Standard/Express/Hybrid; Saga pattern |
 | API Gateway | `references/api-gateway.md` | HTTP API ~70% cheaper; use REST API only for WAF/caching/usage plans |
@@ -20,12 +20,16 @@ description: "Patterns and best practices for AWS serverless workloads. Use when
 
 ### Lambda
 - **Don't** assume cold start is "just the first request" — it happens per concurrent execution
-- **Don't** use Lambda Layers as a package manager — use them for deployment optimization only
+- **Don't** use Lambda Layers as a package manager. When asked whether shared libraries belong in a layer, answer with three points:
+  1. **Layers are for** binary dependencies (FFmpeg, ImageMagick), custom runtimes (LLRT, Bun) and AWS-provided layers (Powertools). Ordinary pip or npm libraries such as `requests` or `pydantic` are not layer candidates. Each function bundles what it imports, from a lockfile.
+  2. **A layer has costs.** It adds a mount and initialization step to every cold start, and INIT is billed since August 2025. It also breaks local development, hides the libraries from vulnerability scanners that read the function package, has no semantic versioning, and counts toward the limit of 5 layers per function.
+  3. **Shared code is not a size problem.** If a package is too large, bundle and tree-shake it, or use a container image. Don't move libraries into a layer to make it smaller.
 - **Don't** call Lambda synchronously from Lambda — use SQS, SNS, or Step Functions
 - **Don't** set user-facing API timeout to 30s ; use async for long operations
 
 ### Observability
-- **Don't** use `print()` for logging — use Powertools Logger for structured JSON
+- **Don't** log unstructured text: set `logging_config { log_format = "JSON" }` and use the language's logger, or Powertools Logger. Set the log level in one place, not in both
+- **Don't** add the X-Ray SDK or Powertools Tracer to new functions by default: it is in maintenance mode. Use active tracing, or a tested OpenTelemetry layer
 - **Don't** call CloudWatch API synchronously for metrics — use Powertools Metrics (EMF format)
 - **Don't** alert on resource utilization (CPU, memory) — alert on user-impacting symptoms
 
@@ -54,50 +58,9 @@ description: "Patterns and best practices for AWS serverless workloads. Use when
 | Cold start acceptable | Sub-100ms latency required |
 | Pay-per-invocation preferred | Need GPU or special hardware |
 
-## Cost Analysis
+## Cost questions
 
-When the user asks about cost impact or reducing costs for Lambda, SQS, SNS, EventBridge, or Step Functions, direct them to install the **AWS Pricing MCP Server**. It provides real-time pricing data and cost optimisation recommendations via `get_pricing` and `generate_cost_report`.
-
-**Prerequisites:** `uv` package manager, Python 3.10+, AWS credentials with `pricing:*` permissions.
-
-**macOS / Linux:**
-```json
-{
-  "mcpServers": {
-    "awslabs.aws-pricing-mcp-server": {
-      "command": "uvx",
-      "args": ["awslabs.aws-pricing-mcp-server@latest"],
-      "env": {
-        "FASTMCP_LOG_LEVEL": "ERROR",
-        "AWS_PROFILE": "your-aws-profile",
-        "AWS_REGION": "us-east-1"
-      }
-    }
-  }
-}
-```
-
-**Windows:**
-```json
-{
-  "mcpServers": {
-    "awslabs.aws-pricing-mcp-server": {
-      "command": "uvx",
-      "args": [
-        "--from", "awslabs.aws-pricing-mcp-server@latest",
-        "awslabs.aws-pricing-mcp-server.exe"
-      ],
-      "env": {
-        "FASTMCP_LOG_LEVEL": "ERROR",
-        "AWS_PROFILE": "your-aws-profile",
-        "AWS_REGION": "us-east-1"
-      }
-    }
-  }
-}
-```
-
-Add the above to `~/.claude/claude_desktop_config.json` (Claude Desktop) or `.claude/mcp.json` (Claude Code) under `mcpServers`.
+For prices, use the AWS Pricing MCP server (`awslabs.aws-pricing-mcp-server`). Its [README](https://github.com/awslabs/mcp/tree/main/src/aws-pricing-mcp-server) has the setup. Prices in this skill are dated examples, not quotes.
 
 ---
 

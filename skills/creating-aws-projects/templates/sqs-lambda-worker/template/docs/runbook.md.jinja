@@ -1,0 +1,21 @@
+# Runbook: {{ project_name }}-{{ environment }}
+
+Dashboard: CloudWatch → Dashboards → `{{ project_name }}-{{ environment }}`. Alarms notify the SNS topic `{{ project_name }}-{{ environment }}-alarms`.{% if alarm_email %} Email `{{ alarm_email }}` is subscribed. The subscription does nothing until someone clicks the confirmation link in the email from AWS.{% else %} Nothing is subscribed to it yet. Add a subscription, or no one is told when an alarm fires.{% endif %}
+
+Logs: `/aws/lambda/{{ project_name }}-{{ environment }}` (JSON, {{ log_retention_days }} days). Each delivery logs `message received` with `order_id`, `message_id` and `receive_count`. Each order that completes logs `order processed` once.
+
+Find one order, in Logs Insights on the function log group:
+
+```
+fields @timestamp, level, message, receive_count | filter order_id = "<id>" | sort @timestamp asc
+```
+
+| Alarm | Fires when | First checks |
+| --- | --- | --- |
+| `{{ project_name }}-{{ environment }}-dlq-messages` | any message is in the dead-letter queue | read the message (`aws sqs receive-message --queue-url <dead_letter_queue_url output> --visibility-timeout 0`); find its `order_id` in the logs; fix the cause, then redrive with `aws sqs start-message-move-task --source-arn <dead-letter queue ARN>` |
+| `{{ project_name }}-{{ environment }}-oldest-message-age` | a message has waited more than the threshold for 5 minutes | the function's `Throttles` and `Errors`; the event source mapping is `Enabled`; `max_concurrency` ({{ max_concurrency }}) against the arrival rate |
+| `{{ project_name }}-{{ environment }}-lambda-errors` | the handler itself fails in a minute | "Recent failures" widget; the last deploy (`function_version` output). A failed message is not a function error: it is reported in the batch response |
+
+Missing data counts as not breaching for all three, so an idle worker is quiet. A quiet dashboard is not proof the worker works: run the verifier.
+
+Redrive moves messages back to the source queue. A message that still fails returns to the dead-letter queue after {{ max_receive_count }} more deliveries. Idempotency records last one hour, so a redriven message that already succeeded once within the hour is skipped, not processed again.

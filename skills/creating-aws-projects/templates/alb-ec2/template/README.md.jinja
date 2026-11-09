@@ -1,0 +1,86 @@
+# {{ project_name }}
+
+HTTP service on EC2 (`{{ runtime }}` on Amazon Linux 2023, `{{ architecture }}`), generated from the `alb-ec2` template. An Auto Scaling group of {{ min_instances }} to {{ max_instances }} `{{ instance_type }}` instances runs behind an Application Load Balancer{% if certificate_arn %} with HTTPS{% else %} on plain HTTP: {{ plain_http_reason }}{% endif %}. The service has no authentication.
+
+## How it works
+
+| Part | What | Why |
+| --- | --- | --- |
+| Image | the newest AL2023 arm64 AMI, read from a public SSM parameter at every plan | AWS patches the AMI; this project does not build images |
+| Install | cloud-init user data: `python3.13` and the CloudWatch agent from the AL2023 repositories, `app/` written by Terraform | One launch template version names one AMI and one copy of `app/` |
+| Health | the load balancer checks `GET /health`; the group replaces an instance that fails it | |
+| Replacement | a new launch template version starts a rolling instance refresh: one new instance is added before one old instance is removed | |
+| Rollback | the refresh watches the `unhealthy-hosts` alarm; when it fires, the refresh fails and rolls back to the previous launch template version | Without the alarm, a refresh of broken instances never fails: the group keeps replacing them for hours |
+| Identity | `GET /hello` returns `source_sha256`, the hash of the files the instance runs | The verifier compares it with this checkout's `app/` |
+
+**Who patches:** the team that runs the plans. When AWS publishes a new AMI, the next plan shows a launch template change, and applying it replaces every instance. Plan at least weekly, or instances keep the AMI they started with.
+
+The group runs in the public subnets of a network made with the `network` template (`network_name`, read from SSM at plan time), or in the `subnet_ids` you give it. The plan fails when neither is set: the template does not use the default VPC.{% if network_name %} This project uses the network `{{ network_name }}`.{% endif %} Deploy the network first. The plan also fails when the VPC has no attached internet gateway.
+
+Instances get public IP addresses, whatever the subnet's default, so they can reach the package repositories and CloudWatch Logs. Their security group accepts only the load balancer, and sends only HTTPS out. Nothing allows SSH.
+
+## What this project uses but does not own
+
+Terraform reads these and never changes them. Destroying this project leaves them in place.
+
+| What | Owner | Read from |
+| --- | --- | --- |
+| VPC, subnets, internet gateway, route tables | the `network` project{% if network_name %} `{{ network_name }}`{% endif %}, or your platform team | `network_name` (SSM) or `subnet_ids`; the plan checks that the subnets share one VPC and span two zones |
+| AMI | AWS | the public SSM parameter `ami_ssm_parameter`, at every plan |
+| Packages (`python3.13`, CloudWatch agent) | AWS, the AL2023 repositories | cloud-init at each boot |
+| TLS certificate | whoever issued it in ACM | `certificate_arn`, when set |
+
+## Layout
+
+| Path | What |
+| --- | --- |
+| `app/server.py` | The service. Standard library only; one JSON log line per request |
+| `app/tests/` | Unit and local HTTP tests (stdlib `unittest`) |
+| `infra/` | Terraform root: load balancer, Auto Scaling group, launch template, IAM, logs, alarms |
+| `infra/templates/user_data.yaml.tftpl` | cloud-init configuration for each instance |
+| `infra/envs/{{ environment }}.tfvars` | Values for the `{{ environment }}` environment |
+| `infra/tests/plan.tftest.hcl` | Mocked tests; no AWS credentials needed |
+| `.verify/probes.json` | Requests the deployment verifier sends after a deploy |
+| `docs/runbook.md` | What each alarm means and what to do |
+
+## Prerequisites
+
+Python 3.13, Terraform ≥ 1.10 (tested with 1.14.4), and a network: a `network` project or public subnets from your platform team. {% if backend == 's3' %}The state bucket `{{ state_bucket }}` must exist before `init`; state locking uses the S3 lock file.{% else %}State is local (`infra/terraform.tfstate`): fine for a sandbox, not for a team. Switch to an S3 backend before sharing.{% endif %}
+
+## Test
+
+```bash
+python -m unittest discover -s app/tests
+terraform -chdir=infra init -backend=false
+terraform -chdir=infra test
+```
+
+## Deploy
+
+The first `init` writes the provider versions and their hashes to `infra/.terraform.lock.hcl`. Commit `infra/.terraform.lock.hcl`: the checks then run `init` with `-lockfile=readonly`, so a provider cannot change without a reviewed commit. If CI runs on another OS, add its hashes first: `terraform -chdir=infra providers lock -platform=linux_amd64 -platform=darwin_arm64 -platform=windows_amd64`.
+
+Deploy from a saved plan, and read the plan before applying it:
+
+```bash
+terraform -chdir=infra init
+terraform -chdir=infra plan -var-file=envs/{{ environment }}.tfvars -out=tfplan
+terraform -chdir=infra show tfplan
+terraform -chdir=infra apply tfplan
+```
+
+The first apply waits until {{ min_instances }} instance(s) are healthy behind the load balancer. A later apply that changes the launch template returns when the instance refresh starts, not when it ends. Wait for it:
+
+```bash
+aws autoscaling describe-instance-refreshes --auto-scaling-group-name {{ project_name }}-{{ environment }}-web --max-records 1
+```
+
+## Verify
+
+A deploy is not working until the verifier says so. It checks the account and region. It then checks that every instance is InService and Healthy, on the current launch template version and AMI, with no refresh running, and that every target is healthy. It calls `GET /hello`, and the response's `source_sha256` must equal this checkout's `app/`. `UNVERIFIED` is not a pass.
+
+## Remove
+
+```bash
+terraform -chdir=infra plan -destroy -var-file=envs/{{ environment }}.tfvars -out=destroy.tfplan
+terraform -chdir=infra apply destroy.tfplan
+```

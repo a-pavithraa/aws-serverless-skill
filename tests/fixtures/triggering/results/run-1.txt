@@ -1,0 +1,46 @@
+
+sonnet: 17/20 passed
+  ok   create-1   expected creating-aws-projects          loaded creating-aws-projects
+  ok   create-2   expected creating-aws-projects          loaded creating-aws-projects
+  ok   create-3   expected creating-aws-projects          loaded creating-aws-projects
+  ok   harness-1  expected aws-iac-team-harness           loaded aws-iac-team-harness
+  ok   harness-2  expected aws-iac-team-harness           loaded aws-iac-team-harness
+  ok   harness-3  expected aws-iac-team-harness           loaded aws-iac-team-harness
+  ok   terraform-1 expected terraform-aws                  loaded terraform-aws
+  MISS terraform-2 expected terraform-aws                  loaded -
+  ok   terraform-3 expected terraform-aws                  loaded terraform-aws
+  ok   serverless-1 expected aws-serverless                 loaded aws-serverless
+  MISS serverless-2 expected aws-serverless                 loaded -
+  MISS serverless-3 expected aws-serverless                 loaded -
+  ok   dynamodb-1 expected aws-dynamodb                   loaded aws-dynamodb
+  ok   dynamodb-2 expected aws-dynamodb                   loaded aws-dynamodb
+  ok   dynamodb-3 expected aws-dynamodb                   loaded aws-dynamodb
+  ok   none-1     expected (none)                         loaded -
+  ok   none-2     expected (none)                         loaded -
+  ok   none-3     expected (none)                         loaded -
+  ok   none-4     expected (none)                         loaded -
+  ok   none-5     expected (none)                         loaded -
+
+haiku: 14/20 passed
+  ok   create-1   expected creating-aws-projects          loaded creating-aws-projects
+  ok   create-2   expected creating-aws-projects          loaded creating-aws-projects
+  ok   create-3   expected creating-aws-projects          loaded creating-aws-projects
+  ok   harness-1  expected aws-iac-team-harness           loaded aws-iac-team-harness
+  ok   harness-2  expected aws-iac-team-harness           loaded aws-iac-team-harness
+  ok   harness-3  expected aws-iac-team-harness           loaded aws-iac-team-harness
+  MISS terraform-1 expected terraform-aws                  loaded -
+  MISS terraform-2 expected terraform-aws                  loaded -
+  ok   terraform-3 expected terraform-aws                  loaded terraform-aws
+  MISS serverless-1 expected aws-serverless                 loaded -
+  MISS serverless-2 expected aws-serverless                 loaded -
+  MISS serverless-3 expected aws-serverless                 loaded -
+  ok   dynamodb-1 expected aws-dynamodb                   loaded aws-dynamodb
+  MISS dynamodb-2 expected aws-dynamodb                   loaded -
+  ok   dynamodb-3 expected aws-dynamodb                   loaded aws-dynamodb
+  ok   none-1     expected (none)                         loaded -
+  ok   none-2     expected (none)                         loaded -
+  ok   none-3     expected (none)                         loaded -
+  ok   none-4     expected (none)                         loaded -
+  ok   none-5     expected (none)                         loaded -
+
+Total cost: $1.52

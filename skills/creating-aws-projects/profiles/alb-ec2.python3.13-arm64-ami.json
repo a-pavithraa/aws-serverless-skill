@@ -1,0 +1,52 @@
+{
+  "id": "alb-ec2.python3.13-arm64-ami",
+  "status": "candidate",
+  "pattern": "alb-ec2",
+  "template": "templates/alb-ec2",
+  "lambda_variant": "none: EC2 Auto Scaling group behind an Application Load Balancer",
+  "runtime": {
+    "identifier": "python3.13",
+    "os": "Amazon Linux 2023 (arm64), python3.13 package from the AL2023 repositories",
+    "preview": false,
+    "lifecycle": {
+      "deprecation": "2029-06-30",
+      "block_create": null,
+      "block_update": null
+    },
+    "source": "https://docs.aws.amazon.com/linux/al2023/ug/release-cadence.html",
+    "checked": "2026-11-09",
+    "notes": "AL2023 maintenance ends 2029-06-30 (standard support ends 2027-06-30). AL2023 supports python3.13 for the upstream period (October 2029), so the OS date comes first. https://docs.aws.amazon.com/linux/al2023/ug/python.html"
+  },
+  "architecture": "arm64",
+  "packaging": "ami",
+  "image": {
+    "source": "public SSM parameter /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64, read at every plan",
+    "install": "cloud-init user data: python3.13 and amazon-cloudwatch-agent from the AL2023 repositories, app/ files written by Terraform",
+    "patch_owner": "the team that runs the plans: a new AMI shows as a launch template change, and the apply replaces instances by a rolling instance refresh",
+    "checked_ami": "al2023-ami-2023.12.20261102.0-kernel-6.18-arm64 (ami-0951c836c26e34fc8, us-east-1, 2026-11-09)"
+  },
+  "dependencies": [],
+  "native_dependencies": false,
+  "instrumentation": {
+    "logging": "one JSON line per request to /var/log/app/app.log, shipped by the CloudWatch agent",
+    "tracing": "none; the load balancer's X-Amzn-Trace-Id is logged",
+    "powertools": "not used; Powertools is for Lambda"
+  },
+  "regions": [
+    "us-east-1"
+  ],
+  "tools": {
+    "copier": "9.19.1",
+    "terraform": "1.14.4",
+    "aws_provider": "6.72.0",
+    "tflint": "0.65.0",
+    "tflint_ruleset_aws": "0.50.0",
+    "checkov": "3.4.3"
+  },
+  "evidence": {
+    "render": "docs/evidence/task-9-ec2-sandbox/README.md",
+    "checks": "docs/evidence/task-9-ec2-sandbox/README.md",
+    "sandbox": "docs/evidence/task-9-ec2-sandbox/README.md"
+  },
+  "review": "pending: promote status to supported after a person reviews the sandbox evidence"
+}

@@ -1,0 +1,20 @@
+[
+  {
+    "id": "create-1",
+    "model": "haiku",
+    "expect": "creating-aws-projects",
+    "loaded": [
+      "creating-aws-projects"
+    ],
+    "passed": true,
+    "cost_usd": 0.0059029500000000006
+  },
+  {
+    "id": "none-1",
+    "model": "haiku",
+    "expect": null,
+    "loaded": [],
+    "passed": true,
+    "cost_usd": 0.0027669600000000006
+  }
+]

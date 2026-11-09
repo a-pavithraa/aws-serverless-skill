@@ -1,0 +1,17 @@
+metadata:
+  id: "HARNESS_AWS_2"
+  name: "Lambda function without an alarm: add aws_cloudwatch_metric_alarm on its Errors metric with dimensions FunctionName = this function's function_name"
+  category: "LOGGING"
+definition:
+  and:
+    - cond_type: "filter"
+      attribute: "resource_type"
+      value:
+        - "aws_lambda_function"
+      operator: "within"
+    - cond_type: "connection"
+      resource_types:
+        - "aws_lambda_function"
+      connected_resource_types:
+        - "aws_cloudwatch_metric_alarm"
+      operator: "exists"

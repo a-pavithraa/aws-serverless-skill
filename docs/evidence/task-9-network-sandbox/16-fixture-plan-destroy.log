@@ -1,0 +1,176 @@
+aws_vpc.sandbox: Refreshing state... [id=vpc-0178dfcc3d465dba0]
+aws_internet_gateway.sandbox: Refreshing state... [id=igw-0f53e767cde106552]
+aws_subnet.public[0]: Refreshing state... [id=subnet-02d7dec8c746e298a]
+aws_subnet.public[1]: Refreshing state... [id=subnet-0858a2f10ef669131]
+aws_route_table.public: Refreshing state... [id=rtb-043e790f6f102fdf4]
+aws_route_table_association.public[1]: Refreshing state... [id=rtbassoc-0a09ddb441f0aefbd]
+aws_route_table_association.public[0]: Refreshing state... [id=rtbassoc-07f2539e503676133]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  - destroy
+
+Terraform will perform the following actions:
+
+  # aws_internet_gateway.sandbox will be destroyed
+  - resource "aws_internet_gateway" "sandbox" {
+      - arn      = "arn:aws:ec2:us-east-1:123456789012:internet-gateway/igw-0f53e767cde106552" -> null
+      - id       = "igw-0f53e767cde106552" -> null
+      - owner_id = "123456789012" -> null
+      - region   = "us-east-1" -> null
+      - tags     = {} -> null
+      - tags_all = {
+          - "Environment" = "sandbox"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-sandbox-net"
+        } -> null
+      - vpc_id   = "vpc-0178dfcc3d465dba0" -> null
+    }
+
+  # aws_route_table.public will be destroyed
+  - resource "aws_route_table" "public" {
+      - arn              = "arn:aws:ec2:us-east-1:123456789012:route-table/rtb-043e790f6f102fdf4" -> null
+      - id               = "rtb-043e790f6f102fdf4" -> null
+      - owner_id         = "123456789012" -> null
+      - propagating_vgws = [] -> null
+      - region           = "us-east-1" -> null
+      - route            = [
+          - {
+              - cidr_block                 = "0.0.0.0/0"
+              - gateway_id                 = "igw-0f53e767cde106552"
+                # (12 unchanged attributes hidden)
+            },
+        ] -> null
+      - tags             = {} -> null
+      - tags_all         = {
+          - "Environment" = "sandbox"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-sandbox-net"
+        } -> null
+      - vpc_id           = "vpc-0178dfcc3d465dba0" -> null
+    }
+
+  # aws_route_table_association.public[0] will be destroyed
+  - resource "aws_route_table_association" "public" {
+      - id             = "rtbassoc-07f2539e503676133" -> null
+      - region         = "us-east-1" -> null
+      - route_table_id = "rtb-043e790f6f102fdf4" -> null
+      - subnet_id      = "subnet-02d7dec8c746e298a" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_route_table_association.public[1] will be destroyed
+  - resource "aws_route_table_association" "public" {
+      - id             = "rtbassoc-0a09ddb441f0aefbd" -> null
+      - region         = "us-east-1" -> null
+      - route_table_id = "rtb-043e790f6f102fdf4" -> null
+      - subnet_id      = "subnet-0858a2f10ef669131" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_subnet.public[0] will be destroyed
+  - resource "aws_subnet" "public" {
+      - arn                                            = "arn:aws:ec2:us-east-1:123456789012:subnet/subnet-02d7dec8c746e298a" -> null
+      - assign_ipv6_address_on_creation                = false -> null
+      - availability_zone                              = "us-east-1a" -> null
+      - availability_zone_id                           = "use1-az1" -> null
+      - cidr_block                                     = "10.42.0.0/24" -> null
+      - enable_dns64                                   = false -> null
+      - enable_lni_at_device_index                     = 0 -> null
+      - enable_resource_name_dns_a_record_on_launch    = false -> null
+      - enable_resource_name_dns_aaaa_record_on_launch = false -> null
+      - id                                             = "subnet-02d7dec8c746e298a" -> null
+      - ipv6_native                                    = false -> null
+      - map_customer_owned_ip_on_launch                = false -> null
+      - map_public_ip_on_launch                        = true -> null
+      - owner_id                                       = "123456789012" -> null
+      - private_dns_hostname_type_on_launch            = "ip-name" -> null
+      - region                                         = "us-east-1" -> null
+      - tags                                           = {
+          - "Name" = "lf-sandbox-net-us-east-1a"
+        } -> null
+      - tags_all                                       = {
+          - "Environment" = "sandbox"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "lf-sandbox-net-us-east-1a"
+          - "Project"     = "lf-sandbox-net"
+        } -> null
+      - vpc_id                                         = "vpc-0178dfcc3d465dba0" -> null
+        # (4 unchanged attributes hidden)
+    }
+
+  # aws_subnet.public[1] will be destroyed
+  - resource "aws_subnet" "public" {
+      - arn                                            = "arn:aws:ec2:us-east-1:123456789012:subnet/subnet-0858a2f10ef669131" -> null
+      - assign_ipv6_address_on_creation                = false -> null
+      - availability_zone                              = "us-east-1b" -> null
+      - availability_zone_id                           = "use1-az2" -> null
+      - cidr_block                                     = "10.42.1.0/24" -> null
+      - enable_dns64                                   = false -> null
+      - enable_lni_at_device_index                     = 0 -> null
+      - enable_resource_name_dns_a_record_on_launch    = false -> null
+      - enable_resource_name_dns_aaaa_record_on_launch = false -> null
+      - id                                             = "subnet-0858a2f10ef669131" -> null
+      - ipv6_native                                    = false -> null
+      - map_customer_owned_ip_on_launch                = false -> null
+      - map_public_ip_on_launch                        = true -> null
+      - owner_id                                       = "123456789012" -> null
+      - private_dns_hostname_type_on_launch            = "ip-name" -> null
+      - region                                         = "us-east-1" -> null
+      - tags                                           = {
+          - "Name" = "lf-sandbox-net-us-east-1b"
+        } -> null
+      - tags_all                                       = {
+          - "Environment" = "sandbox"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "lf-sandbox-net-us-east-1b"
+          - "Project"     = "lf-sandbox-net"
+        } -> null
+      - vpc_id                                         = "vpc-0178dfcc3d465dba0" -> null
+        # (4 unchanged attributes hidden)
+    }
+
+  # aws_vpc.sandbox will be destroyed
+  - resource "aws_vpc" "sandbox" {
+      - arn                                  = "arn:aws:ec2:us-east-1:123456789012:vpc/vpc-0178dfcc3d465dba0" -> null
+      - assign_generated_ipv6_cidr_block     = false -> null
+      - cidr_block                           = "10.42.0.0/16" -> null
+      - default_network_acl_id               = "acl-0ffa7bf44570b6547" -> null
+      - default_route_table_id               = "rtb-0a435c9d7cd45f707" -> null
+      - default_security_group_id            = "sg-028b65451c53997d8" -> null
+      - dhcp_options_id                      = "dopt-25d18a5f" -> null
+      - enable_dns_hostnames                 = true -> null
+      - enable_dns_support                   = true -> null
+      - enable_network_address_usage_metrics = false -> null
+      - id                                   = "vpc-0178dfcc3d465dba0" -> null
+      - instance_tenancy                     = "default" -> null
+      - ipv6_netmask_length                  = 0 -> null
+      - main_route_table_id                  = "rtb-0a435c9d7cd45f707" -> null
+      - owner_id                             = "123456789012" -> null
+      - region                               = "us-east-1" -> null
+      - tags                                 = {
+          - "Name" = "lf-sandbox-net"
+        } -> null
+      - tags_all                             = {
+          - "Environment" = "sandbox"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "lf-sandbox-net"
+          - "Project"     = "lf-sandbox-net"
+        } -> null
+        # (4 unchanged attributes hidden)
+    }
+
+Plan: 0 to add, 0 to change, 7 to destroy.
+
+Changes to Outputs:
+  - subnet_ids = [
+      - "subnet-02d7dec8c746e298a",
+      - "subnet-0858a2f10ef669131",
+    ] -> null
+
+─────────────────────────────────────────────────────────────────────────────
+
+Saved the plan to: destroy.tfplan
+
+To perform exactly these actions, run the following command to apply:
+    terraform apply "destroy.tfplan"

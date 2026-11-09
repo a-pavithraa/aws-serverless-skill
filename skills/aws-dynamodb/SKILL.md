@@ -1,9 +1,30 @@
 ---
 name: aws-dynamodb
-description: "Patterns and best practices for Amazon DynamoDB data modeling and access patterns. Use when the user asks about DynamoDB table design, single-table design, GSIs, multi-attribute composite keys, one-to-many relationships, cost optimization, or Terraform DynamoDB resources. Triggers on: DynamoDB, single-table design, GSI, partition key, sort key, access patterns, filter expressions, TTL, vertical sharding, composite keys, multi-attribute keys."
+description: "Use when designing or reviewing a DynamoDB table: access patterns, partition and sort keys, single-table design, GSIs and sparse indexes, hot partitions, one-to-many and many-to-many modeling, capacity mode and cost, or the Terraform for the table."
 ---
 
 # AWS DynamoDB
+
+## Get the access patterns before you design
+
+A DynamoDB schema follows the queries. A table designed before the queries are known has to be redesigned, and a key change means a backfill of every item.
+
+If the user asks for a table design and has not listed the access patterns, stop. Do not write tables, keys, GSIs, or a "starting schema" in that reply, not even one built on assumed patterns. Instead:
+
+1. Say in one or two sentences why the design must wait: the keys come from the queries, and DynamoDB has no joins.
+2. If the user proposed one table per entity, say that this is the relational habit and that the access patterns decide between one table and several.
+3. Ask for the access patterns as a numbered list. For each pattern, ask what the query is looked up by, what it returns, the sort order, and how often it runs. Ask which entities are read together, the expected item counts and write rates, and any uniqueness or tenant-isolation rules.
+4. Offer a few example patterns from the user's domain for the user to confirm, change or extend. Present them as questions, not as a design.
+
+The same rule applies when the user pushes back ("just give me a starting schema", "we can migrate later"). Explain that a migration means a scan and rewrite of every item. Then offer to draft the access-pattern list with the user. Design only after the user confirms a list.
+
+The rule is for data-model design. It does not stop a build. When the user asks you to build a service and the table is one part of it, such as "an API that reads and writes an `orders` table", build the table and do not stop:
+
+- Use the entity's ID as the partition key (`order_id`), with no sort key and no GSIs. A GSI added later backfills itself. A changed primary key does not.
+- Say in your final message that the key assumes lookups by ID only.
+- End by asking for the other access patterns, such as "orders for a customer, newest first", because each one can need a GSI.
+
+If the build needs several related entities, such as users, organizations and projects, the data model is the design question. Stop and ask as described above.
 
 ## Quick Reference
 
@@ -73,50 +94,9 @@ For large tables, use parallel scans (`TotalSegments` + `Segment`) to distribute
 |---------|--------|------------------------|
 | Multi-attribute composite GSI keys | Nov 2025 | v6.29.0+ ([PR #45357](https://github.com/hashicorp/terraform-provider-aws/pull/45357)) |
 
-## Cost Analysis
+## Cost questions
 
-When the user asks about DynamoDB costs, capacity mode trade-offs (PAY_PER_REQUEST vs PROVISIONED), or cost optimisation, direct them to install the **AWS Pricing MCP Server**. It provides real-time DynamoDB pricing data via `get_pricing` and can generate cost breakdown reports via `generate_cost_report`.
-
-**Prerequisites:** `uv` package manager, Python 3.10+, AWS credentials with `pricing:*` permissions.
-
-**macOS / Linux:**
-```json
-{
-  "mcpServers": {
-    "awslabs.aws-pricing-mcp-server": {
-      "command": "uvx",
-      "args": ["awslabs.aws-pricing-mcp-server@latest"],
-      "env": {
-        "FASTMCP_LOG_LEVEL": "ERROR",
-        "AWS_PROFILE": "your-aws-profile",
-        "AWS_REGION": "us-east-1"
-      }
-    }
-  }
-}
-```
-
-**Windows:**
-```json
-{
-  "mcpServers": {
-    "awslabs.aws-pricing-mcp-server": {
-      "command": "uvx",
-      "args": [
-        "--from", "awslabs.aws-pricing-mcp-server@latest",
-        "awslabs.aws-pricing-mcp-server.exe"
-      ],
-      "env": {
-        "FASTMCP_LOG_LEVEL": "ERROR",
-        "AWS_PROFILE": "your-aws-profile",
-        "AWS_REGION": "us-east-1"
-      }
-    }
-  }
-}
-```
-
-Add the above to `~/.claude/claude_desktop_config.json` (Claude Desktop) or `.claude/mcp.json` (Claude Code) under `mcpServers`.
+For prices, use the AWS Pricing MCP server (`awslabs.aws-pricing-mcp-server`). Its [README](https://github.com/awslabs/mcp/tree/main/src/aws-pricing-mcp-server) has the setup. Prices in this skill are dated examples, not quotes.
 
 ---
 

@@ -1,0 +1,14 @@
+PASS       residue                  no live resources tagged Project=lf-web, Environment=dev
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-04df0feb8f69256b8 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-052e0b22183993a28 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-059a2dbc1be6b909c deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-059eb77c8b7125424 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-0991b5f5503d21cb9 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-0d3aa6c141e0898d4 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-0f30a132ad95fd23e deleted; the tag index has not caught up
+arn:aws:ecs:us-east-1:123456789012:cluster/lf-web-dev deleted; the tag index has not caught up
+arn:aws:ecs:us-east-1:123456789012:service/lf-web-dev/lf-web-dev-web deleted; the tag index has not caught up
+arn:aws:ecs:us-east-1:123456789012:task/lf-web-dev/f20d853da4d5411b8fe964cfe78a0d25 deleted; the tag index has not caught up
+arn:aws:kms:us-east-1:123456789012:key/6bd10bc0-17d1-4f8c-9d23-01292c80e43e scheduled for deletion on 2026-11-16
+arn:aws:kms:us-east-1:123456789012:key/c2da804c-3ef0-43a5-a15e-1187613a311d scheduled for deletion on 2026-11-16
+residue: PASS

@@ -1,0 +1,5 @@
+PASS       residue                  no live resources tagged Project=lf-sandbox, Environment=dev
+arn:aws:kms:us-east-1:123456789012:key/c94de63b-97df-4e69-9298-a2dc60b6943e scheduled for deletion on 2026-11-15
+arn:aws:kms:us-east-1:123456789012:key/faf33ace-8f92-4bb9-a06d-2c131ec48164 scheduled for deletion on 2026-11-15
+residue: PASS
+exit=0

@@ -1,0 +1,12 @@
+account_id = "123456789012"
+alarm_names = [
+  "lf-flow-dev-api-5xx",
+  "lf-flow-dev-executions-timed-out",
+]
+alarm_topic_arn = "arn:aws:sns:us-east-1:123456789012:lf-flow-dev-alarms"
+api_access_log_group = "/aws/apigateway/lf-flow-dev-access"
+api_url = "https://hpslaw9de0.execute-api.us-east-1.amazonaws.com/dev"
+auth_mode = "iam"
+log_group = "/aws/vendedlogs/states/lf-flow-dev"
+region = "us-east-1"
+state_machine_arn = "arn:aws:states:us-east-1:123456789012:stateMachine:lf-flow-dev"

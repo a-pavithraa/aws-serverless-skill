@@ -1,0 +1,25 @@
+aws_vpc.sandbox: Creating...
+aws_vpc.sandbox: Creation complete after 5s [id=vpc-0178dfcc3d465dba0]
+aws_internet_gateway.sandbox: Creating...
+aws_subnet.public[1]: Creating...
+aws_subnet.public[0]: Creating...
+aws_internet_gateway.sandbox: Creation complete after 2s [id=igw-0f53e767cde106552]
+aws_route_table.public: Creating...
+aws_route_table.public: Creation complete after 3s [id=rtb-043e790f6f102fdf4]
+aws_subnet.public[1]: Still creating... [00m10s elapsed]
+aws_subnet.public[0]: Still creating... [00m10s elapsed]
+aws_subnet.public[1]: Creation complete after 13s [id=subnet-0858a2f10ef669131]
+aws_subnet.public[0]: Creation complete after 13s [id=subnet-02d7dec8c746e298a]
+aws_route_table_association.public[0]: Creating...
+aws_route_table_association.public[1]: Creating...
+aws_route_table_association.public[1]: Creation complete after 1s [id=rtbassoc-0a09ddb441f0aefbd]
+aws_route_table_association.public[0]: Creation complete after 1s [id=rtbassoc-07f2539e503676133]
+
+Apply complete! Resources: 7 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+subnet_ids = [
+  "subnet-02d7dec8c746e298a",
+  "subnet-0858a2f10ef669131",
+]

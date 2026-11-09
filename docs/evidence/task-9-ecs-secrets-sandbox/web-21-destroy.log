@@ -1,0 +1,86 @@
+aws_ecs_express_gateway_service.web[0]: Destroying...
+aws_ecr_lifecycle_policy.app: Destroying... [id=lf-web-dev]
+aws_cloudwatch_metric_alarm.cpu_high[0]: Destroying... [id=lf-web-dev-cpu-high]
+aws_cloudwatch_metric_alarm.running_tasks[0]: Destroying... [id=lf-web-dev-running-tasks]
+aws_cloudwatch_log_metric_filter.http_5xx: Destroying... [id=lf-web-dev-http-5xx]
+aws_cloudwatch_metric_alarm.http_5xx: Destroying... [id=lf-web-dev-http-5xx]
+aws_cloudwatch_log_metric_filter.http_5xx: Destruction complete after 1s
+aws_cloudwatch_metric_alarm.cpu_high[0]: Destruction complete after 1s
+aws_ecr_lifecycle_policy.app: Destruction complete after 1s
+aws_cloudwatch_metric_alarm.http_5xx: Destruction complete after 1s
+aws_cloudwatch_metric_alarm.running_tasks[0]: Destruction complete after 1s
+aws_sns_topic.alarms: Destroying... [id=arn:aws:sns:us-east-1:123456789012:lf-web-dev-alarms]
+aws_sns_topic.alarms: Destruction complete after 1s
+aws_kms_key.alarms: Destroying... [id=69b359a4-1d5d-4d18-8191-b04f4423d273]
+aws_kms_key.alarms: Destruction complete after 1s
+aws_ecs_express_gateway_service.web[0]: Still destroying... [00m10s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [00m20s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [00m30s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [00m40s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [00m50s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [01m00s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [01m10s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [01m20s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [01m30s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [01m40s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [01m50s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [02m00s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [02m10s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [02m20s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [02m30s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [02m40s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [02m50s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [03m00s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [03m10s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [03m20s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [03m30s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [03m40s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [03m50s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [04m00s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [04m10s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [04m20s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [04m30s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [04m40s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [04m50s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [05m00s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [05m10s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [05m20s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [05m30s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [05m40s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [05m50s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [06m00s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [06m10s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [06m20s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [06m30s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [06m40s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [06m50s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [07m00s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [07m10s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [07m20s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [07m30s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [07m40s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [07m50s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [08m00s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [08m10s elapsed]
+aws_ecs_express_gateway_service.web[0]: Still destroying... [08m20s elapsed]
+aws_ecs_express_gateway_service.web[0]: Destruction complete after 8m29s
+aws_iam_role_policy.execution: Destroying... [id=lf-web-dev-execution:pull-image-and-write-logs]
+aws_iam_role_policy_attachment.infrastructure: Destroying... [id=lf-web-dev-express/arn:aws:iam::aws:policy/service-role/AmazonECSInfrastructureRoleforExpressGatewayServices]
+aws_iam_role.task: Destroying... [id=lf-web-dev-task]
+aws_ecs_cluster.this: Destroying... [id=arn:aws:ecs:us-east-1:123456789012:cluster/lf-web-dev]
+aws_ecs_cluster.this: Destruction complete after 0s
+aws_iam_role_policy_attachment.infrastructure: Destruction complete after 1s
+aws_iam_role.infrastructure: Destroying... [id=lf-web-dev-express]
+aws_iam_role_policy.execution: Destruction complete after 1s
+aws_ecr_repository.app: Destroying... [id=lf-web-dev]
+aws_cloudwatch_log_group.app: Destroying... [id=/ecs/lf-web-dev]
+aws_secretsmanager_secret.app[0]: Destroying... [id=arn:aws:secretsmanager:us-east-1:123456789012:secret:lf-web-dev/app-DVPADj]
+aws_iam_role.execution: Destroying... [id=lf-web-dev-execution]
+aws_iam_role.task: Destruction complete after 1s
+aws_iam_role.infrastructure: Destruction complete after 0s
+aws_iam_role.execution: Destruction complete after 1s
+aws_secretsmanager_secret.app[0]: Destruction complete after 1s
+aws_cloudwatch_log_group.app: Destruction complete after 1s
+aws_ecr_repository.app: Destruction complete after 1s
+
+Apply complete! Resources: 0 added, 0 changed, 17 destroyed.

@@ -1,0 +1,4 @@
+PASS       residue                  no live resources tagged Project=lf-flow, Environment=dev
+arn:aws:kms:us-east-1:123456789012:key/2374c77e-9a28-4d16-a3ae-a8def8a460ec scheduled for deletion on 2026-11-16
+arn:aws:kms:us-east-1:123456789012:key/6759a924-d34a-4ec9-bef2-01e13450b6c1 scheduled for deletion on 2026-11-16
+residue: PASS

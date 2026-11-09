@@ -1,0 +1,13 @@
+{
+    "imageIds": [
+        {
+            "imageDigest": "sha256:fcce5459b307d3882c33d94b930376c6883eccd5a5b55ff2ad4a1d5b5c5c96c7",
+            "imageTag": "d46ef4310057"
+        },
+        {
+            "imageDigest": "sha256:50e8a39ea2041b2ebb2cb8b0e23765d975d0937aeb1730dae8ce4cf6cb65dd4f",
+            "imageTag": "broken-d46ef431"
+        }
+    ],
+    "failures": []
+}
