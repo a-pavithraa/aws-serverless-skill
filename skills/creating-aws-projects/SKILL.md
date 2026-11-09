@@ -23,7 +23,7 @@ Render a tested template; do not hand-write the pattern. The template carries th
    uv run --with copier==9.19.1 python "${CLAUDE_SKILL_DIR}/scripts/render.py" <pattern> ./my-service --answers answers.json
    ```
    It refuses an existing destination (exit 3), refuses a failing profile, and leaves nothing behind when Copier rejects the answers. Report the `template_revision` it prints.
-6. **Install the harness** with the `aws-iac-team-harness` skill (`apply_harness.py`).
+6. **Install the harness** with the `aws-iac-team-harness` skill (`apply_harness.py`). The next step fails without it: the harness files and the `AGENTS.md` section are what make the next agent that changes the project run the same checks.
 7. **Check.**
    ```bash
    python "${CLAUDE_SKILL_DIR}/scripts/check_new_project.py" ./my-service

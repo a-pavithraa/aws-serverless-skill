@@ -12,7 +12,7 @@ APPLY = HARNESS / "scripts" / "apply_harness.py"
 FIXTURES = REPO / "tests" / "fixtures" / "checks"
 sys.path.insert(0, str(REPO / "skills" / "creating-aws-projects" / "scripts"))
 
-from check_new_project import TEMPLATE_SYNTAX  # noqa: E402
+from check_new_project import TEMPLATE_SYNTAX, harness_installed  # noqa: E402
 
 OWNED = ["harness/check.py", "harness/baseline.py", "harness/plan_summary.py", "harness/plan_provenance.py",
          "harness/verify_deployment.py", "harness/.tflint.hcl",
@@ -52,6 +52,29 @@ class ApplyHarnessTest(unittest.TestCase):
             self.assertEqual("added", self.actions(report)[path])
         lock = json.loads((self.project / "harness" / "lock.json").read_text(encoding="utf-8"))
         self.assertEqual(set(OWNED) | {"AGENTS.md#harness"}, set(lock["files"]))
+
+    def test_new_project_check_fails_without_the_harness(self):
+        result = harness_installed(self.project)
+
+        self.assertEqual("FAIL", result.status)
+        self.assertIn("harness/check.py", result.detail)
+        self.assertIn("apply_harness.py", result.fix)
+        self.assertFalse((self.project / "harness").exists(), "the check must not install anything")
+
+    def test_new_project_check_passes_once_installed(self):
+        self.apply()
+
+        self.assertEqual("PASS", harness_installed(self.project).status)
+
+    def test_new_project_check_fails_on_an_edited_harness_file(self):
+        self.apply()
+        tflint = self.project / "harness" / ".tflint.hcl"
+        tflint.write_text(tflint.read_text(encoding="utf-8") + "\n# team change\n", encoding="utf-8")
+
+        result = harness_installed(self.project)
+
+        self.assertEqual("FAIL", result.status)
+        self.assertIn("harness/.tflint.hcl", result.detail)
 
     def test_installed_files_hold_no_template_syntax(self):
         self.apply("--workflows")

@@ -100,12 +100,15 @@ class RenderedProjectTest(Workdir):
 
     def test_new_project_check_delegates_and_adds_template_checks(self):
         project = self.render()
+        subprocess.run([sys.executable, str(HARNESS / "scripts" / "apply_harness.py"), str(project)],
+                       capture_output=True, check=True)
 
         result, report = run(NEW_PROJECT_CHECK, str(project), "--json")
 
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
         self.assertEqual(["PASS"], statuses(report, "template-syntax"))
         self.assertEqual(["PASS"], statuses(report, "runtime-profile"))
+        self.assertEqual(["PASS"], statuses(report, "harness-installed"))
         self.assertEqual(["PASS"], statuses(report, "checkov"))
 
     def test_missing_retention_fails_with_fix(self):

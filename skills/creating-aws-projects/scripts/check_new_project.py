@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Check a project rendered from a template in this skill.
 
-Runs the shared harness checks (aws-iac-team-harness/scripts/check.py) and adds two
+Runs the shared harness checks (aws-iac-team-harness/scripts/check.py) and adds three
 that only make sense right after rendering:
 
 - template-syntax: no Copier/Jinja syntax ({{, {%, [[) left in project files; ${{ is allowed
 - runtime-profile: the runtime/architecture recorded in .copier-answers.yml still
   passes the profile gate (scripts/profiles.py)
+- harness-installed: the project holds the current harness files and AGENTS.md section,
+  so the next agent that changes it runs the same checks
 
 Usage:
     python check_new_project.py <project> [--json] [--today YYYY-MM-DD]
@@ -25,6 +27,7 @@ SKILL = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SKILL.parent / "aws-iac-team-harness" / "scripts"))
 sys.path.insert(0, str(SKILL / "scripts"))
 
+import apply_harness  # noqa: E402
 import check  # noqa: E402
 import profiles  # noqa: E402
 
@@ -59,6 +62,20 @@ def template_syntax(project: Path):
     return check.CheckResult("template-syntax", ".", "PASS")
 
 
+def harness_installed(project: Path):
+    report = apply_harness.Installer(project, dry_run=True, workflows=False).run()
+    missing = [r["path"] for r in report if r["action"] in ("added", "updated")]
+    conflicts = [r["path"] for r in report if r["action"] == "conflict"]
+    if not missing and not conflicts:
+        return check.CheckResult("harness-installed", ".", "PASS")
+    detail = "; ".join(part for part in (
+        f"missing or out of date: {', '.join(missing)}" if missing else "",
+        f"edited by hand: {', '.join(conflicts)}" if conflicts else "") if part)
+    fix = (f"run python {SKILL.parent / 'aws-iac-team-harness' / 'scripts' / 'apply_harness.py'} {project}"
+           + ("; merge the edited files by hand first" if conflicts else ""))
+    return check.CheckResult("harness-installed", ".", "FAIL", detail, fix)
+
+
 def runtime_profile(project: Path, today: date):
     answers = read_answers(project)
     pattern = Path(answers.get("_src_path", "")).name
@@ -81,7 +98,7 @@ def main(argv=None):
 
     project = args.project.resolve()
     tools = {tool: check.resolve_tool(tool, None) for tool in ("terraform", "tflint", "checkov")}
-    results = [template_syntax(project), runtime_profile(project, args.today)]
+    results = [template_syntax(project), runtime_profile(project, args.today), harness_installed(project)]
     results += check.Checker(project, check.default_harness_dir(project), tools).run_all()
     report = check.report_dict(results)
 
