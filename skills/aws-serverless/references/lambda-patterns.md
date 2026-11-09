@@ -98,7 +98,16 @@ resource "aws_lambda_alias" "live" {
 
 Don't use layers to share business logic or application dependencies between functions. Each layer you add goes through its own mount and initialization step during the INIT phase — "layer mounting and initialization" is an explicit cost listed in AWS's cold start breakdown. Since INIT duration is now billed (August 2025), unnecessary layers also increase your compute bill. Beyond cold start: layers have no semantic versioning, break local dev (they're not installed in your environment), blind vulnerability scanners, and have a hard limit of 5 per function.
 
-**Correct use — deployment optimization** by separating rarely-changed dependencies from frequently-changed code:
+### Good uses for layers
+- **Binary dependencies**: FFmpeg, ImageMagick, GeoIP databases
+- **Custom runtimes**: LLRT, Bun
+- **AWS-provided layers**: Lambda Powertools, AWS SDK extensions
+
+Ordinary pip or npm libraries (`requests`, `pydantic`, `axios`) are not on this list, even when several functions share them. Each function bundles what it imports, built from one lockfile. Shared libraries in a layer cost every cold start to save a few megabytes of upload.
+
+### Deployment optimization: the narrow exception
+
+A layer of rarely-changed dependencies can shorten code-only deploys. Use it only when slow uploads are a measured problem and the dependencies change much less often than the code. Pin each function to an explicit layer version:
 
 ```hcl
 # Layer contains node_modules (changes rarely)
@@ -123,12 +132,6 @@ resource "aws_lambda_function" "api" {
 ```
 
 **When pushed on "packages are too large without Layers" (Node.js):** esbuild's `--bundle` flag automatically tree-shakes unused code and collapses all dependencies into a single file — the same code that filled a layer typically produces a bundle small enough to ship directly. No layer needed, no layer mount overhead.
-
-### Good Uses for Layers
-- **Binary dependencies**: FFMPEG, ImageMagick, GeoIP databases
-- **Custom runtimes**: LLRT, Bun
-- **AWS-provided layers**: Lambda Powertools, AWS SDK extensions
-- **Deployment optimization**: As described above
 
 ---
 

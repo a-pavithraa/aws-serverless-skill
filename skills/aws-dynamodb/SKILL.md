@@ -18,6 +18,14 @@ If the user asks for a table design and has not listed the access patterns, stop
 
 The same rule applies when the user pushes back ("just give me a starting schema", "we can migrate later"). Explain that a migration means a scan and rewrite of every item. Then offer to draft the access-pattern list with the user. Design only after the user confirms a list.
 
+The rule is for data-model design. It does not stop a build. When the user asks you to build a service and the table is one part of it, such as "an API that reads and writes an `orders` table", build the table and do not stop:
+
+- Use the entity's ID as the partition key (`order_id`), with no sort key and no GSIs. A GSI added later backfills itself. A changed primary key does not.
+- Say in your final message that the key assumes lookups by ID only.
+- End by asking for the other access patterns, such as "orders for a customer, newest first", because each one can need a GSI.
+
+If the build needs several related entities, such as users, organizations and projects, the data model is the design question. Stop and ask as described above.
+
 ## Quick Reference
 
 > All patterns are in [`references/dynamodb-patterns.md`](references/dynamodb-patterns.md).
