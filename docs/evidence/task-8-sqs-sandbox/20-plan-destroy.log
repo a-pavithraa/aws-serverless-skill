@@ -1,0 +1,812 @@
+data.archive_file.lambda: Reading...
+data.archive_file.lambda: Read complete after 0s [id=1ce286b7818942a567b59d5ad936b63323590fa5]
+data.aws_ssm_parameter.powertools_layer: Reading...
+data.aws_caller_identity.current: Reading...
+aws_sqs_queue.dead_letter: Refreshing state... [id=https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-dlq]
+aws_cloudwatch_log_group.lambda: Refreshing state... [id=/aws/lambda/lf-sqs-dev]
+aws_dynamodb_table.idempotency: Refreshing state... [id=lf-sqs-dev-idempotency]
+data.aws_caller_identity.current: Read complete after 0s [id=123456789012]
+aws_kms_key.alarms: Refreshing state... [id=41c31c13-9030-4856-a98f-0d22e5375024]
+data.aws_iam_policy_document.lambda_assume: Reading...
+data.aws_iam_policy_document.lambda_assume: Read complete after 0s [id=492682820]
+aws_iam_role.lambda: Refreshing state... [id=lf-sqs-dev-fn]
+data.aws_ssm_parameter.powertools_layer: Read complete after 0s [id=/aws/service/powertools/python/arm64/python3.13/3.39.0]
+aws_sqs_queue.orders: Refreshing state... [id=https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-orders]
+aws_sns_topic.alarms: Refreshing state... [id=arn:aws:sns:us-east-1:123456789012:lf-sqs-dev-alarms]
+aws_sqs_queue_redrive_allow_policy.dead_letter: Refreshing state... [id=https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-dlq]
+data.aws_iam_policy_document.lambda: Reading...
+data.aws_iam_policy_document.lambda: Read complete after 0s [id=1649335421]
+aws_iam_role_policy.lambda: Refreshing state... [id=lf-sqs-dev-fn:runtime]
+aws_lambda_function.worker: Refreshing state... [id=lf-sqs-dev]
+aws_cloudwatch_metric_alarm.oldest_message_age: Refreshing state... [id=lf-sqs-dev-oldest-message-age]
+aws_cloudwatch_metric_alarm.dead_letter_messages: Refreshing state... [id=lf-sqs-dev-dlq-messages]
+aws_lambda_alias.live: Refreshing state... [id=arn:aws:lambda:us-east-1:123456789012:function:lf-sqs-dev:live]
+aws_cloudwatch_dashboard.service: Refreshing state... [id=lf-sqs-dev]
+aws_cloudwatch_metric_alarm.lambda_errors: Refreshing state... [id=lf-sqs-dev-lambda-errors]
+aws_lambda_event_source_mapping.orders: Refreshing state... [id=33e72fd4-bbc4-461b-95bd-358a739223d9]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  - destroy
+
+Terraform will perform the following actions:
+
+  # aws_cloudwatch_dashboard.service will be destroyed
+  - resource "aws_cloudwatch_dashboard" "service" {
+      - dashboard_arn  = "arn:aws:cloudwatch::123456789012:dashboard/lf-sqs-dev" -> null
+      - dashboard_body = jsonencode(
+            {
+              - widgets = [
+                  - {
+                      - height     = 6
+                      - properties = {
+                          - metrics = [
+                              - [
+                                  - "AWS/SQS",
+                                  - "ApproximateNumberOfMessagesVisible",
+                                  - "QueueName",
+                                  - "lf-sqs-dev-orders",
+                                ],
+                              - [
+                                  - ".",
+                                  - "ApproximateAgeOfOldestMessage",
+                                  - ".",
+                                  - ".",
+                                  - {
+                                      - yAxis = "right"
+                                    },
+                                ],
+                              - [
+                                  - ".",
+                                  - "ApproximateNumberOfMessagesVisible",
+                                  - ".",
+                                  - "lf-sqs-dev-dlq",
+                                  - {
+                                      - label = "dead-letter"
+                                    },
+                                ],
+                            ]
+                          - period  = 60
+                          - region  = "us-east-1"
+                          - stat    = "Maximum"
+                          - title   = "Queue depth and age"
+                        }
+                      - type       = "metric"
+                      - width      = 12
+                      - x          = 0
+                      - y          = 0
+                    },
+                  - {
+                      - height     = 6
+                      - properties = {
+                          - metrics = [
+                              - [
+                                  - "AWS/Lambda",
+                                  - "Invocations",
+                                  - "FunctionName",
+                                  - "lf-sqs-dev",
+                                ],
+                              - [
+                                  - ".",
+                                  - "Errors",
+                                  - ".",
+                                  - ".",
+                                ],
+                              - [
+                                  - ".",
+                                  - "Throttles",
+                                  - ".",
+                                  - ".",
+                                ],
+                            ]
+                          - period  = 60
+                          - region  = "us-east-1"
+                          - stat    = "Sum"
+                          - title   = "Lambda invocations, errors, throttles"
+                        }
+                      - type       = "metric"
+                      - width      = 12
+                      - x          = 12
+                      - y          = 0
+                    },
+                  - {
+                      - height     = 6
+                      - properties = {
+                          - metrics = [
+                              - [
+                                  - "AWS/Lambda",
+                                  - "Duration",
+                                  - "FunctionName",
+                                  - "lf-sqs-dev",
+                                  - {
+                                      - stat = "p50"
+                                    },
+                                ],
+                              - [
+                                  - "...",
+                                  - {
+                                      - stat = "p99"
+                                    },
+                                ],
+                            ]
+                          - period  = 60
+                          - region  = "us-east-1"
+                          - title   = "Lambda duration"
+                        }
+                      - type       = "metric"
+                      - width      = 12
+                      - x          = 0
+                      - y          = 6
+                    },
+                  - {
+                      - height     = 6
+                      - properties = {
+                          - query  = "SOURCE '/aws/lambda/lf-sqs-dev' | fields @timestamp, level, message, order_id | filter level = 'ERROR' or level = 'WARNING' | sort @timestamp desc | limit 20"
+                          - region = "us-east-1"
+                          - title  = "Recent failures"
+                        }
+                      - type       = "log"
+                      - width      = 12
+                      - x          = 12
+                      - y          = 6
+                    },
+                ]
+            }
+        ) -> null
+      - dashboard_name = "lf-sqs-dev" -> null
+      - id             = "lf-sqs-dev" -> null
+      - region         = "us-east-1" -> null
+    }
+
+  # aws_cloudwatch_log_group.lambda will be destroyed
+  - resource "aws_cloudwatch_log_group" "lambda" {
+      - arn                         = "arn:aws:logs:us-east-1:123456789012:log-group:/aws/lambda/lf-sqs-dev" -> null
+      - deletion_protection_enabled = false -> null
+      - id                          = "/aws/lambda/lf-sqs-dev" -> null
+      - log_group_class             = "STANDARD" -> null
+      - name                        = "/aws/lambda/lf-sqs-dev" -> null
+      - region                      = "us-east-1" -> null
+      - retention_in_days           = 7 -> null
+      - skip_destroy                = false -> null
+      - tags                        = {} -> null
+      - tags_all                    = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/sqs-lambda-worker"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-sqs"
+        } -> null
+        # (2 unchanged attributes hidden)
+    }
+
+  # aws_cloudwatch_metric_alarm.dead_letter_messages will be destroyed
+  - resource "aws_cloudwatch_metric_alarm" "dead_letter_messages" {
+      - actions_enabled                       = true -> null
+      - alarm_actions                         = [
+          - "arn:aws:sns:us-east-1:123456789012:lf-sqs-dev-alarms",
+        ] -> null
+      - alarm_name                            = "lf-sqs-dev-dlq-messages" -> null
+      - arn                                   = "arn:aws:cloudwatch:us-east-1:123456789012:alarm:lf-sqs-dev-dlq-messages" -> null
+      - comparison_operator                   = "GreaterThanThreshold" -> null
+      - datapoints_to_alarm                   = 0 -> null
+      - dimensions                            = {
+          - "QueueName" = "lf-sqs-dev-dlq"
+        } -> null
+      - evaluation_interval                   = 0 -> null
+      - evaluation_periods                    = 1 -> null
+      - id                                    = "lf-sqs-dev-dlq-messages" -> null
+      - insufficient_data_actions             = [] -> null
+      - metric_name                           = "ApproximateNumberOfMessagesVisible" -> null
+      - namespace                             = "AWS/SQS" -> null
+      - ok_actions                            = [
+          - "arn:aws:sns:us-east-1:123456789012:lf-sqs-dev-alarms",
+        ] -> null
+      - period                                = 60 -> null
+      - region                                = "us-east-1" -> null
+      - statistic                             = "Maximum" -> null
+      - tags                                  = {} -> null
+      - tags_all                              = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/sqs-lambda-worker"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-sqs"
+        } -> null
+      - threshold                             = 0 -> null
+      - treat_missing_data                    = "notBreaching" -> null
+        # (5 unchanged attributes hidden)
+    }
+
+  # aws_cloudwatch_metric_alarm.lambda_errors will be destroyed
+  - resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
+      - actions_enabled                       = true -> null
+      - alarm_actions                         = [
+          - "arn:aws:sns:us-east-1:123456789012:lf-sqs-dev-alarms",
+        ] -> null
+      - alarm_name                            = "lf-sqs-dev-lambda-errors" -> null
+      - arn                                   = "arn:aws:cloudwatch:us-east-1:123456789012:alarm:lf-sqs-dev-lambda-errors" -> null
+      - comparison_operator                   = "GreaterThanThreshold" -> null
+      - datapoints_to_alarm                   = 0 -> null
+      - dimensions                            = {
+          - "FunctionName" = "lf-sqs-dev"
+        } -> null
+      - evaluation_interval                   = 0 -> null
+      - evaluation_periods                    = 1 -> null
+      - id                                    = "lf-sqs-dev-lambda-errors" -> null
+      - insufficient_data_actions             = [] -> null
+      - metric_name                           = "Errors" -> null
+      - namespace                             = "AWS/Lambda" -> null
+      - ok_actions                            = [
+          - "arn:aws:sns:us-east-1:123456789012:lf-sqs-dev-alarms",
+        ] -> null
+      - period                                = 60 -> null
+      - region                                = "us-east-1" -> null
+      - statistic                             = "Sum" -> null
+      - tags                                  = {} -> null
+      - tags_all                              = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/sqs-lambda-worker"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-sqs"
+        } -> null
+      - threshold                             = 0 -> null
+      - treat_missing_data                    = "notBreaching" -> null
+        # (5 unchanged attributes hidden)
+    }
+
+  # aws_cloudwatch_metric_alarm.oldest_message_age will be destroyed
+  - resource "aws_cloudwatch_metric_alarm" "oldest_message_age" {
+      - actions_enabled                       = true -> null
+      - alarm_actions                         = [
+          - "arn:aws:sns:us-east-1:123456789012:lf-sqs-dev-alarms",
+        ] -> null
+      - alarm_name                            = "lf-sqs-dev-oldest-message-age" -> null
+      - arn                                   = "arn:aws:cloudwatch:us-east-1:123456789012:alarm:lf-sqs-dev-oldest-message-age" -> null
+      - comparison_operator                   = "GreaterThanThreshold" -> null
+      - datapoints_to_alarm                   = 0 -> null
+      - dimensions                            = {
+          - "QueueName" = "lf-sqs-dev-orders"
+        } -> null
+      - evaluation_interval                   = 0 -> null
+      - evaluation_periods                    = 5 -> null
+      - id                                    = "lf-sqs-dev-oldest-message-age" -> null
+      - insufficient_data_actions             = [] -> null
+      - metric_name                           = "ApproximateAgeOfOldestMessage" -> null
+      - namespace                             = "AWS/SQS" -> null
+      - ok_actions                            = [
+          - "arn:aws:sns:us-east-1:123456789012:lf-sqs-dev-alarms",
+        ] -> null
+      - period                                = 60 -> null
+      - region                                = "us-east-1" -> null
+      - statistic                             = "Maximum" -> null
+      - tags                                  = {} -> null
+      - tags_all                              = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/sqs-lambda-worker"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-sqs"
+        } -> null
+      - threshold                             = 300 -> null
+      - treat_missing_data                    = "notBreaching" -> null
+        # (5 unchanged attributes hidden)
+    }
+
+  # aws_dynamodb_table.idempotency will be destroyed
+  - resource "aws_dynamodb_table" "idempotency" {
+      - arn                         = "arn:aws:dynamodb:us-east-1:123456789012:table/lf-sqs-dev-idempotency" -> null
+      - billing_mode                = "PAY_PER_REQUEST" -> null
+      - deletion_protection_enabled = false -> null
+      - hash_key                    = "id" -> null
+      - id                          = "lf-sqs-dev-idempotency" -> null
+      - name                        = "lf-sqs-dev-idempotency" -> null
+      - read_capacity               = 0 -> null
+      - region                      = "us-east-1" -> null
+      - stream_enabled              = false -> null
+      - table_class                 = "STANDARD" -> null
+      - tags                        = {} -> null
+      - tags_all                    = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/sqs-lambda-worker"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-sqs"
+        } -> null
+      - write_capacity              = 0 -> null
+        # (3 unchanged attributes hidden)
+
+      - attribute {
+          - name = "id" -> null
+          - type = "S" -> null
+        }
+
+      - point_in_time_recovery {
+          - enabled                 = false -> null
+          - recovery_period_in_days = 0 -> null
+        }
+
+      - ttl {
+          - attribute_name = "expiration" -> null
+          - enabled        = true -> null
+        }
+    }
+
+  # aws_iam_role.lambda will be destroyed
+  - resource "aws_iam_role" "lambda" {
+      - arn                   = "arn:aws:iam::123456789012:role/lf-sqs-dev-fn" -> null
+      - assume_role_policy    = jsonencode(
+            {
+              - Statement = [
+                  - {
+                      - Action    = "sts:AssumeRole"
+                      - Condition = {
+                          - StringEquals = {
+                              - "aws:SourceAccount" = "123456789012"
+                            }
+                        }
+                      - Effect    = "Allow"
+                      - Principal = {
+                          - Service = "lambda.amazonaws.com"
+                        }
+                    },
+                ]
+              - Version   = "2012-10-17"
+            }
+        ) -> null
+      - create_date           = "2026-11-09T02:00:50Z" -> null
+      - force_detach_policies = false -> null
+      - id                    = "lf-sqs-dev-fn" -> null
+      - managed_policy_arns   = [] -> null
+      - max_session_duration  = 3600 -> null
+      - name                  = "lf-sqs-dev-fn" -> null
+      - path                  = "/" -> null
+      - tags                  = {} -> null
+      - tags_all              = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/sqs-lambda-worker"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-sqs"
+        } -> null
+      - unique_id             = "AROA2P7Z4QCOILZYDFM65" -> null
+        # (3 unchanged attributes hidden)
+
+      - inline_policy {
+          - name   = "runtime" -> null
+          - policy = jsonencode(
+                {
+                  - Statement = [
+                      - {
+                          - Action   = [
+                              - "logs:PutLogEvents",
+                              - "logs:CreateLogStream",
+                            ]
+                          - Effect   = "Allow"
+                          - Resource = "arn:aws:logs:us-east-1:123456789012:log-group:/aws/lambda/lf-sqs-dev:*"
+                          - Sid      = "WriteOwnLogs"
+                        },
+                      - {
+                          - Action   = [
+                              - "sqs:ReceiveMessage",
+                              - "sqs:GetQueueAttributes",
+                              - "sqs:DeleteMessage",
+                            ]
+                          - Effect   = "Allow"
+                          - Resource = "arn:aws:sqs:us-east-1:123456789012:lf-sqs-dev-orders"
+                          - Sid      = "ConsumeOrders"
+                        },
+                      - {
+                          - Action   = [
+                              - "dynamodb:UpdateItem",
+                              - "dynamodb:PutItem",
+                              - "dynamodb:GetItem",
+                              - "dynamodb:DeleteItem",
+                            ]
+                          - Effect   = "Allow"
+                          - Resource = "arn:aws:dynamodb:us-east-1:123456789012:table/lf-sqs-dev-idempotency"
+                          - Sid      = "IdempotencyRecords"
+                        },
+                      - {
+                          - Action   = [
+                              - "xray:PutTraceSegments",
+                              - "xray:PutTelemetryRecords",
+                            ]
+                          - Effect   = "Allow"
+                          - Resource = "*"
+                          - Sid      = "WriteTraces"
+                        },
+                    ]
+                  - Version   = "2012-10-17"
+                }
+            ) -> null
+        }
+    }
+
+  # aws_iam_role_policy.lambda will be destroyed
+  - resource "aws_iam_role_policy" "lambda" {
+      - id          = "lf-sqs-dev-fn:runtime" -> null
+      - name        = "runtime" -> null
+      - policy      = jsonencode(
+            {
+              - Statement = [
+                  - {
+                      - Action   = [
+                          - "logs:PutLogEvents",
+                          - "logs:CreateLogStream",
+                        ]
+                      - Effect   = "Allow"
+                      - Resource = "arn:aws:logs:us-east-1:123456789012:log-group:/aws/lambda/lf-sqs-dev:*"
+                      - Sid      = "WriteOwnLogs"
+                    },
+                  - {
+                      - Action   = [
+                          - "sqs:ReceiveMessage",
+                          - "sqs:GetQueueAttributes",
+                          - "sqs:DeleteMessage",
+                        ]
+                      - Effect   = "Allow"
+                      - Resource = "arn:aws:sqs:us-east-1:123456789012:lf-sqs-dev-orders"
+                      - Sid      = "ConsumeOrders"
+                    },
+                  - {
+                      - Action   = [
+                          - "dynamodb:UpdateItem",
+                          - "dynamodb:PutItem",
+                          - "dynamodb:GetItem",
+                          - "dynamodb:DeleteItem",
+                        ]
+                      - Effect   = "Allow"
+                      - Resource = "arn:aws:dynamodb:us-east-1:123456789012:table/lf-sqs-dev-idempotency"
+                      - Sid      = "IdempotencyRecords"
+                    },
+                  - {
+                      - Action   = [
+                          - "xray:PutTraceSegments",
+                          - "xray:PutTelemetryRecords",
+                        ]
+                      - Effect   = "Allow"
+                      - Resource = "*"
+                      - Sid      = "WriteTraces"
+                    },
+                ]
+              - Version   = "2012-10-17"
+            }
+        ) -> null
+      - role        = "lf-sqs-dev-fn" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_kms_key.alarms will be destroyed
+  - resource "aws_kms_key" "alarms" {
+      - arn                                = "arn:aws:kms:us-east-1:123456789012:key/41c31c13-9030-4856-a98f-0d22e5375024" -> null
+      - bypass_policy_lockout_safety_check = false -> null
+      - customer_master_key_spec           = "SYMMETRIC_DEFAULT" -> null
+      - deletion_window_in_days            = 7 -> null
+      - description                        = "Encrypts the lf-sqs-dev alarm topic" -> null
+      - enable_key_rotation                = true -> null
+      - id                                 = "41c31c13-9030-4856-a98f-0d22e5375024" -> null
+      - is_enabled                         = true -> null
+      - key_id                             = "41c31c13-9030-4856-a98f-0d22e5375024" -> null
+      - key_usage                          = "ENCRYPT_DECRYPT" -> null
+      - multi_region                       = false -> null
+      - policy                             = jsonencode(
+            {
+              - Statement = [
+                  - {
+                      - Action    = "kms:*"
+                      - Effect    = "Allow"
+                      - Principal = {
+                          - AWS = "arn:aws:iam::123456789012:root"
+                        }
+                      - Resource  = "*"
+                      - Sid       = "AccountAdministersKey"
+                    },
+                  - {
+                      - Action    = [
+                          - "kms:Decrypt",
+                          - "kms:GenerateDataKey*",
+                        ]
+                      - Condition = {
+                          - StringEquals = {
+                              - "aws:SourceAccount" = "123456789012"
+                            }
+                        }
+                      - Effect    = "Allow"
+                      - Principal = {
+                          - Service = "cloudwatch.amazonaws.com"
+                        }
+                      - Resource  = "*"
+                      - Sid       = "CloudWatchAlarmsPublish"
+                    },
+                ]
+              - Version   = "2012-10-17"
+            }
+        ) -> null
+      - region                             = "us-east-1" -> null
+      - rotation_period_in_days            = 365 -> null
+      - tags                               = {} -> null
+      - tags_all                           = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/sqs-lambda-worker"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-sqs"
+        } -> null
+        # (2 unchanged attributes hidden)
+    }
+
+  # aws_lambda_alias.live will be destroyed
+  - resource "aws_lambda_alias" "live" {
+      - arn              = "arn:aws:lambda:us-east-1:123456789012:function:lf-sqs-dev:live" -> null
+      - function_name    = "lf-sqs-dev" -> null
+      - function_version = "1" -> null
+      - id               = "arn:aws:lambda:us-east-1:123456789012:function:lf-sqs-dev:live" -> null
+      - invoke_arn       = "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:123456789012:function:lf-sqs-dev:live/invocations" -> null
+      - name             = "live" -> null
+      - region           = "us-east-1" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_lambda_event_source_mapping.orders will be destroyed
+  - resource "aws_lambda_event_source_mapping" "orders" {
+      - arn                                = "arn:aws:lambda:us-east-1:123456789012:event-source-mapping:33e72fd4-bbc4-461b-95bd-358a739223d9" -> null
+      - batch_size                         = 10 -> null
+      - bisect_batch_on_function_error     = false -> null
+      - enabled                            = true -> null
+      - event_source_arn                   = "arn:aws:sqs:us-east-1:123456789012:lf-sqs-dev-orders" -> null
+      - function_arn                       = "arn:aws:lambda:us-east-1:123456789012:function:lf-sqs-dev:live" -> null
+      - function_name                      = "arn:aws:lambda:us-east-1:123456789012:function:lf-sqs-dev:live" -> null
+      - function_response_types            = [
+          - "ReportBatchItemFailures",
+        ] -> null
+      - id                                 = "33e72fd4-bbc4-461b-95bd-358a739223d9" -> null
+      - last_modified                      = "2026-11-09T02:01:54Z" -> null
+      - maximum_batching_window_in_seconds = 0 -> null
+      - maximum_record_age_in_seconds      = 0 -> null
+      - maximum_retry_attempts             = 0 -> null
+      - parallelization_factor             = 0 -> null
+      - queues                             = [] -> null
+      - region                             = "us-east-1" -> null
+      - state                              = "Enabled" -> null
+      - state_transition_reason            = "USER_INITIATED" -> null
+      - tags                               = {} -> null
+      - tags_all                           = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/sqs-lambda-worker"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-sqs"
+        } -> null
+      - topics                             = [] -> null
+      - tumbling_window_in_seconds         = 0 -> null
+      - uuid                               = "33e72fd4-bbc4-461b-95bd-358a739223d9" -> null
+        # (4 unchanged attributes hidden)
+
+      - scaling_config {
+          - maximum_concurrency = 2 -> null
+        }
+    }
+
+  # aws_lambda_function.worker will be destroyed
+  - resource "aws_lambda_function" "worker" {
+      - architectures                  = [
+          - "arm64",
+        ] -> null
+      - arn                            = "arn:aws:lambda:us-east-1:123456789012:function:lf-sqs-dev" -> null
+      - code_sha256                    = "ij2ShCrw5e1A4f6L4TivUUZSDPu6M+YosoDvunvRT0A=" -> null
+      - filename                       = "./build/lambda.zip" -> null
+      - function_name                  = "lf-sqs-dev" -> null
+      - handler                        = "worker.handler" -> null
+      - id                             = "lf-sqs-dev" -> null
+      - invoke_arn                     = "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:123456789012:function:lf-sqs-dev/invocations" -> null
+      - last_modified                  = "2026-11-09T02:01:46.650+0000" -> null
+      - layers                         = [
+          - "arn:aws:lambda:us-east-1:017000801446:layer:AWSLambdaPowertoolsPythonV3-python313-arm64:42",
+        ] -> null
+      - memory_size                    = 256 -> null
+      - package_type                   = "Zip" -> null
+      - publish                        = true -> null
+      - qualified_arn                  = "arn:aws:lambda:us-east-1:123456789012:function:lf-sqs-dev:1" -> null
+      - qualified_invoke_arn           = "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:123456789012:function:lf-sqs-dev:1/invocations" -> null
+      - region                         = "us-east-1" -> null
+      - reserved_concurrent_executions = -1 -> null
+      - response_streaming_invoke_arn  = "arn:aws:apigateway:us-east-1:lambda:path/2021-11-15/functions/arn:aws:lambda:us-east-1:123456789012:function:lf-sqs-dev/response-streaming-invocations" -> null
+      - role                           = "arn:aws:iam::123456789012:role/lf-sqs-dev-fn" -> null
+      - runtime                        = "python3.13" -> null
+      - skip_destroy                   = false -> null
+      - source_code_hash               = "ij2ShCrw5e1A4f6L4TivUUZSDPu6M+YosoDvunvRT0A=" -> null
+      - source_code_size               = 1103 -> null
+      - tags                           = {} -> null
+      - tags_all                       = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/sqs-lambda-worker"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-sqs"
+        } -> null
+      - timeout                        = 10 -> null
+      - version                        = "1" -> null
+        # (7 unchanged attributes hidden)
+
+      - environment {
+          - variables = {
+              - "IDEMPOTENCY_TABLE"       = "lf-sqs-dev-idempotency"
+              - "POWERTOOLS_SERVICE_NAME" = "lf-sqs-dev"
+            } -> null
+        }
+
+      - ephemeral_storage {
+          - size = 512 -> null
+        }
+
+      - logging_config {
+          - application_log_level = "INFO" -> null
+          - log_format            = "JSON" -> null
+          - log_group             = "/aws/lambda/lf-sqs-dev" -> null
+          - system_log_level      = "WARN" -> null
+        }
+
+      - tracing_config {
+          - mode = "Active" -> null
+        }
+    }
+
+  # aws_sns_topic.alarms will be destroyed
+  - resource "aws_sns_topic" "alarms" {
+      - application_success_feedback_sample_rate = 0 -> null
+      - arn                                      = "arn:aws:sns:us-east-1:123456789012:lf-sqs-dev-alarms" -> null
+      - content_based_deduplication              = false -> null
+      - fifo_topic                               = false -> null
+      - firehose_success_feedback_sample_rate    = 0 -> null
+      - http_success_feedback_sample_rate        = 0 -> null
+      - id                                       = "arn:aws:sns:us-east-1:123456789012:lf-sqs-dev-alarms" -> null
+      - kms_master_key_id                        = "arn:aws:kms:us-east-1:123456789012:key/41c31c13-9030-4856-a98f-0d22e5375024" -> null
+      - lambda_success_feedback_sample_rate      = 0 -> null
+      - maximum_message_size                     = 0 -> null
+      - name                                     = "lf-sqs-dev-alarms" -> null
+      - owner                                    = "123456789012" -> null
+      - policy                                   = jsonencode(
+            {
+              - Id        = "__default_policy_ID"
+              - Statement = [
+                  - {
+                      - Action    = [
+                          - "SNS:GetTopicAttributes",
+                          - "SNS:SetTopicAttributes",
+                          - "SNS:AddPermission",
+                          - "SNS:RemovePermission",
+                          - "SNS:DeleteTopic",
+                          - "SNS:Subscribe",
+                          - "SNS:ListSubscriptionsByTopic",
+                          - "SNS:Publish",
+                        ]
+                      - Condition = {
+                          - StringEquals = {
+                              - "AWS:SourceOwner" = "123456789012"
+                            }
+                        }
+                      - Effect    = "Allow"
+                      - Principal = {
+                          - AWS = "*"
+                        }
+                      - Resource  = "arn:aws:sns:us-east-1:123456789012:lf-sqs-dev-alarms"
+                      - Sid       = "__default_statement_ID"
+                    },
+                ]
+              - Version   = "2008-10-17"
+            }
+        ) -> null
+      - region                                   = "us-east-1" -> null
+      - signature_version                        = 0 -> null
+      - sqs_success_feedback_sample_rate         = 0 -> null
+      - tags                                     = {} -> null
+      - tags_all                                 = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/sqs-lambda-worker"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-sqs"
+        } -> null
+        # (17 unchanged attributes hidden)
+    }
+
+  # aws_sqs_queue.dead_letter will be destroyed
+  - resource "aws_sqs_queue" "dead_letter" {
+      - arn                               = "arn:aws:sqs:us-east-1:123456789012:lf-sqs-dev-dlq" -> null
+      - content_based_deduplication       = false -> null
+      - delay_seconds                     = 0 -> null
+      - fifo_queue                        = false -> null
+      - id                                = "https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-dlq" -> null
+      - kms_data_key_reuse_period_seconds = 300 -> null
+      - max_message_size                  = 262144 -> null
+      - message_retention_seconds         = 1209600 -> null
+      - name                              = "lf-sqs-dev-dlq" -> null
+      - receive_wait_time_seconds         = 0 -> null
+      - redrive_allow_policy              = jsonencode(
+            {
+              - redrivePermission = "byQueue"
+              - sourceQueueArns   = [
+                  - "arn:aws:sqs:us-east-1:123456789012:lf-sqs-dev-orders",
+                ]
+            }
+        ) -> null
+      - region                            = "us-east-1" -> null
+      - sqs_managed_sse_enabled           = true -> null
+      - tags                              = {} -> null
+      - tags_all                          = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/sqs-lambda-worker"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-sqs"
+        } -> null
+      - url                               = "https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-dlq" -> null
+      - visibility_timeout_seconds        = 30 -> null
+        # (6 unchanged attributes hidden)
+    }
+
+  # aws_sqs_queue.orders will be destroyed
+  - resource "aws_sqs_queue" "orders" {
+      - arn                               = "arn:aws:sqs:us-east-1:123456789012:lf-sqs-dev-orders" -> null
+      - content_based_deduplication       = false -> null
+      - delay_seconds                     = 0 -> null
+      - fifo_queue                        = false -> null
+      - id                                = "https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-orders" -> null
+      - kms_data_key_reuse_period_seconds = 300 -> null
+      - max_message_size                  = 262144 -> null
+      - message_retention_seconds         = 345600 -> null
+      - name                              = "lf-sqs-dev-orders" -> null
+      - receive_wait_time_seconds         = 0 -> null
+      - redrive_policy                    = jsonencode(
+            {
+              - deadLetterTargetArn = "arn:aws:sqs:us-east-1:123456789012:lf-sqs-dev-dlq"
+              - maxReceiveCount     = 3
+            }
+        ) -> null
+      - region                            = "us-east-1" -> null
+      - sqs_managed_sse_enabled           = true -> null
+      - tags                              = {} -> null
+      - tags_all                          = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/sqs-lambda-worker"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-sqs"
+        } -> null
+      - url                               = "https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-orders" -> null
+      - visibility_timeout_seconds        = 60 -> null
+        # (6 unchanged attributes hidden)
+    }
+
+  # aws_sqs_queue_redrive_allow_policy.dead_letter will be destroyed
+  - resource "aws_sqs_queue_redrive_allow_policy" "dead_letter" {
+      - id                   = "https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-dlq" -> null
+      - queue_url            = "https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-dlq" -> null
+      - redrive_allow_policy = jsonencode(
+            {
+              - redrivePermission = "byQueue"
+              - sourceQueueArns   = [
+                  - "arn:aws:sqs:us-east-1:123456789012:lf-sqs-dev-orders",
+                ]
+            }
+        ) -> null
+      - region               = "us-east-1" -> null
+    }
+
+Plan: 0 to add, 0 to change, 16 to destroy.
+
+Changes to Outputs:
+  - account_id                 = "123456789012" -> null
+  - alarm_names                = [
+      - "lf-sqs-dev-lambda-errors",
+      - "lf-sqs-dev-dlq-messages",
+      - "lf-sqs-dev-oldest-message-age",
+    ] -> null
+  - alarm_topic_arn            = "arn:aws:sns:us-east-1:123456789012:lf-sqs-dev-alarms" -> null
+  - artifact_path              = "./build/lambda.zip" -> null
+  - dead_letter_queue_url      = "https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-dlq" -> null
+  - function_alias             = "live" -> null
+  - function_name              = "lf-sqs-dev" -> null
+  - function_version           = "1" -> null
+  - idempotency_table          = "lf-sqs-dev-idempotency" -> null
+  - lambda_log_group           = "/aws/lambda/lf-sqs-dev" -> null
+  - max_receive_count          = 3 -> null
+  - queue_url                  = "https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-orders" -> null
+  - region                     = "us-east-1" -> null
+  - visibility_timeout_seconds = 60 -> null
+
+─────────────────────────────────────────────────────────────────────────────
+
+Saved the plan to: destroy.tfplan
+
+To perform exactly these actions, run the following command to apply:
+    terraform apply "destroy.tfplan"

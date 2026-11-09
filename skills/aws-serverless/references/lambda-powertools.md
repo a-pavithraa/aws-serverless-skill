@@ -5,14 +5,26 @@
 | Utility | Purpose | Output |
 |---------|---------|--------|
 | **Logger** | Structured JSON logging | CloudWatch Logs |
-| **Tracer** | Distributed tracing | AWS X-Ray |
+| **Tracer** | Distributed tracing | AWS X-Ray, through the X-Ray SDK |
 | **Metrics** | Custom metrics via EMF | CloudWatch Metrics |
+
+Current releases (GitHub, checked 2026-11-08): Python 3.39.0, TypeScript 2.36.0, Java 2.11.0 (Java 17 minimum), .NET 3.2.2. Utilities and their maturity differ by language. Check the language's docs before you use a utility.
+
+## Tracing: decide before you add Tracer
+
+The X-Ray SDKs entered maintenance mode on 2026-02-25: security fixes only, no new features. AWS recommends OpenTelemetry for new instrumentation ([X-Ray SDK migration](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-migration.html), checked 2026-11-08). The Python Tracer wraps the X-Ray SDK.
+
+- **Existing functions that use Tracer:** keep it. The X-Ray service and APIs continue.
+- **New functions:** turn on Lambda active tracing (`tracing_config { mode = "Active" }`). This gives a segment per invocation with no SDK. Add the AWS Distro for OpenTelemetry layer only when you need spans for downstream calls, and measure the cold-start cost first.
+- **Never both.** Tracer and an OpenTelemetry layer on one function duplicate the trace data.
+
+Lambda samples traces. A single request is not guaranteed to have a trace.
 
 ---
 
 ## Complete Handler Pattern
 
-Decorator order matters: metrics MUST be outermost.
+Decorator order matters: metrics MUST be outermost. Do not pass `log_event=True` in production: it writes every request body, with any personal data or tokens in it, to the log.
 
 ```python
 import os
@@ -25,7 +37,7 @@ tracer = Tracer()
 metrics = Metrics()
 
 @metrics.log_metrics(capture_cold_start_metric=True)
-@logger.inject_lambda_context(log_event=True)
+@logger.inject_lambda_context
 @tracer.capture_lambda_handler
 def handler(event: dict, context: LambdaContext) -> dict:
     logger.info("Processing request", extra={
@@ -123,14 +135,16 @@ resource "aws_dynamodb_table" "idempotency" {
 ## Terraform: Lambda with Powertools
 
 ```hcl
-locals {
-  powertools_layer = "arn:aws:lambda:${data.aws_region.current.name}:017000801446:layer:AWSLambdaPowertoolsPythonV2:59"
+# AWS publishes the layer ARN per region, architecture, Python version and Powertools version.
+# Pin the version: ".../latest" changes the layer on any plan.
+data "aws_ssm_parameter" "powertools_layer" {
+  name = "/aws/service/powertools/python/arm64/python3.13/3.39.0"
 }
 
 resource "aws_lambda_function" "this" {
   function_name    = var.function_name
   handler          = var.handler
-  runtime          = "python3.11"
+  runtime          = "python3.13"
   memory_size      = var.memory_size
   timeout          = var.timeout
   architectures    = ["arm64"]
@@ -138,7 +152,7 @@ resource "aws_lambda_function" "this" {
   filename         = data.archive_file.lambda.output_path
   source_code_hash = data.archive_file.lambda.output_base64sha256
 
-  layers = [local.powertools_layer]
+  layers = [data.aws_ssm_parameter.powertools_layer.value]
 
   environment {
     variables = {

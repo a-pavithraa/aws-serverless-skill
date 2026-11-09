@@ -1,0 +1,57 @@
+{
+  "id": "network.none-managed-module",
+  "status": "candidate",
+  "pattern": "network",
+  "template": "templates/network",
+  "lambda_variant": "none: VPC foundation in its own Terraform root, consumed by ecs-web and alb-ec2 through SSM parameters",
+  "runtime": {
+    "identifier": "none",
+    "os": "none: AWS managed networking",
+    "preview": false,
+    "lifecycle": {
+      "deprecation": "none",
+      "reason": "A VPC has no runtime. The module version (terraform-aws-modules/vpc 6.7.3) is pinned and is checked at template release."
+    },
+    "source": "https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/6.7.3",
+    "checked": "2026-11-09"
+  },
+  "architecture": "managed",
+  "packaging": "module",
+  "dependencies": [
+    {
+      "name": "terraform-aws-modules/vpc/aws",
+      "version": "6.7.3",
+      "delivery": "Terraform registry module, published 2026-09-18, requires hashicorp/aws >= 6.28",
+      "checked": "2026-11-09"
+    }
+  ],
+  "contract": {
+    "lifecycle": "own Terraform root and state; applied rarely; services never own it",
+    "publishes": "/landform/network/<project>-<environment>/{vpc-id, public-subnet-ids, private-subnet-ids (nat_mode single or per-az), nat-mode}",
+    "nat": "none: public subnets only, no hourly cost; single: one NAT gateway; per-az: one per zone",
+    "consumers": "ecs-web and alb-ec2 read network_name at plan time; subnet_ids still wins when given"
+  },
+  "native_dependencies": false,
+  "instrumentation": {
+    "logging": "VPC flow logs to CloudWatch Logs, 10-minute aggregation",
+    "tracing": "none",
+    "powertools": "not used"
+  },
+  "regions": [
+    "us-east-1"
+  ],
+  "tools": {
+    "copier": "9.19.1",
+    "terraform": "1.14.4",
+    "aws_provider": "6.72.0",
+    "tflint": "0.65.0",
+    "tflint_ruleset_aws": "0.50.0",
+    "checkov": "3.4.3"
+  },
+  "evidence": {
+    "render": "docs/evidence/task-9-network-sandbox/README.md",
+    "checks": "docs/evidence/task-9-network-sandbox/README.md",
+    "sandbox": "docs/evidence/task-9-network-sandbox/README.md"
+  },
+  "review": "pending: promote status to supported after a person reviews the sandbox evidence"
+}

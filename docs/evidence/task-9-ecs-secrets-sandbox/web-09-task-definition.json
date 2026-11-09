@@ -1,0 +1,18 @@
+{
+    "secrets": [
+        {
+            "name": "DB_PASSWORD",
+            "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:lf-web-dev/app-DVPADj:DB_PASSWORD::"
+        },
+        {
+            "name": "API_TOKEN",
+            "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:lf-web-dev/app-DVPADj:API_TOKEN::"
+        }
+    ],
+    "environment": [
+        {
+            "name": "SECRET_NAMES",
+            "value": "DB_PASSWORD,API_TOKEN"
+        }
+    ]
+}

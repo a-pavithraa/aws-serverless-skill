@@ -1,0 +1,4 @@
+1 200 repeat-name-check {"status":"processed","correlation_id":"repeat-name-check","order_id":"repeat-1"}
+
+2 200 repeat-name-check {"status":"processed","correlation_id":"repeat-name-check","order_id":"repeat-2"}
+

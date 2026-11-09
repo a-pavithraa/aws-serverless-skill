@@ -1,0 +1,53 @@
+aws_iam_role_policy.instances: Destroying... [id=lf-vm-dev-instances:write-app-logs]
+aws_vpc_security_group_ingress_rule.instances_from_alb: Destroying... [id=sgr-0af93ec87ef0abfb9]
+aws_vpc_security_group_ingress_rule.alb_listener: Destroying... [id=sgr-0d7647d479b4a365e]
+aws_vpc_security_group_egress_rule.alb_to_instances: Destroying... [id=sgr-043b8780eb22e9ae5]
+aws_vpc_security_group_egress_rule.instances_https: Destroying... [id=sgr-0590ea0a820921bf8]
+aws_cloudwatch_metric_alarm.target_5xx: Destroying... [id=lf-vm-dev-target-5xx]
+aws_cloudwatch_metric_alarm.healthy_hosts: Destroying... [id=lf-vm-dev-healthy-hosts]
+aws_lb_listener.web: Destroying... [id=arn:aws:elasticloadbalancing:us-east-1:123456789012:listener/app/lf-vm-dev/9a86d6f77ca39fe6/5f3fcac0e8e49cdd]
+aws_autoscaling_group.web: Destroying... [id=lf-vm-dev-web]
+aws_iam_role_policy.instances: Destruction complete after 1s
+aws_cloudwatch_metric_alarm.healthy_hosts: Destruction complete after 1s
+aws_lb_listener.web: Destruction complete after 1s
+aws_cloudwatch_metric_alarm.target_5xx: Destruction complete after 1s
+aws_vpc_security_group_egress_rule.instances_https: Destruction complete after 1s
+aws_vpc_security_group_ingress_rule.instances_from_alb: Destruction complete after 1s
+aws_vpc_security_group_egress_rule.alb_to_instances: Destruction complete after 1s
+aws_vpc_security_group_ingress_rule.alb_listener: Destruction complete after 2s
+aws_autoscaling_group.web: Still destroying... [id=lf-vm-dev-web, 00m10s elapsed]
+aws_autoscaling_group.web: Still destroying... [id=lf-vm-dev-web, 00m20s elapsed]
+aws_autoscaling_group.web: Still destroying... [id=lf-vm-dev-web, 00m30s elapsed]
+aws_autoscaling_group.web: Still destroying... [id=lf-vm-dev-web, 00m40s elapsed]
+aws_autoscaling_group.web: Still destroying... [id=lf-vm-dev-web, 00m50s elapsed]
+aws_autoscaling_group.web: Still destroying... [id=lf-vm-dev-web, 01m00s elapsed]
+aws_autoscaling_group.web: Still destroying... [id=lf-vm-dev-web, 01m10s elapsed]
+aws_autoscaling_group.web: Still destroying... [id=lf-vm-dev-web, 01m20s elapsed]
+aws_autoscaling_group.web: Still destroying... [id=lf-vm-dev-web, 01m30s elapsed]
+aws_autoscaling_group.web: Still destroying... [id=lf-vm-dev-web, 01m40s elapsed]
+aws_autoscaling_group.web: Destruction complete after 1m46s
+aws_cloudwatch_metric_alarm.unhealthy_hosts: Destroying... [id=lf-vm-dev-unhealthy-hosts]
+aws_launch_template.web: Destroying... [id=lt-0352386a8a3783711]
+aws_cloudwatch_metric_alarm.unhealthy_hosts: Destruction complete after 1s
+aws_sns_topic.alarms: Destroying... [id=arn:aws:sns:us-east-1:123456789012:lf-vm-dev-alarms]
+aws_lb_target_group.web: Destroying... [id=arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/lf-vm-dev/122e8bd3e201a3ab]
+aws_lb.web: Destroying... [id=arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/app/lf-vm-dev/9a86d6f77ca39fe6]
+aws_launch_template.web: Destruction complete after 1s
+aws_iam_instance_profile.instances: Destroying... [id=lf-vm-dev-instances]
+aws_cloudwatch_log_group.app: Destroying... [id=/ec2/lf-vm-dev]
+aws_security_group.instances: Destroying... [id=sg-0833cfc0ffcf82f08]
+aws_lb_target_group.web: Destruction complete after 1s
+aws_sns_topic.alarms: Destruction complete after 1s
+aws_kms_key.alarms: Destroying... [id=b959dabf-c63d-4c02-bb7b-a7a31407d4d9]
+aws_cloudwatch_log_group.app: Destruction complete after 2s
+aws_iam_instance_profile.instances: Destruction complete after 2s
+aws_iam_role.instances: Destroying... [id=lf-vm-dev-instances]
+aws_security_group.instances: Destruction complete after 2s
+aws_kms_key.alarms: Destruction complete after 1s
+aws_iam_role.instances: Destruction complete after 1s
+aws_lb.web: Still destroying... [id=arn:aws:elasticloadbalancing:us-east-1:...alancer/app/lf-vm-dev/9a86d6f77ca39fe6, 00m10s elapsed]
+aws_lb.web: Destruction complete after 12s
+aws_security_group.alb: Destroying... [id=sg-0212b0ddbaf2596f7]
+aws_security_group.alb: Destruction complete after 8s
+
+Apply complete! Resources: 0 added, 0 changed, 20 destroyed.

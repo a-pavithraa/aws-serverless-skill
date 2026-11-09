@@ -1,0 +1,10 @@
+aws_launch_template.web: Modifying... [id=lt-0a5648b36b4d64ace]
+aws_launch_template.web: Modifications complete after 8s [id=lt-0a5648b36b4d64ace]
+aws_autoscaling_group.web: Modifying... [id=lf-vm-dev-web]
+
+Error: starting Auto Scaling Group (lf-vm-dev-web) instance refresh: operation error Auto Scaling: StartInstanceRefresh, https response error StatusCode: 400, RequestID: 60abf242-852b-4ed1-b291-d5a64bfc09c7, api error ValidationError: A CloudWatch monitor is in alarm. The instance refresh cannot start.
+
+  with aws_autoscaling_group.web,
+  on main.tf line 257, in resource "aws_autoscaling_group" "web":
+ 257: resource "aws_autoscaling_group" "web" {
+

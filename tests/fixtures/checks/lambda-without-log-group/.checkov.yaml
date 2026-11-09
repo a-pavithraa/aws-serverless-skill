@@ -1,0 +1,11 @@
+# Fixture: only the log-group and alarm relationships are under test.
+framework:
+  - terraform
+skip-check:
+  - CKV_AWS_115
+  - CKV_AWS_116
+  - CKV_AWS_117
+  - CKV_AWS_158
+  - CKV_AWS_173
+  - CKV_AWS_272
+  - CKV_AWS_338

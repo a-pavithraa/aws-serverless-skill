@@ -1,0 +1,12 @@
+{
+  "probes": [
+    {
+      "name": "hello",
+      "method": "GET",
+      "path": "/hello",
+      "expect_status": 200,
+      "expect_json_keys": ["message", "requestId"],
+      "unauthenticated_expect_status_when_iam": 403
+    }
+  ]
+}

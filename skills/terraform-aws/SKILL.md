@@ -1,6 +1,6 @@
 ---
 name: terraform-aws
-description: "Patterns and best practices for AWS infrastructure as code with Terraform. Use when the user asks about Terraform module structure, naming conventions, state management, IAM policies (least privilege, OIDC), CI/CD pipelines for infrastructure (GitHub Actions, OIDC authentication), security scanning (Checkov, CKV_AWS checks), secrets management, KMS key policies, confused deputy prevention, Lambda function URL auth, API Gateway WAF/logging, or general IaC architecture decisions. Triggers on: Terraform, OpenTofu, IaC, modules, tfstate, remote state, OIDC, IAM, least privilege, GitHub Actions, CI/CD, infrastructure pipeline, AWS provider, Checkov, static analysis, IaC scanning, confused deputy, source ARN, KMS, CMK, secrets in state, ephemeral resources, Lambda function URL, API Gateway WAF."
+description: "Use when writing or reviewing Terraform for AWS: module layout, naming, state backends and locking, IAM least privilege and confused-deputy conditions, KMS key policies, keeping secrets out of state, OIDC for CI, or GitHub Actions plan and apply pipelines. Not for creating a new application (creating-aws-projects) or installing repository checks (aws-iac-team-harness)."
 ---
 
 # Terraform AWS
@@ -39,6 +39,7 @@ description: "Patterns and best practices for AWS infrastructure as code with Te
 - **Don't** use `data "aws_secretsmanager_secret_version"` in Terraform ≥ 1.10 — use `ephemeral` to avoid writing the secret value to state
 
 ### CI/CD
+- **Don't** run `terraform apply`, `destroy`, `state` commands, `-target` or `-auto-approve` from an agent session. Apply runs in CI from the approved saved plan. The `aws-iac-team-harness` skill installs the checks and the reference workflow.
 - **Don't** store AWS credentials as GitHub/CI secrets — use OIDC federation
 - **Don't** run `terraform apply` directly on push to main — require plan review in PR
 - **Don't** use `cancel-in-progress: true` on apply/destroy jobs — cancelling mid-apply corrupts state
@@ -62,50 +63,9 @@ description: "Patterns and best practices for AWS infrastructure as code with Te
 | S3-native state locking (no DynamoDB lock table) | 1.10+ | any |
 | Ephemeral resources for secrets | 1.10+ | any |
 
-## Cost Analysis
+## Cost questions
 
-When the user asks about cost impact, pricing, or cost optimisation for Terraform-managed infrastructure, direct them to install the **AWS Pricing MCP Server**. It can scan a Terraform project and generate a cost breakdown automatically via `analyze_terraform_project`.
-
-**Prerequisites:** `uv` package manager, Python 3.10+, AWS credentials with `pricing:*` permissions.
-
-**macOS / Linux:**
-```json
-{
-  "mcpServers": {
-    "awslabs.aws-pricing-mcp-server": {
-      "command": "uvx",
-      "args": ["awslabs.aws-pricing-mcp-server@latest"],
-      "env": {
-        "FASTMCP_LOG_LEVEL": "ERROR",
-        "AWS_PROFILE": "your-aws-profile",
-        "AWS_REGION": "us-east-1"
-      }
-    }
-  }
-}
-```
-
-**Windows:**
-```json
-{
-  "mcpServers": {
-    "awslabs.aws-pricing-mcp-server": {
-      "command": "uvx",
-      "args": [
-        "--from", "awslabs.aws-pricing-mcp-server@latest",
-        "awslabs.aws-pricing-mcp-server.exe"
-      ],
-      "env": {
-        "FASTMCP_LOG_LEVEL": "ERROR",
-        "AWS_PROFILE": "your-aws-profile",
-        "AWS_REGION": "us-east-1"
-      }
-    }
-  }
-}
-```
-
-Add the above to `~/.claude/claude_desktop_config.json` (Claude Desktop) or `.claude/mcp.json` (Claude Code) under `mcpServers`.
+For prices, use the AWS Pricing MCP server (`awslabs.aws-pricing-mcp-server`). Its [README](https://github.com/awslabs/mcp/tree/main/src/aws-pricing-mcp-server) has the setup. Prices in this skill are dated examples, not quotes.
 
 ---
 
@@ -115,8 +75,8 @@ Load **only** the reference file that matches the user's question. Never bulk-lo
 
 | User is asking about | Load |
 |---------------------|------|
-| Module structure, naming, state, backend buckets | `references/terraform-structure.md` (184 lines) |
-| IAM policies, least privilege, role design, SCPs, Checkov checks, KMS, secrets in state, OIDC | `references/security-iam.md` (327 lines) |
-| CI/CD, GitHub Actions, OIDC, pipelines, ephemeral envs, drift | `references/cicd-patterns.md` (642 lines) |
+| Module structure, naming, state, backend buckets | `references/terraform-structure.md` |
+| IAM policies, least privilege, role design, SCPs, Checkov checks, KMS, secrets in state, OIDC | `references/security-iam.md` |
+| CI/CD, GitHub Actions, OIDC, pipelines, ephemeral envs, drift | `references/cicd-patterns.md` |
 
-For infrastructure **reviews**: load `terraform-structure.md` + `security-iam.md` (511 lines). Only add `cicd-patterns.md` if the review scope includes pipeline config.
+For infrastructure **reviews**: load `terraform-structure.md` and `security-iam.md`. Only add `cicd-patterns.md` if the review scope includes pipeline config.

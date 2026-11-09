@@ -1,0 +1,13 @@
+11:38:02 InProgress	0	None
+11:38:35 InProgress	25	Waiting for instances to warm up before continuing. For example: i-079b13f10dd219d5f is warming up.
+11:39:07 InProgress	25	Waiting for instances to warm up before continuing. For example: i-079b13f10dd219d5f is warming up.
+11:39:40 InProgress	25	Waiting for instances to warm up before continuing. For example: i-079b13f10dd219d5f is warming up.
+11:40:12 InProgress	25	Waiting for instances to warm up before continuing. For example: i-079b13f10dd219d5f is warming up.
+11:40:44 InProgress	25	Waiting for instances to warm up before continuing. For example: i-079b13f10dd219d5f is warming up.
+11:41:16 InProgress	25	Waiting for instances to warm up before continuing. For example: i-079b13f10dd219d5f is warming up.
+11:41:49 InProgress	25	Waiting for instances to warm up before continuing. For example: i-079b13f10dd219d5f is warming up.
+11:42:21 InProgress	25	Waiting for instances to warm up before continuing. For example: i-079b13f10dd219d5f is warming up.
+11:42:55 InProgress	25	Waiting for instances to warm up before continuing. For example: i-079b13f10dd219d5f is warming up.
+11:43:27 InProgress	100	Waiting for terminating instances before continuing. For example: i-0b93f741d67ba4682 is terminating.
+11:44:00 InProgress	100	Waiting for terminating instances before continuing. For example: i-0b93f741d67ba4682 is terminating.
+11:44:32 Successful	100	None

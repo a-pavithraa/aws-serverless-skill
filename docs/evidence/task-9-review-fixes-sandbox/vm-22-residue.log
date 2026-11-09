@@ -1,0 +1,41 @@
+PASS       residue                  no live resources tagged Project=lf-vm, Environment=dev
+arn:aws:ec2:us-east-1:123456789012:instance/i-00da4d85abcb121d4 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:instance/i-010a2d000678b3176 instance terminated
+arn:aws:ec2:us-east-1:123456789012:instance/i-02463db53461bb100 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:instance/i-034668fbe3ce4bf9b deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:instance/i-04395e2430e08e5a2 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:instance/i-0454a11d38dc8a6e6 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:instance/i-06747d26befadb3fe deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:instance/i-06e4fc5b803bfe423 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:instance/i-07822d44e33df3f0b deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:instance/i-079b13f10dd219d5f deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:instance/i-0874497037362475b deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:instance/i-08d9898cb386e89b0 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:instance/i-090e11099ffb79660 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:instance/i-0b3447dccd6c9d584 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:instance/i-0b3ff8a3a034e8077 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:instance/i-0b93f741d67ba4682 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:instance/i-0c27f84975a94feda deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:instance/i-0cc6fea77e5aa5d9d deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:instance/i-0ced85ec051a53f43 instance terminated
+arn:aws:ec2:us-east-1:123456789012:instance/i-0d64bcda67f9ffd46 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:instance/i-0ddea1d0358645a79 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:instance/i-0eb074d43ec0f92c2 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:instance/i-0ec369668ca14b996 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:instance/i-0fc2cb57bbf7af0e2 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-0052c4869da1c0415 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-0229d379ee2163029 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-043b8780eb22e9ae5 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-04b6248ae9741f96c deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-0590ea0a820921bf8 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-0af93ec87ef0abfb9 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-0d7647d479b4a365e deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-0efc6eefc7c526439 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:volume/vol-0271d446a26ac437d deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:volume/vol-0b38a5d1d278cc157 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:volume/vol-0c42ab310ea55140e deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:volume/vol-0dc7d7f68382e1291 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:volume/vol-0e211c28490329c08 deleted; the tag index has not caught up
+arn:aws:kms:us-east-1:123456789012:key/af52c7ab-aba9-424e-bf5e-9f10e169dde8 scheduled for deletion on 2026-11-16
+arn:aws:kms:us-east-1:123456789012:key/b959dabf-c63d-4c02-bb7b-a7a31407d4d9 scheduled for deletion on 2026-11-16
+residue: PASS

@@ -1,0 +1,1 @@
+{"message": "hello", "correlation_id": "849955a7-af06-40c5-8b9b-60f16f104bee", "source_sha256": "e36b34d2bcc4638b3c9d4ed0c790cfcccf91dc5a13e98ae5b4636a6b1a94fe06", "secrets_loaded": ["DB_PASSWORD", "API_TOKEN"]}

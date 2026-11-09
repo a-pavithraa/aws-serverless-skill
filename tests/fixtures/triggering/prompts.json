@@ -1,0 +1,22 @@
+[
+  {"id": "create-1", "project": "empty", "expect": "creating-aws-projects", "prompt": "Set up a new serverless HTTP API on AWS for our orders service, in Terraform. Nothing exists yet."},
+  {"id": "create-2", "project": "empty", "expect": "creating-aws-projects", "prompt": "I need a fresh Lambda behind API Gateway for a webhook receiver, with the infrastructure as code."},
+  {"id": "create-3", "project": "empty", "expect": "creating-aws-projects", "prompt": "Start a new AWS project: an HTTP endpoint that returns hello, with logging and alarms set up properly."},
+  {"id": "harness-1", "project": "terraform", "expect": "aws-iac-team-harness", "prompt": "This Terraform repo has no checks and agents keep pushing broken infrastructure. Set up checks that every pull request and every agent run must pass."},
+  {"id": "harness-2", "project": "terraform", "expect": "aws-iac-team-harness", "prompt": "We have hundreds of old Checkov findings. Make CI ignore the existing ones but fail on new ones."},
+  {"id": "harness-3", "project": "terraform", "expect": "aws-iac-team-harness", "prompt": "After a deploy, how do I prove the Lambda running in the sandbox is this commit's code and that it actually works?"},
+  {"id": "terraform-1", "project": "terraform", "expect": "terraform-aws", "prompt": "How should I lay out remote state for dev, staging and prod in this Terraform repo?"},
+  {"id": "terraform-2", "project": "terraform", "expect": "terraform-aws", "prompt": "Review the IAM role in function.tf for least privilege."},
+  {"id": "terraform-3", "project": "terraform", "expect": "terraform-aws", "prompt": "Set up GitHub Actions so the pipeline can assume an AWS role without long-lived keys."},
+  {"id": "serverless-1", "project": "empty", "expect": "aws-serverless", "prompt": "Our Java Lambda takes 3 seconds on a cold start. What are our options?"},
+  {"id": "serverless-2", "project": "empty", "expect": "aws-serverless", "prompt": "What visibility timeout should the SQS queue have for a Lambda consumer with a 30 second timeout?"},
+  {"id": "serverless-3", "project": "empty", "expect": "aws-serverless", "prompt": "HTTP API or REST API on API Gateway for a public endpoint that needs WAF?"},
+  {"id": "dynamodb-1", "project": "empty", "expect": "aws-dynamodb", "prompt": "Design a DynamoDB table for customers and orders, with lookups by customer and by order date."},
+  {"id": "dynamodb-2", "project": "empty", "expect": "aws-dynamodb", "prompt": "Our DynamoDB table throttles on one partition key that holds today's date. How do we fix it?"},
+  {"id": "dynamodb-3", "project": "empty", "expect": "aws-dynamodb", "prompt": "Should this DynamoDB table use on-demand or provisioned capacity at about 50 writes per second all day?"},
+  {"id": "none-1", "project": "empty", "expect": null, "prompt": "Write a Python function that reverses a singly linked list."},
+  {"id": "none-2", "project": "empty", "expect": null, "prompt": "Write a Kubernetes Deployment with a HorizontalPodAutoscaler for an nginx container."},
+  {"id": "none-3", "project": "empty", "expect": null, "prompt": "Explain the difference between TCP and UDP in two sentences."},
+  {"id": "none-4", "project": "empty", "expect": null, "prompt": "Create a Google Cloud Run service with Terraform."},
+  {"id": "none-5", "project": "empty", "expect": null, "prompt": "Fix the missing dependency warning on a React useEffect that reads props.userId."}
+]

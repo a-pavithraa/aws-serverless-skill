@@ -1,0 +1,10 @@
+PASS       target                   123456789012 us-east-1
+PASS       artifact                 version 3, CodeSha256 s+KwjjCT1lWtHedImAO6fD+vn/6VPDq06BQysFq1FBw=
+PASS       probe:hello              200
+PASS       auth-rejection:hello     unsigned request got 403, expected 403
+PASS       logs:hello               1 event(s) for request db4c9718-5618-4002-af15-db23e7f44985
+PASS       trace:hello              1-6af0b677-4e36a81928cbe1d90765caf6 (reported)
+FAIL       alarms                   in ALARM: lf-sandbox-dev-api-5xx, lf-sandbox-dev-lambda-errors (reported)
+UNVERIFIED alerting                 no confirmed subscriber on the alarm topic: alarms notify no one (reported)
+verify-deployment: PASS (pass 6, fail 1, unverified 1)
+exit=0

@@ -1,0 +1,40 @@
+module.vpc.aws_default_route_table.default[0]: Destroying... [id=rtb-0749473297cea2422]
+module.vpc.aws_route_table_association.public[1]: Destroying... [id=rtbassoc-0fb4ae960015f4a52]
+module.vpc.aws_route.public_internet_gateway[0]: Destroying... [id=r-rtb-07dfa57831820ecf51080289494]
+aws_ssm_parameter.nat_mode: Destroying... [id=/landform/network/lf-net-dev/nat-mode]
+module.vpc.aws_iam_role_policy_attachment.vpc_flow_log_cloudwatch[0]: Destroying... [id=vpc-flow-log-role-8e5d2b61a9eff021c028d7ecfd/arn:aws:iam::123456789012:policy/vpc-flow-log-to-cloudwatch-839ee125324cdc036b52fcce22]
+module.vpc.aws_route_table_association.public[0]: Destroying... [id=rtbassoc-0e26c7c87a9e48954]
+module.vpc.aws_default_security_group.this[0]: Destroying... [id=sg-0d8b93d1930c087f1]
+aws_ssm_parameter.vpc_id: Destroying... [id=/landform/network/lf-net-dev/vpc-id]
+aws_ssm_parameter.public_subnet_ids: Destroying... [id=/landform/network/lf-net-dev/public-subnet-ids]
+module.vpc.aws_default_network_acl.this[0]: Destroying... [id=acl-01301ea6aa9049120]
+module.vpc.aws_default_security_group.this[0]: Destruction complete after 0s
+module.vpc.aws_default_route_table.default[0]: Destruction complete after 0s
+module.vpc.aws_default_network_acl.this[0]: Destruction complete after 0s
+module.vpc.aws_flow_log.this[0]: Destroying... [id=fl-081977486e5fe3f85]
+module.vpc.aws_iam_role_policy_attachment.vpc_flow_log_cloudwatch[0]: Destruction complete after 1s
+module.vpc.aws_iam_policy.vpc_flow_log_cloudwatch[0]: Destroying... [id=arn:aws:iam::123456789012:policy/vpc-flow-log-to-cloudwatch-839ee125324cdc036b52fcce22]
+aws_ssm_parameter.vpc_id: Destruction complete after 1s
+aws_ssm_parameter.public_subnet_ids: Destruction complete after 1s
+aws_ssm_parameter.nat_mode: Destruction complete after 1s
+module.vpc.aws_flow_log.this[0]: Destruction complete after 1s
+module.vpc.aws_iam_role.vpc_flow_log_cloudwatch[0]: Destroying... [id=vpc-flow-log-role-8e5d2b61a9eff021c028d7ecfd]
+module.vpc.aws_route_table_association.public[0]: Destruction complete after 2s
+module.vpc.aws_route_table_association.public[1]: Destruction complete after 2s
+module.vpc.aws_subnet.public[0]: Destroying... [id=subnet-0478b72d44dad5966]
+module.vpc.aws_subnet.public[1]: Destroying... [id=subnet-07c6b2db61803dca1]
+module.vpc.aws_route.public_internet_gateway[0]: Destruction complete after 2s
+module.vpc.aws_internet_gateway.this[0]: Destroying... [id=igw-0b245308b683214a3]
+module.vpc.aws_route_table.public[0]: Destroying... [id=rtb-07dfa57831820ecf5]
+module.vpc.aws_iam_policy.vpc_flow_log_cloudwatch[0]: Destruction complete after 1s
+module.vpc.aws_cloudwatch_log_group.flow_log[0]: Destroying... [id=/aws/vpc-flow-log/vpc-0316eaacbffec1be1]
+module.vpc.aws_iam_role.vpc_flow_log_cloudwatch[0]: Destruction complete after 2s
+module.vpc.aws_subnet.public[0]: Destruction complete after 1s
+module.vpc.aws_subnet.public[1]: Destruction complete after 1s
+module.vpc.aws_cloudwatch_log_group.flow_log[0]: Destruction complete after 1s
+module.vpc.aws_internet_gateway.this[0]: Destruction complete after 1s
+module.vpc.aws_route_table.public[0]: Destruction complete after 1s
+module.vpc.aws_vpc.this[0]: Destroying... [id=vpc-0316eaacbffec1be1]
+module.vpc.aws_vpc.this[0]: Destruction complete after 1s
+
+Apply complete! Resources: 0 added, 0 changed, 19 destroyed.

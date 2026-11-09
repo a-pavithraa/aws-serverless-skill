@@ -1,0 +1,10 @@
+Installed 7 packages in 2.92s
+PASS       target                   123456789012 us-east-1
+PASS       artifact                 1 task(s) run sha256:58c1a415e9dbbb7cb3d6d9c3c21bab3d18e0cc9c9be9ba0bceded5e8a0388d86
+PASS       health                   1 healthy target(s)
+PASS       probe:hello              200
+PASS       logs:hello               1 event(s) for request 7553ad52-d9b6-401f-8f96-62034a662eb4
+UNVERIFIED trace:hello              response carried no trace ID (reported)
+PASS       alarms                   lf-web-dev-cpu-high=OK, lf-web-dev-http-5xx=OK, lf-web-dev-running-tasks=OK (reported)
+UNVERIFIED alerting                 no confirmed subscriber on the alarm topic: alarms notify no one (reported)
+verify-deployment: PASS (pass 6, fail 0, unverified 2)

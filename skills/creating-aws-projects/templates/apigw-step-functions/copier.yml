@@ -1,0 +1,73 @@
+_subdirectory: template
+_templates_suffix: .jinja
+
+project_name:
+  type: str
+  help: Lowercase name, 3-32 chars, letters, digits and hyphens
+  validator: "{% if not (project_name | regex_search('^[a-z][a-z0-9-]{1,30}[a-z0-9]$')) %}invalid project_name{% endif %}"
+
+aws_region:
+  type: str
+  default: us-east-1
+
+environment:
+  type: str
+  default: dev
+  validator: "{% if not (environment | regex_search('^[a-z][a-z0-9]{1,15}$')) %}invalid environment{% endif %}"
+
+auth_mode:
+  type: str
+  choices: [iam, none]
+  default: iam
+
+public_reason:
+  type: str
+  default: ""
+  help: Why the API is public; required when auth_mode is none
+  validator: "{% if auth_mode == 'none' and (public_reason | trim | length) < 10 %}public_reason: auth_mode none needs a reason of at least 10 characters{% endif %}"
+
+runtime:
+  type: str
+  help: Step Functions has no runtime; this names the state language the definition uses
+  choices: [asl-jsonpath]
+  default: asl-jsonpath
+
+architecture:
+  type: str
+  choices: [managed]
+  default: managed
+
+workflow_timeout_seconds:
+  type: int
+  default: 10
+  help: The workflow's TimeoutSeconds; REST API integrations stop waiting after 29 s
+  validator: "{% if workflow_timeout_seconds < 1 or workflow_timeout_seconds > 25 %}workflow_timeout_seconds: 1-25, so the workflow ends before API Gateway's 29 s integration timeout{% endif %}"
+
+log_retention_days:
+  type: int
+  default: 14
+  validator: "{% if log_retention_days not in [1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653] %}log_retention_days: not a value CloudWatch Logs accepts{% endif %}"
+
+alarm_email:
+  type: str
+  default: ""
+
+allowed_account_id:
+  type: str
+  default: ""
+  validator: "{% if allowed_account_id and not (allowed_account_id | regex_search('^[0-9]{12}$')) %}allowed_account_id: empty or a 12-digit account ID{% endif %}"
+
+backend:
+  type: str
+  choices: [local, s3]
+  default: local
+
+state_bucket:
+  type: str
+  default: ""
+  validator: "{% if backend == 's3' and not state_bucket %}state_bucket: required for the s3 backend{% endif %}"
+
+state_key:
+  type: str
+  default: ""
+  validator: "{% if backend == 's3' and not state_key %}state_key: required for the s3 backend{% endif %}"

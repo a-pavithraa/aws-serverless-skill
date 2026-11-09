@@ -1,0 +1,10 @@
+PASS       template-syntax .
+PASS       runtime-profile .
+PASS       app-tests       app
+PASS       fmt             infra
+PASS       init            infra
+PASS       validate        infra
+PASS       tflint          infra
+PASS       checkov         infra [dev]
+PASS       terraform-test  infra
+harness check: PASS (pass 9, fail 0, unverified 0)

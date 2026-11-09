@@ -1,0 +1,8 @@
+PASS       target                   123456789012 us-east-1
+PASS       artifact                 EXPRESS state machine runs the local definition
+FAIL       probe:processed          status 500, expected 200: {"message": "Internal server error"}
+FAIL       probe:rejected           status 500, expected 422: {"message": "Internal server error"}
+FAIL       probe:timed-out          status 500, expected 504: {"message": "Internal server error"}
+PASS       alarms                   lf-flow-dev-api-5xx=INSUFFICIENT_DATA, lf-flow-dev-executions-timed-out=INSUFFICIENT_DATA (reported)
+UNVERIFIED alerting                 no confirmed subscriber on the alarm topic: alarms notify no one (reported)
+verify-deployment: FAIL (pass 3, fail 3, unverified 1)

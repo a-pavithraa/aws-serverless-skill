@@ -1,0 +1,54 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.14.4",
+  "resource_changes": [
+    {
+      "address": "aws_lambda_function.api",
+      "mode": "managed",
+      "type": "aws_lambda_function",
+      "name": "api",
+      "change": {
+        "actions": ["update"],
+        "before": {"function_name": "orders-dev", "environment": [{"variables": {"API_TOKEN": "hunter2-before"}}]},
+        "after": {"function_name": "orders-dev", "environment": [{"variables": {"API_TOKEN": "hunter2-after"}}]},
+        "after_unknown": {"version": true, "qualified_arn": true},
+        "after_sensitive": {"environment": [{"variables": {"API_TOKEN": true}}]}
+      }
+    },
+    {
+      "address": "aws_dynamodb_table.orders",
+      "mode": "managed",
+      "type": "aws_dynamodb_table",
+      "name": "orders",
+      "change": {
+        "actions": ["delete", "create"],
+        "before": {"name": "orders-dev"},
+        "after": {"name": "orders-dev-v2"},
+        "after_unknown": {"arn": true},
+        "after_sensitive": {}
+      },
+      "action_reason": "replace_because_cannot_update"
+    },
+    {
+      "address": "aws_cloudwatch_log_group.old",
+      "mode": "managed",
+      "type": "aws_cloudwatch_log_group",
+      "name": "old",
+      "change": {"actions": ["delete"], "before": {"name": "/aws/lambda/old"}, "after": null, "after_unknown": {}, "after_sensitive": false}
+    },
+    {
+      "address": "data.aws_caller_identity.current",
+      "mode": "data",
+      "type": "aws_caller_identity",
+      "name": "current",
+      "change": {"actions": ["read"], "before": null, "after": {"account_id": "123456789012"}, "after_unknown": {}, "after_sensitive": {}}
+    },
+    {
+      "address": "aws_sns_topic.alarms",
+      "mode": "managed",
+      "type": "aws_sns_topic",
+      "name": "alarms",
+      "change": {"actions": ["no-op"], "before": {"name": "a"}, "after": {"name": "a"}, "after_unknown": {}, "after_sensitive": {}}
+    }
+  ]
+}

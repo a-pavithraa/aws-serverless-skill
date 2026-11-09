@@ -1,0 +1,26 @@
+aws_lambda_function.api: Modifying... [id=lf-sandbox-dev]
+aws_lambda_function.api: Still modifying... [id=lf-sandbox-dev, 00m10s elapsed]
+aws_lambda_function.api: Modifications complete after 13s [id=lf-sandbox-dev]
+aws_lambda_alias.live: Modifying... [id=arn:aws:lambda:us-east-1:123456789012:function:lf-sandbox-dev:live]
+aws_lambda_alias.live: Modifications complete after 0s [id=arn:aws:lambda:us-east-1:123456789012:function:lf-sandbox-dev:live]
+
+Apply complete! Resources: 0 added, 2 changed, 0 destroyed.
+
+Outputs:
+
+account_id = "123456789012"
+alarm_names = [
+  "lf-sandbox-dev-lambda-errors",
+  "lf-sandbox-dev-lambda-throttles",
+  "lf-sandbox-dev-lambda-duration-p99",
+  "lf-sandbox-dev-api-5xx",
+]
+alarm_topic_arn = "arn:aws:sns:us-east-1:123456789012:lf-sandbox-dev-alarms"
+api_url = "https://f3nuok38y3.execute-api.us-east-1.amazonaws.com/"
+artifact_path = "./build/lambda.zip"
+auth_mode = "iam"
+function_alias = "live"
+function_name = "lf-sandbox-dev"
+function_version = "3"
+lambda_log_group = "/aws/lambda/lf-sandbox-dev"
+region = "us-east-1"

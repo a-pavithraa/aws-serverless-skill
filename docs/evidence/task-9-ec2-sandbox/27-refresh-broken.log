@@ -1,0 +1,14 @@
+t+3s probe 200 refresh Pending	None	None
+t+36s probe 200 refresh InProgress	25	Waiting for instances to warm up before continuing. For example: i-06747d26befadb3fe is warming up.
+t+69s probe 200 refresh InProgress	25	Waiting for instances to warm up before continuing. For example: i-06747d26befadb3fe is warming up.
+t+104s probe 200 refresh InProgress	25	Waiting for instances to warm up before continuing. For example: i-06747d26befadb3fe is warming up.
+t+137s probe 200 refresh InProgress	25	Waiting for instances to warm up before continuing. For example: i-06747d26befadb3fe is warming up.
+t+170s probe 200 refresh InProgress	25	Waiting for instances to warm up before continuing. For example: i-06747d26befadb3fe is warming up.
+t+203s probe 200 refresh InProgress	25	Waiting for instances to warm up before continuing. For example: i-06747d26befadb3fe is warming up.
+t+236s probe 200 refresh InProgress	25	Waiting for instances to warm up before continuing. For example: i-06747d26befadb3fe is warming up.
+t+269s probe 200 refresh InProgress	25	Waiting for instances to warm up before continuing. For example: i-06747d26befadb3fe is warming up.
+t+302s probe 200 refresh InProgress	25	Waiting for instances to warm up before continuing. For example: i-06747d26befadb3fe is warming up.
+t+335s probe 200 refresh InProgress	25	Waiting for remaining instances to be available. For example: i-06747d26befadb3fe has insufficient data to evaluate its health with Elastic Load Balancing.
+t+368s probe 200 refresh RollbackInProgress	25	Waiting for a health check interval to pass before continuing.
+t+401s probe 200 refresh RollbackInProgress	0	Waiting for a health check interval to pass before continuing.
+t+433s probe 200 refresh RollbackSuccessful	0	None

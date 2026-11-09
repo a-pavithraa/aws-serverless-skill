@@ -1,0 +1,78 @@
+_subdirectory: template
+_templates_suffix: .jinja
+
+project_name:
+  type: str
+  help: Lowercase name, 3-32 chars, letters, digits and hyphens
+  validator: "{% if not (project_name | regex_search('^[a-z][a-z0-9-]{1,30}[a-z0-9]$')) %}invalid project_name{% endif %}"
+
+aws_region:
+  type: str
+  default: us-east-1
+
+environment:
+  type: str
+  default: dev
+  validator: "{% if not (environment | regex_search('^[a-z][a-z0-9]{1,15}$')) %}invalid environment{% endif %}"
+
+runtime:
+  type: str
+  choices: [python3.13]
+  default: python3.13
+
+architecture:
+  type: str
+  choices: [arm64]
+  default: arm64
+
+function_timeout_seconds:
+  type: int
+  default: 10
+  help: The queue's visibility timeout is set to six times this
+  validator: "{% if function_timeout_seconds < 1 or function_timeout_seconds > 900 %}function_timeout_seconds: 1-900{% endif %}"
+
+max_receive_count:
+  type: int
+  default: 3
+  help: Deliveries before a message moves to the dead-letter queue
+  validator: "{% if max_receive_count < 1 or max_receive_count > 10 %}max_receive_count: 1-10{% endif %}"
+
+batch_size:
+  type: int
+  default: 10
+  validator: "{% if batch_size < 1 or batch_size > 10 %}batch_size: 1-10; above 10 needs a batching window{% endif %}"
+
+max_concurrency:
+  type: int
+  default: 2
+  help: Upper bound on concurrent invocations from the queue
+  validator: "{% if max_concurrency < 2 or max_concurrency > 1000 %}max_concurrency: 2-1000, the range SQS event sources accept{% endif %}"
+
+log_retention_days:
+  type: int
+  default: 14
+  validator: "{% if log_retention_days not in [1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653] %}log_retention_days: not a value CloudWatch Logs accepts{% endif %}"
+
+alarm_email:
+  type: str
+  default: ""
+
+allowed_account_id:
+  type: str
+  default: ""
+  validator: "{% if allowed_account_id and not (allowed_account_id | regex_search('^[0-9]{12}$')) %}allowed_account_id: empty or a 12-digit account ID{% endif %}"
+
+backend:
+  type: str
+  choices: [local, s3]
+  default: local
+
+state_bucket:
+  type: str
+  default: ""
+  validator: "{% if backend == 's3' and not state_bucket %}state_bucket: required for the s3 backend{% endif %}"
+
+state_key:
+  type: str
+  default: ""
+  validator: "{% if backend == 's3' and not state_key %}state_key: required for the s3 backend{% endif %}"

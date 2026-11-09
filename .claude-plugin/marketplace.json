@@ -1,20 +1,24 @@
 {
   "name": "aws-serverless-skill",
-  "owner": { "name": "Pavithra" },
+  "owner": {
+    "name": "Pavithra"
+  },
   "metadata": {
-    "description": "Claude Code skills for AWS serverless and Terraform infrastructure-as-code patterns — non-obvious gotchas, decision frameworks, and CI/CD patterns.",
-    "version": "1.0.0"
+    "description": "Skills for AWS applications in Terraform: tested project templates, repository checks for agents and CI, serverless, DynamoDB and Terraform guidance.",
+    "version": "2.0.0"
   },
   "plugins": [
     {
       "name": "aws-infrastructure-skills",
-      "description": "AWS serverless, DynamoDB, and Terraform patterns for Claude Code — Lambda, API Gateway, DynamoDB single-table design, and Terraform IaC best practices.",
+      "description": "Create AWS projects from tested templates, install the Terraform checks every agent must pass, and get current guidance for Lambda, API Gateway, DynamoDB and Terraform.",
       "source": "./",
       "strict": false,
       "skills": [
+        "./skills/creating-aws-projects",
+        "./skills/aws-iac-team-harness",
         "./skills/terraform-aws",
-        "./skills/aws-dynamodb",
-        "./skills/aws-serverless"
+        "./skills/aws-serverless",
+        "./skills/aws-dynamodb"
       ]
     }
   ]

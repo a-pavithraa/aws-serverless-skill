@@ -1,0 +1,7 @@
+marked i-0874497037362475b Unhealthy
+t+9s probe 200000 in-service-healthy 1 healthy-targets 2 victim-present 1
+t+34s probe 200000 in-service-healthy 2 healthy-targets 1 victim-present 1
+t+59s probe 200000 in-service-healthy 2 healthy-targets 1 victim-present 1
+t+83s probe 200000 in-service-healthy 2 healthy-targets 1 victim-present 0
+t+108s probe 200000 in-service-healthy 2 healthy-targets 2 victim-present 0
+replacement: 108 s, probes ok 0, failed 5

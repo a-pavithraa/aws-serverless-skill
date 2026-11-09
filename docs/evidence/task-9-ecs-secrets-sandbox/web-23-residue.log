@@ -1,0 +1,19 @@
+PASS       residue                  no live resources tagged Project=lf-web, Environment=dev
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-03e605ec054d575ef deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-0625b9194b1fa6583 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-091c480247d024276 deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-09e8709adc46a6bbf deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-0a92540689ba5edbc deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-0de67f234fdd045cc deleted; the tag index has not caught up
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-0ef5f2b0c0c91cad7 deleted; the tag index has not caught up
+arn:aws:ecs:us-east-1:123456789012:cluster/lf-web-dev deleted; the tag index has not caught up
+arn:aws:ecs:us-east-1:123456789012:service/lf-web-dev/lf-web-dev-web deleted; the tag index has not caught up
+arn:aws:ecs:us-east-1:123456789012:task-definition/lf-web-dev-lf-web-dev-web:5 deregistered (DELETE_IN_PROGRESS)
+arn:aws:ecs:us-east-1:123456789012:task/lf-web-dev/073e6355855c4f6c99800e500d3f8c03 deleted; the tag index has not caught up
+arn:aws:ecs:us-east-1:123456789012:task/lf-web-dev/66f70696bba04c70876aad90d4075d4d deleted; the tag index has not caught up
+arn:aws:ecs:us-east-1:123456789012:task/lf-web-dev/b93a8d38440e4bf99b69953962f61fc8 deleted; the tag index has not caught up
+arn:aws:kms:us-east-1:123456789012:key/69b359a4-1d5d-4d18-8191-b04f4423d273 scheduled for deletion on 2026-11-16
+arn:aws:kms:us-east-1:123456789012:key/6bd10bc0-17d1-4f8c-9d23-01292c80e43e scheduled for deletion on 2026-11-16
+arn:aws:kms:us-east-1:123456789012:key/c2da804c-3ef0-43a5-a15e-1187613a311d scheduled for deletion on 2026-11-16
+arn:aws:secretsmanager:us-east-1:123456789012:secret:lf-web-dev/app-DVPADj deletion requested on 2026-11-09
+residue: PASS

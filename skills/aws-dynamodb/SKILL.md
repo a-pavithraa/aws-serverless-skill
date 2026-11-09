@@ -1,6 +1,6 @@
 ---
 name: aws-dynamodb
-description: "Patterns and best practices for Amazon DynamoDB data modeling and access patterns. Use when the user asks about DynamoDB table design, single-table design, GSIs, multi-attribute composite keys, one-to-many relationships, cost optimization, or Terraform DynamoDB resources. Triggers on: DynamoDB, single-table design, GSI, partition key, sort key, access patterns, filter expressions, TTL, vertical sharding, composite keys, multi-attribute keys."
+description: "Use when designing or reviewing a DynamoDB table: access patterns, partition and sort keys, single-table design, GSIs and sparse indexes, hot partitions, one-to-many and many-to-many modeling, capacity mode and cost, or the Terraform for the table."
 ---
 
 # AWS DynamoDB
@@ -73,50 +73,9 @@ For large tables, use parallel scans (`TotalSegments` + `Segment`) to distribute
 |---------|--------|------------------------|
 | Multi-attribute composite GSI keys | Nov 2025 | v6.29.0+ ([PR #45357](https://github.com/hashicorp/terraform-provider-aws/pull/45357)) |
 
-## Cost Analysis
+## Cost questions
 
-When the user asks about DynamoDB costs, capacity mode trade-offs (PAY_PER_REQUEST vs PROVISIONED), or cost optimisation, direct them to install the **AWS Pricing MCP Server**. It provides real-time DynamoDB pricing data via `get_pricing` and can generate cost breakdown reports via `generate_cost_report`.
-
-**Prerequisites:** `uv` package manager, Python 3.10+, AWS credentials with `pricing:*` permissions.
-
-**macOS / Linux:**
-```json
-{
-  "mcpServers": {
-    "awslabs.aws-pricing-mcp-server": {
-      "command": "uvx",
-      "args": ["awslabs.aws-pricing-mcp-server@latest"],
-      "env": {
-        "FASTMCP_LOG_LEVEL": "ERROR",
-        "AWS_PROFILE": "your-aws-profile",
-        "AWS_REGION": "us-east-1"
-      }
-    }
-  }
-}
-```
-
-**Windows:**
-```json
-{
-  "mcpServers": {
-    "awslabs.aws-pricing-mcp-server": {
-      "command": "uvx",
-      "args": [
-        "--from", "awslabs.aws-pricing-mcp-server@latest",
-        "awslabs.aws-pricing-mcp-server.exe"
-      ],
-      "env": {
-        "FASTMCP_LOG_LEVEL": "ERROR",
-        "AWS_PROFILE": "your-aws-profile",
-        "AWS_REGION": "us-east-1"
-      }
-    }
-  }
-}
-```
-
-Add the above to `~/.claude/claude_desktop_config.json` (Claude Desktop) or `.claude/mcp.json` (Claude Code) under `mcpServers`.
+For prices, use the AWS Pricing MCP server (`awslabs.aws-pricing-mcp-server`). Its [README](https://github.com/awslabs/mcp/tree/main/src/aws-pricing-mcp-server) has the setup. Prices in this skill are dated examples, not quotes.
 
 ---
 

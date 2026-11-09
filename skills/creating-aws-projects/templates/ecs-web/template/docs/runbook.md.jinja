@@ -1,0 +1,31 @@
+# Runbook: {{ project_name }}-{{ environment }}
+
+Alarms notify the SNS topic `{{ project_name }}-{{ environment }}-alarms`.{% if alarm_email %} Email `{{ alarm_email }}` is subscribed. The subscription does nothing until someone clicks the confirmation link in the email from AWS.{% else %} Nothing is subscribed to it yet. Add a subscription, or no one is told when an alarm fires.{% endif %}
+
+Logs: `/ecs/{{ project_name }}-{{ environment }}` ({{ log_retention_days }} days). Each request, except `/health`, logs one JSON line with `status`, `path`, `correlation_id` and the load balancer's `trace_id`.
+
+Find one request, in Logs Insights on the log group:
+
+```
+fields @timestamp, status, path, trace_id | filter correlation_id = "<id>"
+```
+
+| Alarm | Fires when | First checks |
+| --- | --- | --- |
+| `{{ project_name }}-{{ environment }}-http-5xx` | the service answers any request with a 5xx status in a minute | the log lines with `status >= 500`; the last deploy (`image_digest` output) |
+| `{{ project_name }}-{{ environment }}-running-tasks` | fewer than {{ min_tasks }} task(s) run for 3 minutes, or no task reports metrics | ECS → cluster `{{ project_name }}-{{ environment }}` → service → Events and stopped tasks' "Stopped reason" |
+| `{{ project_name }}-{{ environment }}-cpu-high` | average CPU above 85 % for 5 minutes | the task count against `max_tasks` ({{ max_tasks }}); scale-out events |
+
+Express Mode also creates its own alarm that watches each rollout. ECS uses it to roll a bad rollout back. It is not in this list, and it does not notify the topic.
+
+## A rollout that fails
+
+Apply waits for a steady state. If the new image never passes `GET /health`, the apply fails and the earlier image keeps serving. Check the service events, then run the verifier: it reports which digest the tasks run. Terraform state then holds the failed digest. Plan again with the digest that works.
+
+## A task that cannot read its secret
+
+The service events and the stopped task show `ResourceInitializationError: unable to pull secrets or registry auth`, and no log line from the app. The secret has no value, lacks a key that `secret_names` lists, or was deleted. Check it: `aws secretsmanager get-secret-value --secret-id {{ project_name }}-{{ environment }}/app --query SecretString` and compare its keys with `secret_names`. Set the value with `put-secret-value`, then `aws ecs update-service --force-new-deployment`.
+
+## Patch the base image
+
+The `Dockerfile` pins `python:3.13-slim` by digest, so security fixes do not arrive on their own. When a new digest ships, update the `FROM` line, run `bash build_image.sh` and deploy the digest it prints. The new `Dockerfile` gives the image a new tag. Python 3.13 reaches end of life in October 2029.

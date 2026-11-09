@@ -1,0 +1,139 @@
+data.aws_iam_policy_document.workflow: Reading...
+data.aws_iam_policy_document.api_assume: Reading...
+data.aws_caller_identity.current: Reading...
+aws_cloudwatch_log_group.api_access: Refreshing state... [id=/aws/apigateway/lf-flow-dev-access]
+aws_cloudwatch_log_group.workflow: Refreshing state... [id=/aws/vendedlogs/states/lf-flow-dev]
+aws_api_gateway_rest_api.orders: Refreshing state... [id=6d7wg5zom5]
+data.aws_iam_policy_document.api_assume: Read complete after 0s [id=1595325114]
+data.aws_iam_policy_document.workflow: Read complete after 0s [id=1857310022]
+aws_iam_role.api: Refreshing state... [id=lf-flow-dev-api]
+data.aws_caller_identity.current: Read complete after 1s [id=123456789012]
+data.aws_iam_policy_document.workflow_assume: Reading...
+aws_kms_key.alarms: Refreshing state... [id=2374c77e-9a28-4d16-a3ae-a8def8a460ec]
+data.aws_iam_policy_document.workflow_assume: Read complete after 0s [id=2035679204]
+aws_iam_role.workflow: Refreshing state... [id=lf-flow-dev-workflow]
+aws_api_gateway_request_validator.body: Refreshing state... [id=4mk4pp]
+aws_api_gateway_resource.orders: Refreshing state... [id=r5z9i3]
+aws_api_gateway_model.order: Refreshing state... [id=92vnfg]
+aws_api_gateway_method.post_orders: Refreshing state... [id=agm-6d7wg5zom5-r5z9i3-POST]
+aws_api_gateway_method_response.post_orders["504"]: Refreshing state... [id=agmr-6d7wg5zom5-r5z9i3-POST-504]
+aws_api_gateway_method_response.post_orders["500"]: Refreshing state... [id=agmr-6d7wg5zom5-r5z9i3-POST-500]
+aws_api_gateway_method_response.post_orders["200"]: Refreshing state... [id=agmr-6d7wg5zom5-r5z9i3-POST-200]
+aws_api_gateway_method_response.post_orders["422"]: Refreshing state... [id=agmr-6d7wg5zom5-r5z9i3-POST-422]
+aws_sns_topic.alarms: Refreshing state... [id=arn:aws:sns:us-east-1:123456789012:lf-flow-dev-alarms]
+aws_iam_role_policy.workflow: Refreshing state... [id=lf-flow-dev-workflow:logs-and-traces]
+aws_sfn_state_machine.orders: Refreshing state... [id=arn:aws:states:us-east-1:123456789012:stateMachine:lf-flow-dev]
+data.aws_iam_policy_document.api: Reading...
+aws_api_gateway_integration.start_sync: Refreshing state... [id=agi-6d7wg5zom5-r5z9i3-POST]
+data.aws_iam_policy_document.api: Read complete after 0s [id=851096049]
+aws_cloudwatch_metric_alarm.executions_timed_out: Refreshing state... [id=lf-flow-dev-executions-timed-out]
+aws_iam_role_policy.api: Refreshing state... [id=lf-flow-dev-api:start-sync-execution]
+aws_api_gateway_integration_response.integration_error: Refreshing state... [id=agir-6d7wg5zom5-r5z9i3-POST-500]
+aws_api_gateway_integration_response.execution: Refreshing state... [id=agir-6d7wg5zom5-r5z9i3-POST-200]
+aws_api_gateway_deployment.orders: Refreshing state... [id=83v9qb]
+aws_api_gateway_stage.api: Refreshing state... [id=ags-6d7wg5zom5-dev]
+aws_api_gateway_method_settings.all: Refreshing state... [id=6d7wg5zom5-dev-*/*]
+aws_cloudwatch_metric_alarm.api_5xx: Refreshing state... [id=lf-flow-dev-api-5xx]
+
+Note: Objects have changed outside of Terraform
+
+Terraform detected the following changes made outside of Terraform since the
+last "terraform apply" which may have affected this plan:
+
+  # aws_api_gateway_integration.start_sync has changed
+  ~ resource "aws_api_gateway_integration" "start_sync" {
+      + cache_key_parameters    = []
+        id                      = "agi-6d7wg5zom5-r5z9i3-POST"
+      + request_parameters      = {}
+        # (17 unchanged attributes hidden)
+    }
+
+  # aws_api_gateway_integration_response.execution has changed
+  ~ resource "aws_api_gateway_integration_response" "execution" {
+        id                  = "agir-6d7wg5zom5-r5z9i3-POST-200"
+      + response_parameters = {}
+        # (8 unchanged attributes hidden)
+    }
+
+  # aws_api_gateway_integration_response.integration_error has changed
+  ~ resource "aws_api_gateway_integration_response" "integration_error" {
+        id                  = "agir-6d7wg5zom5-r5z9i3-POST-500"
+      + response_parameters = {}
+        # (8 unchanged attributes hidden)
+    }
+
+  # aws_api_gateway_method.post_orders has changed
+  ~ resource "aws_api_gateway_method" "post_orders" {
+      + authorization_scopes = []
+        id                   = "agm-6d7wg5zom5-r5z9i3-POST"
+      + request_parameters   = {}
+        # (10 unchanged attributes hidden)
+    }
+
+
+Unless you have made equivalent changes to your configuration, or ignored the
+relevant attributes using ignore_changes, the following plan may include
+actions to undo or respond to these changes.
+
+─────────────────────────────────────────────────────────────────────────────
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  ~ update in-place
++/- create replacement and then destroy
+
+Terraform will perform the following actions:
+
+  # aws_api_gateway_deployment.orders must be replaced
++/- resource "aws_api_gateway_deployment" "orders" {
+      ~ created_date = "2026-11-09T03:03:12Z" -> (known after apply)
+      ~ id           = "83v9qb" -> (known after apply)
+      ~ triggers     = { # forces replacement
+          ~ "redeployment" = "411532138397da97592c21cfa9d6556f87e626ee" -> "7f51d14bb6fd8b66a61c3033bd5c27bc7d2fc862"
+        }
+        # (3 unchanged attributes hidden)
+    }
+
+  # aws_api_gateway_stage.api will be updated in-place
+  ~ resource "aws_api_gateway_stage" "api" {
+      ~ deployment_id         = "83v9qb" -> (known after apply)
+        id                    = "ags-6d7wg5zom5-dev"
+        tags                  = {}
+        # (15 unchanged attributes hidden)
+
+        # (1 unchanged block hidden)
+    }
+
+  # aws_iam_role.api will be updated in-place
+  ~ resource "aws_iam_role" "api" {
+      ~ assume_role_policy    = jsonencode(
+          ~ {
+              ~ Statement = [
+                  ~ {
+                      - Condition = {
+                          - StringEquals = {
+                              - "aws:SourceAccount" = "123456789012"
+                            }
+                        }
+                        # (3 unchanged attributes hidden)
+                    },
+                ]
+                # (1 unchanged attribute hidden)
+            }
+        )
+        id                    = "lf-flow-dev-api"
+        name                  = "lf-flow-dev-api"
+        tags                  = {}
+        # (11 unchanged attributes hidden)
+
+        # (1 unchanged block hidden)
+    }
+
+Plan: 1 to add, 2 to change, 1 to destroy.
+
+─────────────────────────────────────────────────────────────────────────────
+
+Saved the plan to: tfplan
+
+To perform exactly these actions, run the following command to apply:
+    terraform apply "tfplan"

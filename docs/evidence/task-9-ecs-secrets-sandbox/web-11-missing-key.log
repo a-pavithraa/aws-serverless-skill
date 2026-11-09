@@ -1,0 +1,2 @@
+TaskFailedToStart	ResourceInitializationError: unable to pull secrets or registry auth: execution resource retrieval failed: unable to retrieve secret from asm: service call has been retried 1 time(s): retrieved secret from Secrets Manager did not contain json key API_TOKEN
+hello during the bad deployment: 200

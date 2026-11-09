@@ -1,0 +1,57 @@
+{
+  "id": "ecs-web.python3.13-arm64-container",
+  "status": "candidate",
+  "pattern": "ecs-web",
+  "template": "templates/ecs-web",
+  "lambda_variant": "none: ECS Fargate service through ECS Express Mode",
+  "runtime": {
+    "identifier": "python3.13",
+    "os": "Debian 13 (trixie), python:3.13-slim",
+    "preview": false,
+    "lifecycle": {
+      "deprecation": "2029-10-31",
+      "block_create": null,
+      "block_update": null
+    },
+    "source": "https://peps.python.org/pep-0719/",
+    "checked": "2026-11-09"
+  },
+  "architecture": "arm64",
+  "packaging": "container",
+  "base_image": {
+    "reference": "python:3.13-slim@sha256:e48f59cdba69a3cbd9ed2cf0f348d90d45a8d350d98134cf1070bc106ee9ed90",
+    "python": "3.13.18",
+    "patch_owner": "the team that owns the service: rebuild when the base image digest changes",
+    "checked": "2026-11-09"
+  },
+  "dependencies": [],
+  "native_dependencies": false,
+  "instrumentation": {
+    "logging": "one JSON line per request on stdout with correlation_id and status; awslogs driver",
+    "tracing": "none; the load balancer's X-Amzn-Trace-Id is logged, no X-Ray segments",
+    "powertools": "not used; Powertools is for Lambda"
+  },
+  "compute": {
+    "service": "ECS Express Mode (aws_ecs_express_gateway_service)",
+    "aws_owned": "Express Mode creates and deletes the load balancer, listener rules, target groups, security groups, scaling policy, certificate and deployment alarm; Terraform does not manage them",
+    "gaps": "no WAF, no ALB access logs, no custom listener rules, deployment strategy fixed to canary; a team that needs these needs an explicit Fargate profile"
+  },
+  "regions": [
+    "us-east-1"
+  ],
+  "tools": {
+    "copier": "9.19.1",
+    "terraform": "1.14.4",
+    "aws_provider": "6.72.0",
+    "docker": "28.5.1",
+    "tflint": "0.65.0",
+    "tflint_ruleset_aws": "0.50.0",
+    "checkov": "3.4.3"
+  },
+  "evidence": {
+    "render": "docs/evidence/task-8-ecs-sandbox/README.md",
+    "checks": "docs/evidence/task-8-ecs-sandbox/README.md",
+    "sandbox": "docs/evidence/task-8-ecs-sandbox/README.md"
+  },
+  "review": "pending: promote status to supported after a person reviews the sandbox evidence"
+}

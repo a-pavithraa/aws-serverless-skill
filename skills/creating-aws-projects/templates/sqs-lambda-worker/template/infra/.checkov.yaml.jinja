@@ -1,0 +1,25 @@
+# Each skipped check states why it does not apply to this pattern.
+# Changing this list is a policy decision: review it like code.
+framework:
+  - terraform
+skip-check:
+  # Lambda DLQ: dead_letter_config covers asynchronous invocations only. SQS event sources
+  # poll synchronously; failed messages move to the queue's dead-letter queue (redrive_policy).
+  - CKV_AWS_116
+  # Lambda in a VPC: the function reaches only SQS, DynamoDB and CloudWatch over AWS endpoints.
+  - CKV_AWS_117
+  # Reserved concurrency: the event source's maximum_concurrency bounds this function instead.
+  - CKV_AWS_115
+  # Code signing: not part of this pattern's supply-chain contract yet.
+  - CKV_AWS_272
+  # Environment variable CMK: the variables hold a table name and a service name, no secrets.
+  - CKV_AWS_173
+  # Log group CMK: logs are encrypted at rest by CloudWatch; a CMK adds cost and key policy work.
+  - CKV_AWS_158
+  # One-year log retention: retention is explicit and chosen per environment for cost.
+  - CKV_AWS_338
+  # DynamoDB point-in-time recovery: the table holds idempotency records that expire after one hour.
+  # Losing them can cause one duplicate run of a message, which restoring a backup would not prevent.
+  - CKV_AWS_28
+  # DynamoDB CMK: the table holds message ids and result status only; the AWS owned key encrypts it at rest.
+  - CKV_AWS_119

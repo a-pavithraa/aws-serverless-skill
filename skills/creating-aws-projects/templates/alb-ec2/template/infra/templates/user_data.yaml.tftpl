@@ -1,0 +1,40 @@
+#cloud-config
+# Rendered by Terraform. Changing anything here makes a new launch template version, which replaces the instances.
+packages:
+  - python3.13
+  - amazon-cloudwatch-agent
+users:
+  - name: app
+    system: true
+    shell: /sbin/nologin
+write_files:
+%{ for name, content in files ~}
+  - path: /opt/app/${name}
+    encoding: b64
+    content: ${content}
+    permissions: "0444"
+%{ endfor ~}
+  - path: /etc/systemd/system/app.service
+    content: |
+      [Unit]
+      Description=app
+      After=network-online.target
+      [Service]
+      User=app
+      Environment=PORT=8080 PYTHONDONTWRITEBYTECODE=1
+      ExecStart=/usr/bin/python3.13 /opt/app/server.py
+      StandardOutput=append:/var/log/app/app.log
+      StandardError=append:/var/log/app/app.log
+      Restart=always
+      [Install]
+      WantedBy=multi-user.target
+  - path: /opt/aws/amazon-cloudwatch-agent/etc/app.json
+    content: |
+      {"logs": {"logs_collected": {"files": {"collect_list": [
+        {"file_path": "/var/log/app/app.log", "log_group_name": "${log_group}", "log_stream_name": "{instance_id}"}
+      ]}}}}
+runcmd:
+  - install -d -o app -g app /var/log/app
+  - /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/opt/aws/amazon-cloudwatch-agent/etc/app.json
+  - systemctl daemon-reload
+  - systemctl enable --now app.service

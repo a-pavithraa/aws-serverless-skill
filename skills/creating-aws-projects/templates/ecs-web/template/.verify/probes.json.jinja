@@ -1,0 +1,13 @@
+{
+  "probes": [
+    {
+      "name": "hello",
+      "method": "GET",
+      "path": "/hello",
+      "expect_status": 200,
+      "expect_json_keys": ["message", "correlation_id", "source_sha256", "secrets_loaded"],{% if secret_names %}
+      "expect_json": {"secrets_loaded": [{% for s in secret_names.split(",") if s %}"{{ s }}"{% if not loop.last %}, {% endif %}{% endfor %}]},{% endif %}
+      "expect_source_hash": true
+    }
+  ]
+}

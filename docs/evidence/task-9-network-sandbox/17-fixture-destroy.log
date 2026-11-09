@@ -1,0 +1,16 @@
+aws_route_table_association.public[0]: Destroying... [id=rtbassoc-07f2539e503676133]
+aws_route_table_association.public[1]: Destroying... [id=rtbassoc-0a09ddb441f0aefbd]
+aws_route_table_association.public[0]: Destruction complete after 2s
+aws_route_table_association.public[1]: Destruction complete after 2s
+aws_subnet.public[0]: Destroying... [id=subnet-02d7dec8c746e298a]
+aws_subnet.public[1]: Destroying... [id=subnet-0858a2f10ef669131]
+aws_route_table.public: Destroying... [id=rtb-043e790f6f102fdf4]
+aws_subnet.public[0]: Destruction complete after 1s
+aws_route_table.public: Destruction complete after 1s
+aws_internet_gateway.sandbox: Destroying... [id=igw-0f53e767cde106552]
+aws_subnet.public[1]: Destruction complete after 1s
+aws_internet_gateway.sandbox: Destruction complete after 1s
+aws_vpc.sandbox: Destroying... [id=vpc-0178dfcc3d465dba0]
+aws_vpc.sandbox: Destruction complete after 2s
+
+Apply complete! Resources: 0 added, 0 changed, 7 destroyed.

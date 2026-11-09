@@ -1,0 +1,10 @@
+PASS       target                   123456789012 us-east-1
+PASS       artifact                 version 4, CodeSha256 s+KwjjCT1lWtHedImAO6fD+vn/6VPDq06BQysFq1FBw=
+PASS       probe:hello              200
+PASS       auth-rejection:hello     unsigned request got 403, expected 403
+PASS       logs:hello               1 event(s) for request bb4f0733-31f2-45ff-b0a6-422b17573a2c
+PASS       trace:hello              1-6af0b867-44c8946d35a5811d7e536a36 (reported)
+PASS       alarms                   lf-sandbox-dev-api-5xx=INSUFFICIENT_DATA, lf-sandbox-dev-lambda-duration-p99=INSUFFICIENT_DATA, lf-sandbox-dev-lambda-errors=INSUFFICIENT_DATA, lf-sandbox-dev-lambda-throttles=INSUFFICIENT_DATA (reported)
+UNVERIFIED alerting                 no confirmed subscriber on the alarm topic: alarms notify no one (reported)
+verify-deployment: PASS (pass 7, fail 0, unverified 1)
+exit=0

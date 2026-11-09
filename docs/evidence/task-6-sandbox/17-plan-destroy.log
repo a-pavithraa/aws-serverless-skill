@@ -1,0 +1,772 @@
+data.archive_file.lambda: Reading...
+data.archive_file.lambda: Read complete after 0s [id=4cde40f3b59913196d26e6ade1579b450a20bd62]
+data.aws_caller_identity.current: Reading...
+aws_cloudwatch_log_group.lambda: Refreshing state... [id=/aws/lambda/lf-sandbox-dev]
+aws_cloudwatch_log_group.api_access: Refreshing state... [id=/aws/apigateway/lf-sandbox-dev/access]
+aws_apigatewayv2_api.http: Refreshing state... [id=f3nuok38y3]
+data.aws_caller_identity.current: Read complete after 0s [id=123456789012]
+data.aws_iam_policy_document.lambda_assume: Reading...
+aws_kms_key.alarms: Refreshing state... [id=faf33ace-8f92-4bb9-a06d-2c131ec48164]
+data.aws_iam_policy_document.lambda_assume: Read complete after 0s [id=492682820]
+aws_iam_role.lambda: Refreshing state... [id=lf-sandbox-dev-fn]
+aws_apigatewayv2_stage.default: Refreshing state... [id=$default]
+data.aws_iam_policy_document.lambda: Reading...
+data.aws_iam_policy_document.lambda: Read complete after 0s [id=217322824]
+aws_sns_topic.alarms: Refreshing state... [id=arn:aws:sns:us-east-1:123456789012:lf-sandbox-dev-alarms]
+aws_iam_role_policy.lambda: Refreshing state... [id=lf-sandbox-dev-fn:runtime]
+aws_lambda_function.api: Refreshing state... [id=lf-sandbox-dev]
+aws_cloudwatch_metric_alarm.api_5xx: Refreshing state... [id=lf-sandbox-dev-api-5xx]
+aws_cloudwatch_dashboard.service: Refreshing state... [id=lf-sandbox-dev]
+aws_cloudwatch_metric_alarm.lambda_throttles: Refreshing state... [id=lf-sandbox-dev-lambda-throttles]
+aws_lambda_alias.live: Refreshing state... [id=arn:aws:lambda:us-east-1:123456789012:function:lf-sandbox-dev:live]
+aws_cloudwatch_metric_alarm.lambda_errors: Refreshing state... [id=lf-sandbox-dev-lambda-errors]
+aws_cloudwatch_metric_alarm.lambda_duration_p99: Refreshing state... [id=lf-sandbox-dev-lambda-duration-p99]
+aws_lambda_permission.api: Refreshing state... [id=AllowHttpApiInvoke]
+aws_apigatewayv2_integration.lambda: Refreshing state... [id=cdpn515]
+aws_apigatewayv2_route.hello: Refreshing state... [id=zn9mlh3]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  - destroy
+
+Terraform will perform the following actions:
+
+  # aws_apigatewayv2_api.http will be destroyed
+  - resource "aws_apigatewayv2_api" "http" {
+      - api_endpoint                 = "https://f3nuok38y3.execute-api.us-east-1.amazonaws.com" -> null
+      - api_key_selection_expression = "$request.header.x-api-key" -> null
+      - arn                          = "arn:aws:apigateway:us-east-1::/apis/f3nuok38y3" -> null
+      - disable_execute_api_endpoint = false -> null
+      - execution_arn                = "arn:aws:execute-api:us-east-1:123456789012:f3nuok38y3" -> null
+      - id                           = "f3nuok38y3" -> null
+      - ip_address_type              = "ipv4" -> null
+      - name                         = "lf-sandbox-dev" -> null
+      - protocol_type                = "HTTP" -> null
+      - region                       = "us-east-1" -> null
+      - route_selection_expression   = "$request.method $request.path" -> null
+      - tags                         = {} -> null
+      - tags_all                     = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/apigw-lambda"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-sandbox"
+        } -> null
+        # (2 unchanged attributes hidden)
+    }
+
+  # aws_apigatewayv2_integration.lambda will be destroyed
+  - resource "aws_apigatewayv2_integration" "lambda" {
+      - api_id                                    = "f3nuok38y3" -> null
+      - connection_type                           = "INTERNET" -> null
+      - id                                        = "cdpn515" -> null
+      - integration_method                        = "POST" -> null
+      - integration_type                          = "AWS_PROXY" -> null
+      - integration_uri                           = "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:123456789012:function:lf-sandbox-dev:live/invocations" -> null
+      - payload_format_version                    = "2.0" -> null
+      - region                                    = "us-east-1" -> null
+      - request_parameters                        = {} -> null
+      - request_templates                         = {} -> null
+      - timeout_milliseconds                      = 30000 -> null
+        # (8 unchanged attributes hidden)
+    }
+
+  # aws_apigatewayv2_route.hello will be destroyed
+  - resource "aws_apigatewayv2_route" "hello" {
+      - api_id                              = "f3nuok38y3" -> null
+      - api_key_required                    = false -> null
+      - authorization_scopes                = [] -> null
+      - authorization_type                  = "AWS_IAM" -> null
+      - id                                  = "zn9mlh3" -> null
+      - region                              = "us-east-1" -> null
+      - request_models                      = {} -> null
+      - route_key                           = "GET /hello" -> null
+      - target                              = "integrations/cdpn515" -> null
+        # (4 unchanged attributes hidden)
+    }
+
+  # aws_apigatewayv2_stage.default will be destroyed
+  - resource "aws_apigatewayv2_stage" "default" {
+      - api_id                = "f3nuok38y3" -> null
+      - arn                   = "arn:aws:apigateway:us-east-1::/apis/f3nuok38y3/stages/$default" -> null
+      - auto_deploy           = true -> null
+      - deployment_id         = "7wahcc" -> null
+      - execution_arn         = "arn:aws:execute-api:us-east-1:123456789012:f3nuok38y3/$default" -> null
+      - id                    = "$default" -> null
+      - invoke_url            = "https://f3nuok38y3.execute-api.us-east-1.amazonaws.com/" -> null
+      - name                  = "$default" -> null
+      - region                = "us-east-1" -> null
+      - stage_variables       = {} -> null
+      - tags                  = {} -> null
+      - tags_all              = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/apigw-lambda"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-sandbox"
+        } -> null
+        # (2 unchanged attributes hidden)
+
+      - access_log_settings {
+          - destination_arn = "arn:aws:logs:us-east-1:123456789012:log-group:/aws/apigateway/lf-sandbox-dev/access" -> null
+          - format          = jsonencode(
+                {
+                  - authorizationError = "$context.authorizer.error"
+                  - correlationId      = "$context.integration.requestId"
+                  - integrationError   = "$context.integrationErrorMessage"
+                  - integrationStatus  = "$context.integrationStatus"
+                  - latencyMs          = "$context.responseLatency"
+                  - requestId          = "$context.requestId"
+                  - routeKey           = "$context.routeKey"
+                  - sourceIp           = "$context.identity.sourceIp"
+                  - status             = "$context.status"
+                }
+            ) -> null
+        }
+
+      - default_route_settings {
+          - data_trace_enabled       = false -> null
+          - detailed_metrics_enabled = false -> null
+          - throttling_burst_limit   = 100 -> null
+          - throttling_rate_limit    = 50 -> null
+            # (1 unchanged attribute hidden)
+        }
+    }
+
+  # aws_cloudwatch_dashboard.service will be destroyed
+  - resource "aws_cloudwatch_dashboard" "service" {
+      - dashboard_arn  = "arn:aws:cloudwatch::123456789012:dashboard/lf-sandbox-dev" -> null
+      - dashboard_body = jsonencode(
+            {
+              - widgets = [
+                  - {
+                      - height     = 6
+                      - properties = {
+                          - metrics = [
+                              - [
+                                  - "AWS/ApiGateway",
+                                  - "Count",
+                                  - "ApiId",
+                                  - "f3nuok38y3",
+                                  - "Stage",
+                                  - "$default",
+                                ],
+                              - [
+                                  - ".",
+                                  - "4xx",
+                                  - ".",
+                                  - ".",
+                                  - ".",
+                                  - ".",
+                                ],
+                              - [
+                                  - ".",
+                                  - "5xx",
+                                  - ".",
+                                  - ".",
+                                  - ".",
+                                  - ".",
+                                ],
+                            ]
+                          - period  = 60
+                          - region  = "us-east-1"
+                          - stat    = "Sum"
+                          - title   = "API requests and errors"
+                        }
+                      - type       = "metric"
+                      - width      = 12
+                      - x          = 0
+                      - y          = 0
+                    },
+                  - {
+                      - height     = 6
+                      - properties = {
+                          - metrics = [
+                              - [
+                                  - "AWS/Lambda",
+                                  - "Duration",
+                                  - "FunctionName",
+                                  - "lf-sandbox-dev",
+                                  - {
+                                      - stat = "p50"
+                                    },
+                                ],
+                              - [
+                                  - "...",
+                                  - {
+                                      - stat = "p99"
+                                    },
+                                ],
+                            ]
+                          - period  = 60
+                          - region  = "us-east-1"
+                          - title   = "Lambda duration"
+                        }
+                      - type       = "metric"
+                      - width      = 12
+                      - x          = 12
+                      - y          = 0
+                    },
+                  - {
+                      - height     = 6
+                      - properties = {
+                          - metrics = [
+                              - [
+                                  - "AWS/Lambda",
+                                  - "Invocations",
+                                  - "FunctionName",
+                                  - "lf-sandbox-dev",
+                                ],
+                              - [
+                                  - ".",
+                                  - "Errors",
+                                  - ".",
+                                  - ".",
+                                ],
+                              - [
+                                  - ".",
+                                  - "Throttles",
+                                  - ".",
+                                  - ".",
+                                ],
+                            ]
+                          - period  = 60
+                          - region  = "us-east-1"
+                          - stat    = "Sum"
+                          - title   = "Lambda invocations, errors, throttles"
+                        }
+                      - type       = "metric"
+                      - width      = 12
+                      - x          = 0
+                      - y          = 6
+                    },
+                  - {
+                      - height     = 6
+                      - properties = {
+                          - query  = "SOURCE '/aws/lambda/lf-sandbox-dev' | fields @timestamp, level, message, requestId | filter level = 'ERROR' | sort @timestamp desc | limit 20"
+                          - region = "us-east-1"
+                          - title  = "Recent errors"
+                        }
+                      - type       = "log"
+                      - width      = 12
+                      - x          = 12
+                      - y          = 6
+                    },
+                ]
+            }
+        ) -> null
+      - dashboard_name = "lf-sandbox-dev" -> null
+      - id             = "lf-sandbox-dev" -> null
+      - region         = "us-east-1" -> null
+    }
+
+  # aws_cloudwatch_log_group.api_access will be destroyed
+  - resource "aws_cloudwatch_log_group" "api_access" {
+      - arn                         = "arn:aws:logs:us-east-1:123456789012:log-group:/aws/apigateway/lf-sandbox-dev/access" -> null
+      - deletion_protection_enabled = false -> null
+      - id                          = "/aws/apigateway/lf-sandbox-dev/access" -> null
+      - log_group_class             = "STANDARD" -> null
+      - name                        = "/aws/apigateway/lf-sandbox-dev/access" -> null
+      - region                      = "us-east-1" -> null
+      - retention_in_days           = 7 -> null
+      - skip_destroy                = false -> null
+      - tags                        = {} -> null
+      - tags_all                    = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/apigw-lambda"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-sandbox"
+        } -> null
+        # (2 unchanged attributes hidden)
+    }
+
+  # aws_cloudwatch_log_group.lambda will be destroyed
+  - resource "aws_cloudwatch_log_group" "lambda" {
+      - arn                         = "arn:aws:logs:us-east-1:123456789012:log-group:/aws/lambda/lf-sandbox-dev" -> null
+      - deletion_protection_enabled = false -> null
+      - id                          = "/aws/lambda/lf-sandbox-dev" -> null
+      - log_group_class             = "STANDARD" -> null
+      - name                        = "/aws/lambda/lf-sandbox-dev" -> null
+      - region                      = "us-east-1" -> null
+      - retention_in_days           = 7 -> null
+      - skip_destroy                = false -> null
+      - tags                        = {} -> null
+      - tags_all                    = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/apigw-lambda"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-sandbox"
+        } -> null
+        # (2 unchanged attributes hidden)
+    }
+
+  # aws_cloudwatch_metric_alarm.api_5xx will be destroyed
+  - resource "aws_cloudwatch_metric_alarm" "api_5xx" {
+      - actions_enabled                       = true -> null
+      - alarm_actions                         = [
+          - "arn:aws:sns:us-east-1:123456789012:lf-sandbox-dev-alarms",
+        ] -> null
+      - alarm_name                            = "lf-sandbox-dev-api-5xx" -> null
+      - arn                                   = "arn:aws:cloudwatch:us-east-1:123456789012:alarm:lf-sandbox-dev-api-5xx" -> null
+      - comparison_operator                   = "GreaterThanThreshold" -> null
+      - datapoints_to_alarm                   = 0 -> null
+      - dimensions                            = {
+          - "ApiId" = "f3nuok38y3"
+          - "Stage" = "$default"
+        } -> null
+      - evaluation_interval                   = 0 -> null
+      - evaluation_periods                    = 1 -> null
+      - id                                    = "lf-sandbox-dev-api-5xx" -> null
+      - insufficient_data_actions             = [] -> null
+      - metric_name                           = "5xx" -> null
+      - namespace                             = "AWS/ApiGateway" -> null
+      - ok_actions                            = [
+          - "arn:aws:sns:us-east-1:123456789012:lf-sandbox-dev-alarms",
+        ] -> null
+      - period                                = 60 -> null
+      - region                                = "us-east-1" -> null
+      - statistic                             = "Sum" -> null
+      - tags                                  = {} -> null
+      - tags_all                              = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/apigw-lambda"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-sandbox"
+        } -> null
+      - threshold                             = 0 -> null
+      - treat_missing_data                    = "notBreaching" -> null
+        # (5 unchanged attributes hidden)
+    }
+
+  # aws_cloudwatch_metric_alarm.lambda_duration_p99 will be destroyed
+  - resource "aws_cloudwatch_metric_alarm" "lambda_duration_p99" {
+      - actions_enabled                       = true -> null
+      - alarm_actions                         = [
+          - "arn:aws:sns:us-east-1:123456789012:lf-sandbox-dev-alarms",
+        ] -> null
+      - alarm_name                            = "lf-sandbox-dev-lambda-duration-p99" -> null
+      - arn                                   = "arn:aws:cloudwatch:us-east-1:123456789012:alarm:lf-sandbox-dev-lambda-duration-p99" -> null
+      - comparison_operator                   = "GreaterThanThreshold" -> null
+      - datapoints_to_alarm                   = 0 -> null
+      - dimensions                            = {
+          - "FunctionName" = "lf-sandbox-dev"
+        } -> null
+      - evaluation_interval                   = 0 -> null
+      - evaluation_periods                    = 1 -> null
+      - extended_statistic                    = "p99" -> null
+      - id                                    = "lf-sandbox-dev-lambda-duration-p99" -> null
+      - insufficient_data_actions             = [] -> null
+      - metric_name                           = "Duration" -> null
+      - namespace                             = "AWS/Lambda" -> null
+      - ok_actions                            = [
+          - "arn:aws:sns:us-east-1:123456789012:lf-sandbox-dev-alarms",
+        ] -> null
+      - period                                = 300 -> null
+      - region                                = "us-east-1" -> null
+      - tags                                  = {} -> null
+      - tags_all                              = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/apigw-lambda"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-sandbox"
+        } -> null
+      - threshold                             = 8000 -> null
+      - treat_missing_data                    = "notBreaching" -> null
+        # (5 unchanged attributes hidden)
+    }
+
+  # aws_cloudwatch_metric_alarm.lambda_errors will be destroyed
+  - resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
+      - actions_enabled                       = true -> null
+      - alarm_actions                         = [
+          - "arn:aws:sns:us-east-1:123456789012:lf-sandbox-dev-alarms",
+        ] -> null
+      - alarm_name                            = "lf-sandbox-dev-lambda-errors" -> null
+      - arn                                   = "arn:aws:cloudwatch:us-east-1:123456789012:alarm:lf-sandbox-dev-lambda-errors" -> null
+      - comparison_operator                   = "GreaterThanThreshold" -> null
+      - datapoints_to_alarm                   = 0 -> null
+      - dimensions                            = {
+          - "FunctionName" = "lf-sandbox-dev"
+        } -> null
+      - evaluation_interval                   = 0 -> null
+      - evaluation_periods                    = 1 -> null
+      - id                                    = "lf-sandbox-dev-lambda-errors" -> null
+      - insufficient_data_actions             = [] -> null
+      - metric_name                           = "Errors" -> null
+      - namespace                             = "AWS/Lambda" -> null
+      - ok_actions                            = [
+          - "arn:aws:sns:us-east-1:123456789012:lf-sandbox-dev-alarms",
+        ] -> null
+      - period                                = 60 -> null
+      - region                                = "us-east-1" -> null
+      - statistic                             = "Sum" -> null
+      - tags                                  = {} -> null
+      - tags_all                              = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/apigw-lambda"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-sandbox"
+        } -> null
+      - threshold                             = 0 -> null
+      - treat_missing_data                    = "notBreaching" -> null
+        # (5 unchanged attributes hidden)
+    }
+
+  # aws_cloudwatch_metric_alarm.lambda_throttles will be destroyed
+  - resource "aws_cloudwatch_metric_alarm" "lambda_throttles" {
+      - actions_enabled                       = true -> null
+      - alarm_actions                         = [
+          - "arn:aws:sns:us-east-1:123456789012:lf-sandbox-dev-alarms",
+        ] -> null
+      - alarm_name                            = "lf-sandbox-dev-lambda-throttles" -> null
+      - arn                                   = "arn:aws:cloudwatch:us-east-1:123456789012:alarm:lf-sandbox-dev-lambda-throttles" -> null
+      - comparison_operator                   = "GreaterThanThreshold" -> null
+      - datapoints_to_alarm                   = 0 -> null
+      - dimensions                            = {
+          - "FunctionName" = "lf-sandbox-dev"
+        } -> null
+      - evaluation_interval                   = 0 -> null
+      - evaluation_periods                    = 1 -> null
+      - id                                    = "lf-sandbox-dev-lambda-throttles" -> null
+      - insufficient_data_actions             = [] -> null
+      - metric_name                           = "Throttles" -> null
+      - namespace                             = "AWS/Lambda" -> null
+      - ok_actions                            = [
+          - "arn:aws:sns:us-east-1:123456789012:lf-sandbox-dev-alarms",
+        ] -> null
+      - period                                = 60 -> null
+      - region                                = "us-east-1" -> null
+      - statistic                             = "Sum" -> null
+      - tags                                  = {} -> null
+      - tags_all                              = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/apigw-lambda"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-sandbox"
+        } -> null
+      - threshold                             = 0 -> null
+      - treat_missing_data                    = "notBreaching" -> null
+        # (5 unchanged attributes hidden)
+    }
+
+  # aws_iam_role.lambda will be destroyed
+  - resource "aws_iam_role" "lambda" {
+      - arn                   = "arn:aws:iam::123456789012:role/lf-sandbox-dev-fn" -> null
+      - assume_role_policy    = jsonencode(
+            {
+              - Statement = [
+                  - {
+                      - Action    = "sts:AssumeRole"
+                      - Condition = {
+                          - StringEquals = {
+                              - "aws:SourceAccount" = "123456789012"
+                            }
+                        }
+                      - Effect    = "Allow"
+                      - Principal = {
+                          - Service = "lambda.amazonaws.com"
+                        }
+                    },
+                ]
+              - Version   = "2012-10-17"
+            }
+        ) -> null
+      - create_date           = "2026-11-08T17:47:15Z" -> null
+      - force_detach_policies = false -> null
+      - id                    = "lf-sandbox-dev-fn" -> null
+      - managed_policy_arns   = [] -> null
+      - max_session_duration  = 3600 -> null
+      - name                  = "lf-sandbox-dev-fn" -> null
+      - path                  = "/" -> null
+      - tags                  = {} -> null
+      - tags_all              = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/apigw-lambda"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-sandbox"
+        } -> null
+      - unique_id             = "AROA2P7Z4QCOJ7GTQ4PMV" -> null
+        # (3 unchanged attributes hidden)
+
+      - inline_policy {
+          - name   = "runtime" -> null
+          - policy = jsonencode(
+                {
+                  - Statement = [
+                      - {
+                          - Action   = [
+                              - "logs:PutLogEvents",
+                              - "logs:CreateLogStream",
+                            ]
+                          - Effect   = "Allow"
+                          - Resource = "arn:aws:logs:us-east-1:123456789012:log-group:/aws/lambda/lf-sandbox-dev:*"
+                          - Sid      = "WriteOwnLogs"
+                        },
+                      - {
+                          - Action   = [
+                              - "xray:PutTraceSegments",
+                              - "xray:PutTelemetryRecords",
+                            ]
+                          - Effect   = "Allow"
+                          - Resource = "*"
+                          - Sid      = "WriteTraces"
+                        },
+                    ]
+                  - Version   = "2012-10-17"
+                }
+            ) -> null
+        }
+    }
+
+  # aws_iam_role_policy.lambda will be destroyed
+  - resource "aws_iam_role_policy" "lambda" {
+      - id          = "lf-sandbox-dev-fn:runtime" -> null
+      - name        = "runtime" -> null
+      - policy      = jsonencode(
+            {
+              - Statement = [
+                  - {
+                      - Action   = [
+                          - "logs:PutLogEvents",
+                          - "logs:CreateLogStream",
+                        ]
+                      - Effect   = "Allow"
+                      - Resource = "arn:aws:logs:us-east-1:123456789012:log-group:/aws/lambda/lf-sandbox-dev:*"
+                      - Sid      = "WriteOwnLogs"
+                    },
+                  - {
+                      - Action   = [
+                          - "xray:PutTraceSegments",
+                          - "xray:PutTelemetryRecords",
+                        ]
+                      - Effect   = "Allow"
+                      - Resource = "*"
+                      - Sid      = "WriteTraces"
+                    },
+                ]
+              - Version   = "2012-10-17"
+            }
+        ) -> null
+      - role        = "lf-sandbox-dev-fn" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_kms_key.alarms will be destroyed
+  - resource "aws_kms_key" "alarms" {
+      - arn                                = "arn:aws:kms:us-east-1:123456789012:key/faf33ace-8f92-4bb9-a06d-2c131ec48164" -> null
+      - bypass_policy_lockout_safety_check = false -> null
+      - customer_master_key_spec           = "SYMMETRIC_DEFAULT" -> null
+      - deletion_window_in_days            = 7 -> null
+      - description                        = "Encrypts the lf-sandbox-dev alarm topic" -> null
+      - enable_key_rotation                = true -> null
+      - id                                 = "faf33ace-8f92-4bb9-a06d-2c131ec48164" -> null
+      - is_enabled                         = true -> null
+      - key_id                             = "faf33ace-8f92-4bb9-a06d-2c131ec48164" -> null
+      - key_usage                          = "ENCRYPT_DECRYPT" -> null
+      - multi_region                       = false -> null
+      - policy                             = jsonencode(
+            {
+              - Statement = [
+                  - {
+                      - Action    = "kms:*"
+                      - Effect    = "Allow"
+                      - Principal = {
+                          - AWS = "arn:aws:iam::123456789012:root"
+                        }
+                      - Resource  = "*"
+                      - Sid       = "AccountAdministersKey"
+                    },
+                  - {
+                      - Action    = [
+                          - "kms:Decrypt",
+                          - "kms:GenerateDataKey*",
+                        ]
+                      - Condition = {
+                          - StringEquals = {
+                              - "aws:SourceAccount" = "123456789012"
+                            }
+                        }
+                      - Effect    = "Allow"
+                      - Principal = {
+                          - Service = "cloudwatch.amazonaws.com"
+                        }
+                      - Resource  = "*"
+                      - Sid       = "CloudWatchAlarmsPublish"
+                    },
+                ]
+              - Version   = "2012-10-17"
+            }
+        ) -> null
+      - region                             = "us-east-1" -> null
+      - rotation_period_in_days            = 365 -> null
+      - tags                               = {} -> null
+      - tags_all                           = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/apigw-lambda"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-sandbox"
+        } -> null
+        # (2 unchanged attributes hidden)
+    }
+
+  # aws_lambda_alias.live will be destroyed
+  - resource "aws_lambda_alias" "live" {
+      - arn              = "arn:aws:lambda:us-east-1:123456789012:function:lf-sandbox-dev:live" -> null
+      - function_name    = "lf-sandbox-dev" -> null
+      - function_version = "3" -> null
+      - id               = "arn:aws:lambda:us-east-1:123456789012:function:lf-sandbox-dev:live" -> null
+      - invoke_arn       = "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:123456789012:function:lf-sandbox-dev:live/invocations" -> null
+      - name             = "live" -> null
+      - region           = "us-east-1" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_lambda_function.api will be destroyed
+  - resource "aws_lambda_function" "api" {
+      - architectures                  = [
+          - "arm64",
+        ] -> null
+      - arn                            = "arn:aws:lambda:us-east-1:123456789012:function:lf-sandbox-dev" -> null
+      - code_sha256                    = "s+KwjjCT1lWtHedImAO6fD+vn/6VPDq06BQysFq1FBw=" -> null
+      - filename                       = "./build/lambda.zip" -> null
+      - function_name                  = "lf-sandbox-dev" -> null
+      - handler                        = "handler.handler" -> null
+      - id                             = "lf-sandbox-dev" -> null
+      - invoke_arn                     = "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:123456789012:function:lf-sandbox-dev/invocations" -> null
+      - last_modified                  = "2026-11-08T17:50:27.000+0000" -> null
+      - layers                         = [] -> null
+      - memory_size                    = 256 -> null
+      - package_type                   = "Zip" -> null
+      - publish                        = true -> null
+      - qualified_arn                  = "arn:aws:lambda:us-east-1:123456789012:function:lf-sandbox-dev:3" -> null
+      - qualified_invoke_arn           = "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:123456789012:function:lf-sandbox-dev:3/invocations" -> null
+      - region                         = "us-east-1" -> null
+      - reserved_concurrent_executions = -1 -> null
+      - response_streaming_invoke_arn  = "arn:aws:apigateway:us-east-1:lambda:path/2021-11-15/functions/arn:aws:lambda:us-east-1:123456789012:function:lf-sandbox-dev/response-streaming-invocations" -> null
+      - role                           = "arn:aws:iam::123456789012:role/lf-sandbox-dev-fn" -> null
+      - runtime                        = "python3.13" -> null
+      - skip_destroy                   = false -> null
+      - source_code_hash               = "s+KwjjCT1lWtHedImAO6fD+vn/6VPDq06BQysFq1FBw=" -> null
+      - source_code_size               = 491 -> null
+      - tags                           = {} -> null
+      - tags_all                       = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/apigw-lambda"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-sandbox"
+        } -> null
+      - timeout                        = 10 -> null
+      - version                        = "3" -> null
+        # (7 unchanged attributes hidden)
+
+      - ephemeral_storage {
+          - size = 512 -> null
+        }
+
+      - logging_config {
+          - application_log_level = "INFO" -> null
+          - log_format            = "JSON" -> null
+          - log_group             = "/aws/lambda/lf-sandbox-dev" -> null
+          - system_log_level      = "WARN" -> null
+        }
+
+      - tracing_config {
+          - mode = "Active" -> null
+        }
+    }
+
+  # aws_lambda_permission.api will be destroyed
+  - resource "aws_lambda_permission" "api" {
+      - action              = "lambda:InvokeFunction" -> null
+      - function_name       = "lf-sandbox-dev" -> null
+      - id                  = "AllowHttpApiInvoke" -> null
+      - principal           = "apigateway.amazonaws.com" -> null
+      - qualifier           = "live" -> null
+      - region              = "us-east-1" -> null
+      - source_arn          = "arn:aws:execute-api:us-east-1:123456789012:f3nuok38y3/*/GET/hello" -> null
+      - statement_id        = "AllowHttpApiInvoke" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_sns_topic.alarms will be destroyed
+  - resource "aws_sns_topic" "alarms" {
+      - application_success_feedback_sample_rate = 0 -> null
+      - arn                                      = "arn:aws:sns:us-east-1:123456789012:lf-sandbox-dev-alarms" -> null
+      - content_based_deduplication              = false -> null
+      - fifo_topic                               = false -> null
+      - firehose_success_feedback_sample_rate    = 0 -> null
+      - http_success_feedback_sample_rate        = 0 -> null
+      - id                                       = "arn:aws:sns:us-east-1:123456789012:lf-sandbox-dev-alarms" -> null
+      - kms_master_key_id                        = "arn:aws:kms:us-east-1:123456789012:key/faf33ace-8f92-4bb9-a06d-2c131ec48164" -> null
+      - lambda_success_feedback_sample_rate      = 0 -> null
+      - maximum_message_size                     = 0 -> null
+      - name                                     = "lf-sandbox-dev-alarms" -> null
+      - owner                                    = "123456789012" -> null
+      - policy                                   = jsonencode(
+            {
+              - Id        = "__default_policy_ID"
+              - Statement = [
+                  - {
+                      - Action    = [
+                          - "SNS:GetTopicAttributes",
+                          - "SNS:SetTopicAttributes",
+                          - "SNS:AddPermission",
+                          - "SNS:RemovePermission",
+                          - "SNS:DeleteTopic",
+                          - "SNS:Subscribe",
+                          - "SNS:ListSubscriptionsByTopic",
+                          - "SNS:Publish",
+                        ]
+                      - Condition = {
+                          - StringEquals = {
+                              - "AWS:SourceOwner" = "123456789012"
+                            }
+                        }
+                      - Effect    = "Allow"
+                      - Principal = {
+                          - AWS = "*"
+                        }
+                      - Resource  = "arn:aws:sns:us-east-1:123456789012:lf-sandbox-dev-alarms"
+                      - Sid       = "__default_statement_ID"
+                    },
+                ]
+              - Version   = "2008-10-17"
+            }
+        ) -> null
+      - region                                   = "us-east-1" -> null
+      - signature_version                        = 0 -> null
+      - sqs_success_feedback_sample_rate         = 0 -> null
+      - tags                                     = {} -> null
+      - tags_all                                 = {
+          - "Environment" = "dev"
+          - "Generator"   = "landform/apigw-lambda"
+          - "ManagedBy"   = "terraform"
+          - "Project"     = "lf-sandbox"
+        } -> null
+        # (17 unchanged attributes hidden)
+    }
+
+Plan: 0 to add, 0 to change, 18 to destroy.
+
+Changes to Outputs:
+  - account_id       = "123456789012" -> null
+  - alarm_names      = [
+      - "lf-sandbox-dev-lambda-errors",
+      - "lf-sandbox-dev-lambda-throttles",
+      - "lf-sandbox-dev-lambda-duration-p99",
+      - "lf-sandbox-dev-api-5xx",
+    ] -> null
+  - alarm_topic_arn  = "arn:aws:sns:us-east-1:123456789012:lf-sandbox-dev-alarms" -> null
+  - api_url          = "https://f3nuok38y3.execute-api.us-east-1.amazonaws.com/" -> null
+  - artifact_path    = "./build/lambda.zip" -> null
+  - auth_mode        = "iam" -> null
+  - function_alias   = "live" -> null
+  - function_name    = "lf-sandbox-dev" -> null
+  - function_version = "3" -> null
+  - lambda_log_group = "/aws/lambda/lf-sandbox-dev" -> null
+  - region           = "us-east-1" -> null
+
+─────────────────────────────────────────────────────────────────────────────
+
+Saved the plan to: destroy.tfplan
+
+To perform exactly these actions, run the following command to apply:
+    terraform apply "destroy.tfplan"

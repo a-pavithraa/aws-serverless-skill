@@ -1,0 +1,4 @@
+PASS       residue                  no live resources tagged Project=lf-sqs, Environment=dev
+arn:aws:kms:us-east-1:123456789012:key/41c31c13-9030-4856-a98f-0d22e5375024 scheduled for deletion on 2026-11-16
+arn:aws:lambda:us-east-1:123456789012:event-source-mapping:33e72fd4-bbc4-461b-95bd-358a739223d9 deleted; the tag index has not caught up
+residue: PASS

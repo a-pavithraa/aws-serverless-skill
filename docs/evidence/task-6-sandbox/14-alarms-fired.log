@@ -1,0 +1,16 @@
+lf-sandbox-dev-api-5xx	OK	2026-11-08T23:17:36.259000+05:30
+lf-sandbox-dev-lambda-errors	ALARM	2026-11-08T23:20:04.956000+05:30
+lf-sandbox-dev-api-5xx	OK	2026-11-08T23:17:36.259000+05:30
+lf-sandbox-dev-lambda-errors	ALARM	2026-11-08T23:20:04.956000+05:30
+
+[exited with code 0]
+2026-11-08T23:20:05.016000+05:30	Failed to execute action arn:aws:sns:us-east-1:123456789012:lf-sandbox-dev-alarms
+2026-11-08T23:19:05.014000+05:30	Failed to execute action arn:aws:sns:us-east-1:123456789012:lf-sandbox-dev-alarms
+{
+ "actionState": "Failed",
+ "stateUpdateTimestamp": 1794160204956,
+ "notificationResource": "arn:aws:sns:us-east-1:123456789012:lf-sandbox-dev-alarms",
+ "publishedMessage": null,
+ "error": "CloudWatch Alarms does not have authorization to access the SNS topic encryption key.",
+ "muteWindowEndTimestamp": null
+}

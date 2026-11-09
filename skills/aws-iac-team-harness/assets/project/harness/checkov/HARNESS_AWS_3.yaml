@@ -1,0 +1,24 @@
+metadata:
+  id: "HARNESS_AWS_3"
+  name: "Alarm topic encrypted with the AWS managed key alias/aws/sns: CloudWatch cannot use that key, so every alarm notification fails. Use a customer managed aws_kms_key whose policy allows cloudwatch.amazonaws.com kms:Decrypt and kms:GenerateDataKey*"
+  category: "LOGGING"
+definition:
+  and:
+    - cond_type: "filter"
+      attribute: "resource_type"
+      value:
+        - "aws_sns_topic"
+      operator: "within"
+    - or:
+        - cond_type: "connection"
+          resource_types:
+            - "aws_sns_topic"
+          connected_resource_types:
+            - "aws_cloudwatch_metric_alarm"
+          operator: "not_exists"
+        - cond_type: "attribute"
+          resource_types:
+            - "aws_sns_topic"
+          attribute: "kms_master_key_id"
+          operator: "not_equals"
+          value: "alias/aws/sns"

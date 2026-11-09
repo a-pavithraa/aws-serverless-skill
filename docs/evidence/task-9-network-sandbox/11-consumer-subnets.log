@@ -1,0 +1,5 @@
+asg vpc_zone_identifier ['subnet-0478b72d44dad5966', 'subnet-07c6b2db61803dca1']
+aws_lb subnets ['subnet-0478b72d44dad5966', 'subnet-07c6b2db61803dca1']
+aws_lb_target_group web vpc_id vpc-0316eaacbffec1be1
+aws_security_group alb vpc_id vpc-0316eaacbffec1be1
+aws_security_group instances vpc_id vpc-0316eaacbffec1be1

@@ -1,0 +1,732 @@
+data.aws_default_tags.current: Reading...
+data.aws_iam_policy_document.instances_assume: Reading...
+data.aws_ec2_instance_type_offerings.zones: Reading...
+data.aws_caller_identity.current: Reading...
+data.aws_ssm_parameter.ami: Reading...
+data.aws_default_tags.current: Read complete after 0s [id=aws]
+data.aws_iam_policy_document.instances_assume: Read complete after 0s [id=1443847869]
+data.aws_caller_identity.current: Read complete after 0s [id=123456789012]
+data.aws_ec2_instance_type_offerings.zones: Read complete after 1s [id=us-east-1]
+data.aws_subnet.first: Reading...
+data.aws_ssm_parameter.ami: Read complete after 1s [id=/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64]
+data.aws_subnet.first: Read complete after 0s [id=subnet-02d7dec8c746e298a]
+data.aws_internet_gateway.vpc: Reading...
+data.aws_internet_gateway.vpc: Read complete after 0s [id=igw-0f53e767cde106552]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+ <= read (data resources)
+
+Terraform will perform the following actions:
+
+  # data.aws_iam_policy_document.instances will be read during apply
+  # (config refers to values not yet known)
+ <= data "aws_iam_policy_document" "instances" {
+      + id            = (known after apply)
+      + json          = (known after apply)
+      + minified_json = (known after apply)
+
+      + statement {
+          + actions   = [
+              + "logs:CreateLogStream",
+              + "logs:DescribeLogStreams",
+              + "logs:PutLogEvents",
+            ]
+          + resources = [
+              + (known after apply),
+            ]
+        }
+    }
+
+  # aws_autoscaling_group.web will be created
+  + resource "aws_autoscaling_group" "web" {
+      + arn                              = (known after apply)
+      + availability_zones               = (known after apply)
+      + default_cooldown                 = (known after apply)
+      + desired_capacity                 = 2
+      + force_delete                     = false
+      + force_delete_warm_pool           = false
+      + health_check_grace_period        = 300
+      + health_check_type                = "ELB"
+      + id                               = (known after apply)
+      + ignore_failed_scaling_activities = false
+      + load_balancers                   = (known after apply)
+      + max_size                         = 3
+      + metrics_granularity              = "1Minute"
+      + min_size                         = 2
+      + name                             = "lf-vm-dev-web"
+      + name_prefix                      = (known after apply)
+      + predicted_capacity               = (known after apply)
+      + protect_from_scale_in            = false
+      + region                           = "us-east-1"
+      + service_linked_role_arn          = (known after apply)
+      + target_group_arns                = (known after apply)
+      + vpc_zone_identifier              = [
+          + "subnet-02d7dec8c746e298a",
+          + "subnet-0858a2f10ef669131",
+        ]
+      + wait_for_capacity_timeout        = "10m"
+      + wait_for_elb_capacity            = 2
+      + warm_pool_size                   = (known after apply)
+
+      + availability_zone_distribution (known after apply)
+
+      + capacity_reservation_specification (known after apply)
+
+      + instance_lifecycle_policy (known after apply)
+
+      + instance_refresh {
+          + strategy = "Rolling"
+
+          + preferences {
+              + auto_rollback                = true
+              + instance_warmup              = "300"
+              + max_healthy_percentage       = 200
+              + min_healthy_percentage       = 100
+              + scale_in_protected_instances = "Ignore"
+              + skip_matching                = false
+              + standby_instances            = "Ignore"
+            }
+        }
+
+      + launch_template {
+          + id      = (known after apply)
+          + name    = (known after apply)
+          + version = (known after apply)
+        }
+
+      + mixed_instances_policy (known after apply)
+
+      + tag {
+          + key                 = "Environment"
+          + propagate_at_launch = false
+          + value               = "dev"
+        }
+      + tag {
+          + key                 = "Generator"
+          + propagate_at_launch = false
+          + value               = "landform/alb-ec2"
+        }
+      + tag {
+          + key                 = "ManagedBy"
+          + propagate_at_launch = false
+          + value               = "terraform"
+        }
+      + tag {
+          + key                 = "Project"
+          + propagate_at_launch = false
+          + value               = "lf-vm"
+        }
+
+      + traffic_source (known after apply)
+    }
+
+  # aws_cloudwatch_log_group.app will be created
+  + resource "aws_cloudwatch_log_group" "app" {
+      + arn                         = (known after apply)
+      + deletion_protection_enabled = (known after apply)
+      + id                          = (known after apply)
+      + log_group_class             = (known after apply)
+      + name                        = "/ec2/lf-vm-dev"
+      + name_prefix                 = (known after apply)
+      + region                      = "us-east-1"
+      + retention_in_days           = 7
+      + skip_destroy                = false
+      + tags_all                    = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/alb-ec2"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-vm"
+        }
+    }
+
+  # aws_cloudwatch_metric_alarm.healthy_hosts will be created
+  + resource "aws_cloudwatch_metric_alarm" "healthy_hosts" {
+      + actions_enabled                       = true
+      + alarm_actions                         = (known after apply)
+      + alarm_name                            = "lf-vm-dev-healthy-hosts"
+      + arn                                   = (known after apply)
+      + comparison_operator                   = "LessThanThreshold"
+      + dimensions                            = (known after apply)
+      + evaluate_low_sample_count_percentiles = (known after apply)
+      + evaluation_periods                    = 3
+      + id                                    = (known after apply)
+      + metric_name                           = "HealthyHostCount"
+      + namespace                             = "AWS/ApplicationELB"
+      + ok_actions                            = (known after apply)
+      + period                                = 60
+      + region                                = "us-east-1"
+      + statistic                             = "Minimum"
+      + tags_all                              = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/alb-ec2"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-vm"
+        }
+      + threshold                             = 2
+      + treat_missing_data                    = "breaching"
+    }
+
+  # aws_cloudwatch_metric_alarm.target_5xx will be created
+  + resource "aws_cloudwatch_metric_alarm" "target_5xx" {
+      + actions_enabled                       = true
+      + alarm_actions                         = (known after apply)
+      + alarm_name                            = "lf-vm-dev-target-5xx"
+      + arn                                   = (known after apply)
+      + comparison_operator                   = "GreaterThanThreshold"
+      + dimensions                            = (known after apply)
+      + evaluate_low_sample_count_percentiles = (known after apply)
+      + evaluation_periods                    = 1
+      + id                                    = (known after apply)
+      + metric_name                           = "HTTPCode_Target_5XX_Count"
+      + namespace                             = "AWS/ApplicationELB"
+      + ok_actions                            = (known after apply)
+      + period                                = 60
+      + region                                = "us-east-1"
+      + statistic                             = "Sum"
+      + tags_all                              = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/alb-ec2"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-vm"
+        }
+      + threshold                             = 0
+      + treat_missing_data                    = "notBreaching"
+    }
+
+  # aws_cloudwatch_metric_alarm.unhealthy_hosts will be created
+  + resource "aws_cloudwatch_metric_alarm" "unhealthy_hosts" {
+      + actions_enabled                       = true
+      + alarm_actions                         = (known after apply)
+      + alarm_name                            = "lf-vm-dev-unhealthy-hosts"
+      + arn                                   = (known after apply)
+      + comparison_operator                   = "GreaterThanThreshold"
+      + dimensions                            = (known after apply)
+      + evaluate_low_sample_count_percentiles = (known after apply)
+      + evaluation_periods                    = 3
+      + id                                    = (known after apply)
+      + metric_name                           = "UnHealthyHostCount"
+      + namespace                             = "AWS/ApplicationELB"
+      + ok_actions                            = (known after apply)
+      + period                                = 60
+      + region                                = "us-east-1"
+      + statistic                             = "Maximum"
+      + tags_all                              = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/alb-ec2"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-vm"
+        }
+      + threshold                             = 0
+      + treat_missing_data                    = "notBreaching"
+    }
+
+  # aws_iam_instance_profile.instances will be created
+  + resource "aws_iam_instance_profile" "instances" {
+      + arn         = (known after apply)
+      + create_date = (known after apply)
+      + id          = (known after apply)
+      + name        = "lf-vm-dev-instances"
+      + name_prefix = (known after apply)
+      + path        = "/"
+      + role        = "lf-vm-dev-instances"
+      + tags_all    = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/alb-ec2"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-vm"
+        }
+      + unique_id   = (known after apply)
+    }
+
+  # aws_iam_role.instances will be created
+  + resource "aws_iam_role" "instances" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "ec2.amazonaws.com"
+                        }
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "lf-vm-dev-instances"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + tags_all              = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/alb-ec2"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-vm"
+        }
+      + unique_id             = (known after apply)
+
+      + inline_policy (known after apply)
+    }
+
+  # aws_iam_role_policy.instances will be created
+  + resource "aws_iam_role_policy" "instances" {
+      + id          = (known after apply)
+      + name        = "write-app-logs"
+      + name_prefix = (known after apply)
+      + policy      = (known after apply)
+      + role        = (known after apply)
+    }
+
+  # aws_kms_key.alarms will be created
+  + resource "aws_kms_key" "alarms" {
+      + arn                                = (known after apply)
+      + bypass_policy_lockout_safety_check = false
+      + customer_master_key_spec           = "SYMMETRIC_DEFAULT"
+      + deletion_window_in_days            = 7
+      + description                        = "Encrypts the lf-vm-dev alarm topic"
+      + enable_key_rotation                = true
+      + id                                 = (known after apply)
+      + is_enabled                         = true
+      + key_id                             = (known after apply)
+      + key_usage                          = "ENCRYPT_DECRYPT"
+      + multi_region                       = (known after apply)
+      + policy                             = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "kms:*"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + AWS = "arn:aws:iam::123456789012:root"
+                        }
+                      + Resource  = "*"
+                      + Sid       = "AccountAdministersKey"
+                    },
+                  + {
+                      + Action    = [
+                          + "kms:Decrypt",
+                          + "kms:GenerateDataKey*",
+                        ]
+                      + Condition = {
+                          + StringEquals = {
+                              + "aws:SourceAccount" = "123456789012"
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "cloudwatch.amazonaws.com"
+                        }
+                      + Resource  = "*"
+                      + Sid       = "CloudWatchAlarmsPublish"
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + region                             = "us-east-1"
+      + rotation_period_in_days            = (known after apply)
+      + tags_all                           = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/alb-ec2"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-vm"
+        }
+    }
+
+  # aws_launch_template.web will be created
+  + resource "aws_launch_template" "web" {
+      + arn                    = (known after apply)
+      + default_version        = (known after apply)
+      + ebs_optimized          = "true"
+      + id                     = (known after apply)
+      + image_id               = "ami-0951c836c26e34fc8"
+      + instance_type          = "t4g.micro"
+      + latest_version         = (known after apply)
+      + name                   = "lf-vm-dev"
+      + name_prefix            = (known after apply)
+      + region                 = "us-east-1"
+      + tags_all               = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/alb-ec2"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-vm"
+        }
+      + update_default_version = true
+      + user_data              = "I2Nsb3VkLWNvbmZpZwojIFJlbmRlcmVkIGJ5IFRlcnJhZm9ybS4gQ2hhbmdpbmcgYW55dGhpbmcgaGVyZSBtYWtlcyBhIG5ldyBsYXVuY2ggdGVtcGxhdGUgdmVyc2lvbiwgd2hpY2ggcmVwbGFjZXMgdGhlIGluc3RhbmNlcy4KcGFja2FnZXM6CiAgLSBweXRob24zLjEzCiAgLSBhbWF6b24tY2xvdWR3YXRjaC1hZ2VudAp1c2VyczoKICAtIG5hbWU6IGFwcAogICAgc3lzdGVtOiB0cnVlCiAgICBzaGVsbDogL3NiaW4vbm9sb2dpbgp3cml0ZV9maWxlczoKICAtIHBhdGg6IC9vcHQvYXBwL3NlcnZlci5weQogICAgZW5jb2Rpbmc6IGI2NAogICAgY29udGVudDogSWlJaVNGUlVVQ0J6WlhKMmFXTmxJRzl1SUhCdmNuUWdPREE0TURvZ1IwVlVJQzlvWldGc2RHZ2dZVzVrSUVkRlZDQXZhR1ZzYkc4dUlFOXVaU0JLVTA5T0lHeHZaeUJzYVc1bElIQmxjaUJ5WlhGMVpYTjBMaUlpSWdvS2FXMXdiM0owSUdoaGMyaHNhV0lLYVcxd2IzSjBJR3B6YjI0S2FXMXdiM0owSUc5ekNtbHRjRzl5ZENCeVpRcHBiWEJ2Y25RZ2RYVnBaQXBtY205dElHaDBkSEF1YzJWeWRtVnlJR2x0Y0c5eWRDQkNZWE5sU0ZSVVVGSmxjWFZsYzNSSVlXNWtiR1Z5TENCVWFISmxZV1JwYm1kSVZGUlFVMlZ5ZG1WeUNtWnliMjBnY0dGMGFHeHBZaUJwYlhCdmNuUWdVR0YwYUFvS1UwdEpVQ0E5SUhzaWRHVnpkSE1pTENBaVgxOXdlV05oWTJobFgxOGlmUW9LQ21SbFppQnpiM1Z5WTJWZmFHRnphQ2hoY0hBcE9nb2dJQ0FnSWlJaVUyRnRaU0JoYkdkdmNtbDBhRzBnWVhNZ1lIWmxjbWxtZVY5a1pYQnNiM2x0Wlc1MExuQjVJSE52ZFhKalpTMW9ZWE5vWURvZ2RHaGxJSFpsY21sbWFXVnlJR052YlhCaGNtVnpJSFJvWlNCMGQyOHVJaUlpQ2lBZ0lDQmthV2RsYzNRZ1BTQm9ZWE5vYkdsaUxuTm9ZVEkxTmlncENpQWdJQ0JtYVd4bGN5QTlJSHR3TG5KbGJHRjBhWFpsWDNSdktHRndjQ2t1WVhOZmNHOXphWGdvS1RvZ2NDQm1iM0lnY0NCcGJpQmhjSEF1Y21kc2IySW9JaW9pS1FvZ0lDQWdJQ0FnSUNBZ0lDQWdhV1lnY0M1cGMxOW1hV3hsS0NrZ1lXNWtJRzV2ZENCVFMwbFFJQ1lnYzJWMEtIQXVjbVZzWVhScGRtVmZkRzhvWVhCd0tTNXdZWEowY3lsOUNpQWdJQ0JtYjNJZ2JtRnRaU3dnY0dGMGFDQnBiaUJ6YjNKMFpXUW9abWxzWlhNdWFYUmxiWE1vS1NrNkNpQWdJQ0FnSUNBZ1pHbG5aWE4wTG5Wd1pHRjBaU2h1WVcxbExtVnVZMjlrWlNncElDc2dZaUpjTUNJZ0t5Qm9ZWE5vYkdsaUxuTm9ZVEkxTmlod1lYUm9MbkpsWVdSZllubDBaWE1vS1NrdVpHbG5aWE4wS0NrcENpQWdJQ0J5WlhSMWNtNGdaR2xuWlhOMExtaGxlR1JwWjJWemRDZ3BDZ29LVTA5VlVrTkZYMU5JUVRJMU5pQTlJSE52ZFhKalpWOW9ZWE5vS0ZCaGRHZ29YMTltYVd4bFgxOHBMbkpsYzI5c2RtVW9LUzV3WVhKbGJuUXBDa05QVWxKRlRFRlVTVTlPWDBsRUlEMGdjbVV1WTI5dGNHbHNaU2h5SWw1YlFTMWFZUzE2TUMwNUxWMTdNU3cyTkgwa0lpa0tDZ3BrWldZZ2NtOTFkR1VvYldWMGFHOWtMQ0J3WVhSb0xDQmpiM0p5Wld4aGRHbHZibDlwWkNrNkNpQWdJQ0JwWmlCdFpYUm9iMlFnSVQwZ0lrZEZWQ0k2Q2lBZ0lDQWdJQ0FnY21WMGRYSnVJRFF3TlN3Z2V5SnRaWE56WVdkbElqb2dJbTFsZEdodlpDQnViM1FnWVd4c2IzZGxaQ0o5Q2lBZ0lDQnBaaUJ3WVhSb0lEMDlJQ0l2YUdWaGJIUm9Jam9LSUNBZ0lDQWdJQ0J5WlhSMWNtNGdNakF3TENCN0luTjBZWFIxY3lJNklDSnZheUo5Q2lBZ0lDQnBaaUJ3WVhSb0lEMDlJQ0l2YUdWc2JHOGlPZ29nSUNBZ0lDQWdJSEpsZEhWeWJpQXlNREFzSUhzaWJXVnpjMkZuWlNJNklDSm9aV3hzYnlJc0lDSmpiM0p5Wld4aGRHbHZibDlwWkNJNklHTnZjbkpsYkdGMGFXOXVYMmxrTENBaWMyOTFjbU5sWDNOb1lUSTFOaUk2SUZOUFZWSkRSVjlUU0VFeU5UWjlDaUFnSUNCeVpYUjFjbTRnTkRBMExDQjdJbTFsYzNOaFoyVWlPaUFpYm05MElHWnZkVzVrSW4wS0NncGtaV1lnWTI5eWNtVnNZWFJwYjI1ZmFXUmZabkp2YlNob1pXRmtaWEp6S1RvS0lDQWdJSE4xY0hCc2FXVmtJRDBnYUdWaFpHVnljeTVuWlhRb0luZ3RZMjl5Y21Wc1lYUnBiMjR0YVdRaUtTQnZjaUFpSWdvZ0lDQWdjbVYwZFhKdUlITjFjSEJzYVdWa0lHbG1JRU5QVWxKRlRFRlVTVTlPWDBsRUxtMWhkR05vS0hOMWNIQnNhV1ZrS1NCbGJITmxJSE4wY2loMWRXbGtMblYxYVdRMEtDa3BDZ29LWTJ4aGMzTWdTR0Z1Wkd4bGNpaENZWE5sU0ZSVVVGSmxjWFZsYzNSSVlXNWtiR1Z5S1RvS0lDQWdJSE5sY25abGNsOTJaWEp6YVc5dUlEMGdJbUZ3Y0NJS0lDQWdJSE41YzE5MlpYSnphVzl1SUQwZ0lpSUtDaUFnSUNCa1pXWWdaRzlmUjBWVUtITmxiR1lwT2dvZ0lDQWdJQ0FnSUhObGJHWXVjbVZ6Y0c5dVpDZ2lSMFZVSWlrS0NpQWdJQ0JrWldZZ1pHOWZVRTlUVkNoelpXeG1LVG9LSUNBZ0lDQWdJQ0J6Wld4bUxuSmxjM0J2Ym1Rb0lsQlBVMVFpS1FvS0lDQWdJR1JsWmlCeVpYTndiMjVrS0hObGJHWXNJRzFsZEdodlpDazZDaUFnSUNBZ0lDQWdZMjl5Y21Wc1lYUnBiMjVmYVdRZ1BTQmpiM0p5Wld4aGRHbHZibDlwWkY5bWNtOXRLSE5sYkdZdWFHVmhaR1Z5Y3lrS0lDQWdJQ0FnSUNCd1lYUm9JRDBnYzJWc1ppNXdZWFJvTG5Od2JHbDBLQ0kvSWl3Z01TbGJNRjBLSUNBZ0lDQWdJQ0J6ZEdGMGRYTXNJR0p2WkhrZ1BTQnliM1YwWlNodFpYUm9iMlFzSUhCaGRHZ3NJR052Y25KbGJHRjBhVzl1WDJsa0tRb2dJQ0FnSUNBZ0lHUmhkR0VnUFNCcWMyOXVMbVIxYlhCektHSnZaSGtwTG1WdVkyOWtaU2dwQ2lBZ0lDQWdJQ0FnYzJWc1ppNXpaVzVrWDNKbGMzQnZibk5sS0hOMFlYUjFjeWtLSUNBZ0lDQWdJQ0J6Wld4bUxuTmxibVJmYUdWaFpHVnlLQ0pqYjI1MFpXNTBMWFI1Y0dVaUxDQWlZWEJ3YkdsallYUnBiMjR2YW5OdmJpSXBDaUFnSUNBZ0lDQWdjMlZzWmk1elpXNWtYMmhsWVdSbGNpZ2lZMjl1ZEdWdWRDMXNaVzVuZEdnaUxDQnpkSElvYkdWdUtHUmhkR0VwS1NrS0lDQWdJQ0FnSUNCelpXeG1Mbk5sYm1SZmFHVmhaR1Z5S0NKNExXTnZjbkpsYkdGMGFXOXVMV2xrSWl3Z1kyOXljbVZzWVhScGIyNWZhV1FwQ2lBZ0lDQWdJQ0FnYzJWc1ppNWxibVJmYUdWaFpHVnljeWdwQ2lBZ0lDQWdJQ0FnYzJWc1ppNTNabWxzWlM1M2NtbDBaU2hrWVhSaEtRb2dJQ0FnSUNBZ0lHbG1JSEJoZEdnZ0lUMGdJaTlvWldGc2RHZ2lPZ29nSUNBZ0lDQWdJQ0FnSUNCd2NtbHVkQ2hxYzI5dUxtUjFiWEJ6S0hzaWJXVnpjMkZuWlNJNklDSnlaWEYxWlhOMElHaGhibVJzWldRaUxDQWliV1YwYUc5a0lqb2diV1YwYUc5a0xDQWljR0YwYUNJNklIQmhkR2dzSUNKemRHRjBkWE1pT2lCemRHRjBkWE1zQ2lBZ0lDQWdJQ0FnSUNBZ0lDQWdJQ0FnSUNBZ0lDQWdJQ0FnSUNBZ0lDSmpiM0p5Wld4aGRHbHZibDlwWkNJNklHTnZjbkpsYkdGMGFXOXVYMmxrTEFvZ0lDQWdJQ0FnSUNBZ0lDQWdJQ0FnSUNBZ0lDQWdJQ0FnSUNBZ0lDQWlkSEpoWTJWZmFXUWlPaUJ6Wld4bUxtaGxZV1JsY25NdVoyVjBLQ0o0TFdGdGVtNHRkSEpoWTJVdGFXUWlMQ0FpSWlsOUtTd2dabXgxYzJnOVZISjFaU2tLQ2lBZ0lDQmtaV1lnYkc5blgyMWxjM05oWjJVb2MyVnNaaXdnWm05eWJXRjBMQ0FxWVhKbmN5azZDaUFnSUNBZ0lDQWdJeUJVYUdVZ1NsTlBUaUJzYVc1bElHbHVJSEpsYzNCdmJtUW9LU0J5WlhCc1lXTmxjeUIwYUdVZ1pHVm1ZWFZzZENCaFkyTmxjM01nYkc5bklHOXVJSE4wWkdWeWNpNEtJQ0FnSUNBZ0lDQnlaWFIxY200S0NncGtaV1lnYzJWeWRtVW9jRzl5ZENrNkNpQWdJQ0J6WlhKMlpYSWdQU0JVYUhKbFlXUnBibWRJVkZSUVUyVnlkbVZ5S0NnaU1DNHdMakF1TUNJc0lIQnZjblFwTENCSVlXNWtiR1Z5S1FvZ0lDQWdjSEpwYm5Rb2FuTnZiaTVrZFcxd2N5aDdJbTFsYzNOaFoyVWlPaUFpYkdsemRHVnVhVzVuSWl3Z0luQnZjblFpT2lCd2IzSjBMQ0FpYzI5MWNtTmxYM05vWVRJMU5pSTZJRk5QVlZKRFJWOVRTRUV5TlRaOUtTd2dabXgxYzJnOVZISjFaU2tLSUNBZ0lITmxjblpsY2k1elpYSjJaVjltYjNKbGRtVnlLQ2tLQ2dwcFppQmZYMjVoYldWZlh5QTlQU0FpWDE5dFlXbHVYMThpT2dvZ0lDQWdjMlZ5ZG1Vb2FXNTBLRzl6TG1WdWRtbHliMjR1WjJWMEtDSlFUMUpVSWl3Z0lqZ3dPREFpS1NrcENnPT0KICAgIHBlcm1pc3Npb25zOiAiMDQ0NCIKICAtIHBhdGg6IC9ldGMvc3lzdGVtZC9zeXN0ZW0vYXBwLnNlcnZpY2UKICAgIGNvbnRlbnQ6IHwKICAgICAgW1VuaXRdCiAgICAgIERlc2NyaXB0aW9uPWFwcAogICAgICBBZnRlcj1uZXR3b3JrLW9ubGluZS50YXJnZXQKICAgICAgW1NlcnZpY2VdCiAgICAgIFVzZXI9YXBwCiAgICAgIEVudmlyb25tZW50PVBPUlQ9ODA4MCBQWVRIT05ET05UV1JJVEVCWVRFQ09ERT0xCiAgICAgIEV4ZWNTdGFydD0vdXNyL2Jpbi9weXRob24zLjEzIC9vcHQvYXBwL3NlcnZlci5weQogICAgICBTdGFuZGFyZE91dHB1dD1hcHBlbmQ6L3Zhci9sb2cvYXBwL2FwcC5sb2cKICAgICAgU3RhbmRhcmRFcnJvcj1hcHBlbmQ6L3Zhci9sb2cvYXBwL2FwcC5sb2cKICAgICAgUmVzdGFydD1hbHdheXMKICAgICAgW0luc3RhbGxdCiAgICAgIFdhbnRlZEJ5PW11bHRpLXVzZXIudGFyZ2V0CiAgLSBwYXRoOiAvb3B0L2F3cy9hbWF6b24tY2xvdWR3YXRjaC1hZ2VudC9ldGMvYXBwLmpzb24KICAgIGNvbnRlbnQ6IHwKICAgICAgeyJsb2dzIjogeyJsb2dzX2NvbGxlY3RlZCI6IHsiZmlsZXMiOiB7ImNvbGxlY3RfbGlzdCI6IFsKICAgICAgICB7ImZpbGVfcGF0aCI6ICIvdmFyL2xvZy9hcHAvYXBwLmxvZyIsICJsb2dfZ3JvdXBfbmFtZSI6ICIvZWMyL2xmLXZtLWRldiIsICJsb2dfc3RyZWFtX25hbWUiOiAie2luc3RhbmNlX2lkfSJ9CiAgICAgIF19fX19CnJ1bmNtZDoKICAtIGluc3RhbGwgLWQgLW8gYXBwIC1nIGFwcCAvdmFyL2xvZy9hcHAKICAtIC9vcHQvYXdzL2FtYXpvbi1jbG91ZHdhdGNoLWFnZW50L2Jpbi9hbWF6b24tY2xvdWR3YXRjaC1hZ2VudC1jdGwgLWEgZmV0Y2gtY29uZmlnIC1tIGVjMiAtcyAtYyBmaWxlOi9vcHQvYXdzL2FtYXpvbi1jbG91ZHdhdGNoLWFnZW50L2V0Yy9hcHAuanNvbgogIC0gc3lzdGVtY3RsIGRhZW1vbi1yZWxvYWQKICAtIHN5c3RlbWN0bCBlbmFibGUgLS1ub3cgYXBwLnNlcnZpY2UK"
+      + vpc_security_group_ids = (known after apply)
+
+      + block_device_mappings {
+          + device_name = "/dev/xvda"
+
+          + ebs {
+              + delete_on_termination      = "true"
+              + encrypted                  = "true"
+              + iops                       = (known after apply)
+              + throughput                 = (known after apply)
+              + volume_initialization_rate = (known after apply)
+              + volume_size                = 8
+              + volume_type                = "gp3"
+            }
+        }
+
+      + iam_instance_profile {
+          + arn = (known after apply)
+        }
+
+      + metadata_options {
+          + http_endpoint               = "enabled"
+          + http_protocol_ipv6          = (known after apply)
+          + http_put_response_hop_limit = 1
+          + http_tokens                 = "required"
+          + instance_metadata_tags      = (known after apply)
+        }
+
+      + monitoring {
+          + enabled = true
+        }
+
+      + tag_specifications {
+          + resource_type = "instance"
+          + tags          = {
+              + "Environment" = "dev"
+              + "Generator"   = "landform/alb-ec2"
+              + "ManagedBy"   = "terraform"
+              + "Name"        = "lf-vm-dev"
+              + "Project"     = "lf-vm"
+            }
+        }
+      + tag_specifications {
+          + resource_type = "volume"
+          + tags          = {
+              + "Environment" = "dev"
+              + "Generator"   = "landform/alb-ec2"
+              + "ManagedBy"   = "terraform"
+              + "Project"     = "lf-vm"
+            }
+        }
+    }
+
+  # aws_lb.web will be created
+  + resource "aws_lb" "web" {
+      + arn                                                          = (known after apply)
+      + arn_suffix                                                   = (known after apply)
+      + client_keep_alive                                            = 3600
+      + desync_mitigation_mode                                       = "defensive"
+      + dns_name                                                     = (known after apply)
+      + drop_invalid_header_fields                                   = true
+      + enable_deletion_protection                                   = false
+      + enable_http2                                                 = true
+      + enable_prefix_for_ipv6_source_nat                            = (known after apply)
+      + enable_tls_version_and_cipher_suite_headers                  = false
+      + enable_waf_fail_open                                         = false
+      + enable_xff_client_port                                       = false
+      + enable_zonal_shift                                           = false
+      + enforce_security_group_inbound_rules_on_private_link_traffic = (known after apply)
+      + id                                                           = (known after apply)
+      + idle_timeout                                                 = 60
+      + internal                                                     = (known after apply)
+      + ip_address_type                                              = (known after apply)
+      + load_balancer_type                                           = "application"
+      + name                                                         = "lf-vm-dev"
+      + name_prefix                                                  = (known after apply)
+      + preserve_host_header                                         = false
+      + region                                                       = "us-east-1"
+      + secondary_ips_auto_assigned_per_subnet                       = (known after apply)
+      + security_groups                                              = (known after apply)
+      + subnets                                                      = [
+          + "subnet-02d7dec8c746e298a",
+          + "subnet-0858a2f10ef669131",
+        ]
+      + tags                                                         = {
+          + "PlainHttpReason" = "sandbox without a domain name"
+        }
+      + tags_all                                                     = {
+          + "Environment"     = "dev"
+          + "Generator"       = "landform/alb-ec2"
+          + "ManagedBy"       = "terraform"
+          + "PlainHttpReason" = "sandbox without a domain name"
+          + "Project"         = "lf-vm"
+        }
+      + vpc_id                                                       = (known after apply)
+      + xff_header_processing_mode                                   = "append"
+      + zone_id                                                      = (known after apply)
+
+      + subnet_mapping (known after apply)
+    }
+
+  # aws_lb_listener.web will be created
+  + resource "aws_lb_listener" "web" {
+      + arn                                                                   = (known after apply)
+      + id                                                                    = (known after apply)
+      + load_balancer_arn                                                     = (known after apply)
+      + port                                                                  = 80
+      + protocol                                                              = "HTTP"
+      + region                                                                = "us-east-1"
+      + routing_http_request_x_amzn_mtls_clientcert_header_name               = (known after apply)
+      + routing_http_request_x_amzn_mtls_clientcert_issuer_header_name        = (known after apply)
+      + routing_http_request_x_amzn_mtls_clientcert_leaf_header_name          = (known after apply)
+      + routing_http_request_x_amzn_mtls_clientcert_serial_number_header_name = (known after apply)
+      + routing_http_request_x_amzn_mtls_clientcert_subject_header_name       = (known after apply)
+      + routing_http_request_x_amzn_mtls_clientcert_validity_header_name      = (known after apply)
+      + routing_http_request_x_amzn_tls_cipher_suite_header_name              = (known after apply)
+      + routing_http_request_x_amzn_tls_version_header_name                   = (known after apply)
+      + routing_http_response_access_control_allow_credentials_header_value   = (known after apply)
+      + routing_http_response_access_control_allow_headers_header_value       = (known after apply)
+      + routing_http_response_access_control_allow_methods_header_value       = (known after apply)
+      + routing_http_response_access_control_allow_origin_header_value        = (known after apply)
+      + routing_http_response_access_control_expose_headers_header_value      = (known after apply)
+      + routing_http_response_access_control_max_age_header_value             = (known after apply)
+      + routing_http_response_content_security_policy_header_value            = (known after apply)
+      + routing_http_response_server_enabled                                  = (known after apply)
+      + routing_http_response_strict_transport_security_header_value          = (known after apply)
+      + routing_http_response_x_content_type_options_header_value             = (known after apply)
+      + routing_http_response_x_frame_options_header_value                    = (known after apply)
+      + ssl_policy                                                            = (known after apply)
+      + tags_all                                                              = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/alb-ec2"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-vm"
+        }
+      + tcp_idle_timeout_seconds                                              = (known after apply)
+
+      + default_action {
+          + order            = (known after apply)
+          + target_group_arn = (known after apply)
+          + type             = "forward"
+        }
+
+      + mutual_authentication (known after apply)
+    }
+
+  # aws_lb_target_group.web will be created
+  + resource "aws_lb_target_group" "web" {
+      + arn                                = (known after apply)
+      + arn_suffix                         = (known after apply)
+      + connection_termination             = (known after apply)
+      + deregistration_delay               = "30"
+      + id                                 = (known after apply)
+      + ip_address_type                    = (known after apply)
+      + lambda_multi_value_headers_enabled = false
+      + load_balancer_arns                 = (known after apply)
+      + load_balancing_algorithm_type      = (known after apply)
+      + load_balancing_anomaly_mitigation  = (known after apply)
+      + load_balancing_cross_zone_enabled  = (known after apply)
+      + name                               = "lf-vm-dev"
+      + name_prefix                        = (known after apply)
+      + port                               = 8080
+      + preserve_client_ip                 = (known after apply)
+      + protocol                           = "HTTP"
+      + protocol_version                   = (known after apply)
+      + proxy_protocol_v2                  = false
+      + region                             = "us-east-1"
+      + slow_start                         = 0
+      + tags_all                           = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/alb-ec2"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-vm"
+        }
+      + target_type                        = "instance"
+      + vpc_id                             = "vpc-0178dfcc3d465dba0"
+
+      + health_check {
+          + enabled             = true
+          + healthy_threshold   = 2
+          + interval            = 15
+          + matcher             = "200"
+          + path                = "/health"
+          + port                = "traffic-port"
+          + protocol            = "HTTP"
+          + timeout             = (known after apply)
+          + unhealthy_threshold = 2
+        }
+
+      + stickiness (known after apply)
+
+      + target_failover (known after apply)
+
+      + target_group_health (known after apply)
+
+      + target_health_state (known after apply)
+    }
+
+  # aws_security_group.alb will be created
+  + resource "aws_security_group" "alb" {
+      + arn                    = (known after apply)
+      + description            = "Load balancer for lf-vm-dev"
+      + egress                 = (known after apply)
+      + id                     = (known after apply)
+      + ingress                = (known after apply)
+      + name                   = "lf-vm-dev-alb"
+      + name_prefix            = (known after apply)
+      + owner_id               = (known after apply)
+      + region                 = "us-east-1"
+      + revoke_rules_on_delete = false
+      + tags_all               = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/alb-ec2"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-vm"
+        }
+      + vpc_id                 = "vpc-0178dfcc3d465dba0"
+    }
+
+  # aws_security_group.instances will be created
+  + resource "aws_security_group" "instances" {
+      + arn                    = (known after apply)
+      + description            = "Instances of lf-vm-dev: the load balancer in, HTTPS out"
+      + egress                 = (known after apply)
+      + id                     = (known after apply)
+      + ingress                = (known after apply)
+      + name                   = "lf-vm-dev-instances"
+      + name_prefix            = (known after apply)
+      + owner_id               = (known after apply)
+      + region                 = "us-east-1"
+      + revoke_rules_on_delete = false
+      + tags_all               = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/alb-ec2"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-vm"
+        }
+      + vpc_id                 = "vpc-0178dfcc3d465dba0"
+    }
+
+  # aws_sns_topic.alarms will be created
+  + resource "aws_sns_topic" "alarms" {
+      + arn                         = (known after apply)
+      + beginning_archive_time      = (known after apply)
+      + content_based_deduplication = false
+      + fifo_throughput_scope       = (known after apply)
+      + fifo_topic                  = false
+      + id                          = (known after apply)
+      + kms_master_key_id           = (known after apply)
+      + maximum_message_size        = (known after apply)
+      + name                        = "lf-vm-dev-alarms"
+      + name_prefix                 = (known after apply)
+      + owner                       = (known after apply)
+      + policy                      = (known after apply)
+      + region                      = "us-east-1"
+      + signature_version           = (known after apply)
+      + tags_all                    = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/alb-ec2"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-vm"
+        }
+      + tracing_config              = (known after apply)
+    }
+
+  # aws_vpc_security_group_egress_rule.alb_to_instances will be created
+  + resource "aws_vpc_security_group_egress_rule" "alb_to_instances" {
+      + arn                          = (known after apply)
+      + description                  = "Requests and health checks to the instances"
+      + from_port                    = 8080
+      + id                           = (known after apply)
+      + ip_protocol                  = "tcp"
+      + referenced_security_group_id = (known after apply)
+      + region                       = "us-east-1"
+      + security_group_id            = (known after apply)
+      + security_group_rule_id       = (known after apply)
+      + tags_all                     = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/alb-ec2"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-vm"
+        }
+      + to_port                      = 8080
+    }
+
+  # aws_vpc_security_group_egress_rule.instances_https will be created
+  + resource "aws_vpc_security_group_egress_rule" "instances_https" {
+      + arn                    = (known after apply)
+      + cidr_ipv4              = "0.0.0.0/0"
+      + description            = "Package repositories and CloudWatch Logs"
+      + from_port              = 443
+      + id                     = (known after apply)
+      + ip_protocol            = "tcp"
+      + region                 = "us-east-1"
+      + security_group_id      = (known after apply)
+      + security_group_rule_id = (known after apply)
+      + tags_all               = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/alb-ec2"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-vm"
+        }
+      + to_port                = 443
+    }
+
+  # aws_vpc_security_group_ingress_rule.alb_listener will be created
+  + resource "aws_vpc_security_group_ingress_rule" "alb_listener" {
+      + arn                    = (known after apply)
+      + cidr_ipv4              = "0.0.0.0/0"
+      + description            = "Clients"
+      + from_port              = 80
+      + id                     = (known after apply)
+      + ip_protocol            = "tcp"
+      + region                 = "us-east-1"
+      + security_group_id      = (known after apply)
+      + security_group_rule_id = (known after apply)
+      + tags_all               = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/alb-ec2"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-vm"
+        }
+      + to_port                = 80
+    }
+
+  # aws_vpc_security_group_ingress_rule.instances_from_alb will be created
+  + resource "aws_vpc_security_group_ingress_rule" "instances_from_alb" {
+      + arn                          = (known after apply)
+      + description                  = "Load balancer"
+      + from_port                    = 8080
+      + id                           = (known after apply)
+      + ip_protocol                  = "tcp"
+      + referenced_security_group_id = (known after apply)
+      + region                       = "us-east-1"
+      + security_group_id            = (known after apply)
+      + security_group_rule_id       = (known after apply)
+      + tags_all                     = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/alb-ec2"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-vm"
+        }
+      + to_port                      = 8080
+    }
+
+Plan: 20 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + account_id              = "123456789012"
+  + alarm_names             = [
+      + "lf-vm-dev-target-5xx",
+      + "lf-vm-dev-unhealthy-hosts",
+      + "lf-vm-dev-healthy-hosts",
+    ]
+  + alarm_topic_arn         = (known after apply)
+  + ami_id                  = "ami-0951c836c26e34fc8"
+  + asg_name                = "lf-vm-dev-web"
+  + launch_template_version = (known after apply)
+  + log_group               = "/ec2/lf-vm-dev"
+  + region                  = "us-east-1"
+  + service_url             = (known after apply)
+  + target_group_arn        = (known after apply)
+
+─────────────────────────────────────────────────────────────────────────────
+
+Saved the plan to: tfplan
+
+To perform exactly these actions, run the following command to apply:
+    terraform apply "tfplan"

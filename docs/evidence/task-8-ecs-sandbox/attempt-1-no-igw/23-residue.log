@@ -1,0 +1,12 @@
+FAIL       residue                  still tagged after destroy:
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-07600956faa7954d0
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-07be0615430cec5e7
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-0939dccad10d03aef
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-0a958e389c4a8a85e
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-0accf3c921a626288
+arn:aws:ec2:us-east-1:123456789012:security-group-rule/sgr-0f980664d9c732111
+arn:aws:ecs:us-east-1:123456789012:cluster/lf-web-dev
+arn:aws:ecs:us-east-1:123456789012:service/lf-web-dev/lf-web-dev-web
+arn:aws:ecs:us-east-1:123456789012:task-definition/lf-web-dev-lf-web-dev-web:1
+arn:aws:kms:us-east-1:123456789012:key/6bd10bc0-17d1-4f8c-9d23-01292c80e43e scheduled for deletion on 2026-11-16
+residue: FAIL

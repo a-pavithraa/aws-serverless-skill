@@ -1,0 +1,55 @@
+# {{ project_name }}
+
+HTTP API (API Gateway v2) → Lambda (`{{ runtime }}`, `{{ architecture }}`, ZIP), generated from the `apigw-lambda` template. Route: `GET /hello`. Authentication: {% if auth_mode == 'iam' %}**AWS_IAM** — callers sign requests with SigV4; unsigned requests get 403.{% else %}**none** — the route is public. Reason: {{ public_reason }}{% endif %}
+
+## Layout
+
+| Path | What |
+| --- | --- |
+| `app/handler.py` | The function. No dependencies; logs JSON through Lambda's native log format |
+| `app/tests/` | Unit tests (stdlib `unittest`) |
+| `infra/` | Terraform root: function, alias `live`, HTTP API, log groups, IAM, alarms, dashboard |
+| `infra/envs/{{ environment }}.tfvars` | Values for the `{{ environment }}` environment |
+| `infra/tests/plan.tftest.hcl` | Mocked plan tests; no AWS credentials needed |
+| `.verify/probes.json` | Requests the deployment verifier sends after a deploy |
+| `docs/runbook.md` | What each alarm means and what to do |
+
+## Prerequisites
+
+Python 3.13, Terraform ≥ 1.10 (tested with 1.14.4). Network access for `terraform init` (it downloads the AWS and archive providers). {% if backend == 's3' %}The state bucket `{{ state_bucket }}` must exist before `init`; state locking uses the S3 lock file.{% else %}State is local (`infra/terraform.tfstate`): fine for a sandbox, not for a team. Switch to an S3 backend before sharing.{% endif %}
+
+## Test
+
+```bash
+python -m unittest discover -s app/tests
+terraform -chdir=infra init -backend=false
+terraform -chdir=infra test
+```
+
+`terraform test` also builds `infra/build/lambda.zip`, the deployment package. It must contain only `handler.py`.
+
+## Deploy
+
+The first `init` writes the provider versions and their hashes to `infra/.terraform.lock.hcl`. Commit `infra/.terraform.lock.hcl`: the checks then run `init` with `-lockfile=readonly`, so a provider cannot change without a reviewed commit. If CI runs on another OS, add its hashes first: `terraform -chdir=infra providers lock -platform=linux_amd64 -platform=darwin_arm64 -platform=windows_amd64`.
+
+Deploy from a saved plan, and read the plan before applying it:
+
+```bash
+terraform -chdir=infra init
+terraform -chdir=infra plan -var-file=envs/{{ environment }}.tfvars -out=tfplan
+terraform -chdir=infra show tfplan
+terraform -chdir=infra apply tfplan
+```
+
+In a team, apply runs in CI from the approved plan of the merged commit, not from a laptop.
+
+## Verify
+
+A deploy is not working until the verifier says so: it checks the account and region, that the deployed code is this checkout's package, sends the probes in `.verify/probes.json`, and looks for the request in the function's logs. `UNVERIFIED` is not a pass.
+
+## Remove
+
+```bash
+terraform -chdir=infra plan -destroy -var-file=envs/{{ environment }}.tfvars -out=destroy.tfplan
+terraform -chdir=infra apply destroy.tfplan
+```

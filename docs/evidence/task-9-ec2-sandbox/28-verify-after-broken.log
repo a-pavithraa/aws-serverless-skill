@@ -1,0 +1,7 @@
+PASS       target                   123456789012 us-east-1
+FAIL       artifact                 not on launch template version 4: i-0b93f741d67ba4682, i-0ec369668ca14b996
+PASS       health                   2 healthy target(s)
+FAIL       probe:hello              response source_sha256 2322ffae4a9112e575fdd965bfaf7cc5a428f149aefcfa36bedc1e15c18c05f0 is not app/ (8e44a4a230a8c682c92e079d08adaae1856912b61d092c118e8623cf08689fa9)
+FAIL       alarms                   in ALARM: lf-vm-dev-unhealthy-hosts (reported)
+UNVERIFIED alerting                 no confirmed subscriber on the alarm topic: alarms notify no one (reported)
+verify-deployment: FAIL (pass 2, fail 3, unverified 1)

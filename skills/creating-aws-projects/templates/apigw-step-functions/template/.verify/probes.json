@@ -1,0 +1,32 @@
+{
+  "probes": [
+    {
+      "name": "processed",
+      "method": "POST",
+      "path": "/orders",
+      "body": {"order_id": "verify-processed"},
+      "expect_status": 200,
+      "expect_json_keys": ["order_id", "status", "correlation_id"],
+      "unauthenticated_expect_status_when_iam": 403
+    },
+    {
+      "name": "rejected",
+      "method": "POST",
+      "path": "/orders",
+      "body": {"order_id": "verify-rejected", "action": "fail"},
+      "expect_status": 422,
+      "expect_json_keys": ["error", "execution_arn"],
+      "unauthenticated_expect_status_when_iam": 403
+    },
+    {
+      "name": "timed-out",
+      "method": "POST",
+      "path": "/orders",
+      "body": {"order_id": "verify-timed-out", "action": "slow"},
+      "expect_status": 504,
+      "expect_json_keys": ["error", "execution_arn"],
+      "unauthenticated_expect_status_when_iam": 403,
+      "trips_alarm": ["api-5xx", "executions-timed-out"]
+    }
+  ]
+}

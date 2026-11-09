@@ -1,0 +1,9 @@
+PASS       target                   123456789012 us-east-1
+PASS       artifact                 1 task(s) run sha256:fcce5459b307d3882c33d94b930376c6883eccd5a5b55ff2ad4a1d5b5c5c96c7
+FAIL       health                   no healthy target behind the load balancer
+PASS       probe:hello              200
+PASS       logs:hello               1 event(s) for request c4f7ae32-4da2-4b28-bc41-6f8bb00f3756
+UNVERIFIED trace:hello              response carried no trace ID (reported)
+FAIL       alarms                   in ALARM: lf-web-dev-running-tasks (reported)
+UNVERIFIED alerting                 no confirmed subscriber on the alarm topic: alarms notify no one (reported)
+verify-deployment: FAIL (pass 4, fail 2, unverified 2)

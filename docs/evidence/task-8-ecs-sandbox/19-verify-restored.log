@@ -1,0 +1,9 @@
+PASS       target                   123456789012 us-east-1
+FAIL       artifact                 rollout not complete: PRIMARY=IN_PROGRESS, DRAINING=COMPLETED
+PASS       health                   1 healthy target(s)
+PASS       probe:hello              200
+PASS       logs:hello               1 event(s) for request 5a47a7fb-dbc6-407f-a67e-546c72a24a01
+UNVERIFIED trace:hello              response carried no trace ID (reported)
+PASS       alarms                   lf-web-dev-cpu-high=OK, lf-web-dev-http-5xx=OK, lf-web-dev-running-tasks=OK (reported)
+UNVERIFIED alerting                 no confirmed subscriber on the alarm topic: alarms notify no one (reported)
+verify-deployment: FAIL (pass 5, fail 1, unverified 2)

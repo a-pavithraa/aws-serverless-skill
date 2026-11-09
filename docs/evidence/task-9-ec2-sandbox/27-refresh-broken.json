@@ -1,0 +1,42 @@
+{
+    "InstanceRefreshes": [
+        {
+            "InstanceRefreshId": "fa6b3cd4-bf89-47a5-b173-848e2168235e",
+            "AutoScalingGroupName": "lf-vm-dev-web",
+            "Status": "RollbackSuccessful",
+            "StartTime": "2026-11-09T05:03:46+00:00",
+            "EndTime": "2026-11-09T05:10:54+00:00",
+            "PercentageComplete": 0,
+            "InstancesToUpdate": 2,
+            "Preferences": {
+                "MinHealthyPercentage": 100,
+                "InstanceWarmup": 300,
+                "SkipMatching": false,
+                "AutoRollback": true,
+                "ScaleInProtectedInstances": "Ignore",
+                "StandbyInstances": "Ignore",
+                "AlarmSpecification": {
+                    "Alarms": [
+                        "lf-vm-dev-unhealthy-hosts"
+                    ]
+                },
+                "MaxHealthyPercentage": 200
+            },
+            "DesiredConfiguration": {
+                "LaunchTemplate": {
+                    "LaunchTemplateId": "lt-0a5648b36b4d64ace",
+                    "LaunchTemplateName": "lf-vm-dev",
+                    "Version": "4"
+                }
+            },
+            "RollbackDetails": {
+                "RollbackReason": "Rollback triggered due to the following failure: Refresh failed because the following CloudWatch alarms went to ALARM state: lf-vm-dev-unhealthy-hosts",
+                "RollbackStartTime": "2026-11-09T05:09:45.916000+00:00",
+                "PercentageCompleteOnRollback": 25,
+                "InstancesToUpdateOnRollback": 2
+            },
+            "Strategy": "Rolling"
+        }
+    ],
+    "NextToken": "NTAwYmE0MGUtOTc5ZC00OTYwLTlmZTAtZjA4ZDc2YmNhMWM2fDIwMjYtMTEtMDkgMDQ6MDM6MjMuMA=="
+}

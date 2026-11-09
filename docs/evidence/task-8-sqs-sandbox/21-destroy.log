@@ -1,0 +1,44 @@
+aws_sqs_queue_redrive_allow_policy.dead_letter: Destroying... [id=https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-dlq]
+aws_cloudwatch_dashboard.service: Destroying... [id=lf-sqs-dev]
+aws_cloudwatch_metric_alarm.lambda_errors: Destroying... [id=lf-sqs-dev-lambda-errors]
+aws_cloudwatch_metric_alarm.oldest_message_age: Destroying... [id=lf-sqs-dev-oldest-message-age]
+aws_cloudwatch_metric_alarm.dead_letter_messages: Destroying... [id=lf-sqs-dev-dlq-messages]
+aws_lambda_event_source_mapping.orders: Destroying... [id=33e72fd4-bbc4-461b-95bd-358a739223d9]
+aws_cloudwatch_metric_alarm.dead_letter_messages: Destruction complete after 2s
+aws_cloudwatch_dashboard.service: Destruction complete after 2s
+aws_cloudwatch_metric_alarm.lambda_errors: Destruction complete after 2s
+aws_cloudwatch_metric_alarm.oldest_message_age: Destruction complete after 2s
+aws_sns_topic.alarms: Destroying... [id=arn:aws:sns:us-east-1:123456789012:lf-sqs-dev-alarms]
+aws_lambda_event_source_mapping.orders: Destruction complete after 2s
+aws_lambda_alias.live: Destroying... [id=arn:aws:lambda:us-east-1:123456789012:function:lf-sqs-dev:live]
+aws_lambda_alias.live: Destruction complete after 0s
+aws_lambda_function.worker: Destroying... [id=lf-sqs-dev]
+aws_sns_topic.alarms: Destruction complete after 1s
+aws_kms_key.alarms: Destroying... [id=41c31c13-9030-4856-a98f-0d22e5375024]
+aws_kms_key.alarms: Destruction complete after 1s
+aws_lambda_function.worker: Destruction complete after 6s
+aws_iam_role_policy.lambda: Destroying... [id=lf-sqs-dev-fn:runtime]
+aws_iam_role_policy.lambda: Destruction complete after 1s
+aws_cloudwatch_log_group.lambda: Destroying... [id=/aws/lambda/lf-sqs-dev]
+aws_dynamodb_table.idempotency: Destroying... [id=lf-sqs-dev-idempotency]
+aws_iam_role.lambda: Destroying... [id=lf-sqs-dev-fn]
+aws_iam_role.lambda: Destruction complete after 1s
+aws_cloudwatch_log_group.lambda: Destruction complete after 1s
+aws_sqs_queue_redrive_allow_policy.dead_letter: Still destroying... [id=https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-dlq, 00m10s elapsed]
+aws_dynamodb_table.idempotency: Destruction complete after 9s
+aws_sqs_queue_redrive_allow_policy.dead_letter: Still destroying... [id=https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-dlq, 00m20s elapsed]
+aws_sqs_queue_redrive_allow_policy.dead_letter: Destruction complete after 28s
+aws_sqs_queue.orders: Destroying... [id=https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-orders]
+aws_sqs_queue.orders: Still destroying... [id=https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-orders, 00m10s elapsed]
+aws_sqs_queue.orders: Still destroying... [id=https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-orders, 00m20s elapsed]
+aws_sqs_queue.orders: Still destroying... [id=https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-orders, 00m30s elapsed]
+aws_sqs_queue.orders: Still destroying... [id=https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-orders, 00m40s elapsed]
+aws_sqs_queue.orders: Destruction complete after 46s
+aws_sqs_queue.dead_letter: Destroying... [id=https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-dlq]
+aws_sqs_queue.dead_letter: Still destroying... [id=https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-dlq, 00m10s elapsed]
+aws_sqs_queue.dead_letter: Still destroying... [id=https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-dlq, 00m20s elapsed]
+aws_sqs_queue.dead_letter: Still destroying... [id=https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-dlq, 00m30s elapsed]
+aws_sqs_queue.dead_letter: Still destroying... [id=https://sqs.us-east-1.amazonaws.com/123456789012/lf-sqs-dev-dlq, 00m40s elapsed]
+aws_sqs_queue.dead_letter: Destruction complete after 46s
+
+Apply complete! Resources: 0 added, 0 changed, 16 destroyed.

@@ -1,0 +1,75 @@
+_subdirectory: template
+_templates_suffix: .jinja
+
+project_name:
+  type: str
+  help: Lowercase name, 3-32 chars, letters, digits and hyphens
+  validator: "{% if not (project_name | regex_search('^[a-z][a-z0-9-]{1,30}[a-z0-9]$')) %}invalid project_name{% endif %}"
+
+aws_region:
+  type: str
+  default: us-east-1
+
+environment:
+  type: str
+  default: dev
+  validator: "{% if not (environment | regex_search('^[a-z][a-z0-9]{1,15}$')) %}invalid environment{% endif %}"
+
+runtime:
+  type: str
+  help: A network has no runtime
+  choices: [none]
+  default: none
+
+architecture:
+  type: str
+  choices: [managed]
+  default: managed
+
+cidr:
+  type: str
+  default: 10.42.0.0/16
+  help: VPC CIDR, /16 to /20; subnets are /24s cut from it
+  validator: "{% if not (cidr | regex_search('^([0-9]{1,3}[.]){3}[0-9]{1,3}/(1[6-9]|20)$')) %}cidr: an IPv4 CIDR from /16 to /20{% endif %}"
+
+az_count:
+  type: int
+  default: 2
+  validator: "{% if az_count < 2 or az_count > 3 %}az_count: 2 or 3; load balancers need two zones{% endif %}"
+
+nat_mode:
+  type: str
+  choices: [none, single, per-az]
+  default: none
+  help: "none: public subnets only, no cost. single: private subnets and one NAT gateway (about 32 USD a month plus data). per-az: one NAT gateway per zone"
+
+zone_instance_type:
+  type: str
+  default: t4g.micro
+  help: Only zones that offer this instance type are used
+
+log_retention_days:
+  type: int
+  help: Flow log retention
+  default: 14
+  validator: "{% if log_retention_days not in [1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653] %}log_retention_days: not a value CloudWatch Logs accepts{% endif %}"
+
+allowed_account_id:
+  type: str
+  default: ""
+  validator: "{% if allowed_account_id and not (allowed_account_id | regex_search('^[0-9]{12}$')) %}allowed_account_id: empty or a 12-digit account ID{% endif %}"
+
+backend:
+  type: str
+  choices: [local, s3]
+  default: local
+
+state_bucket:
+  type: str
+  default: ""
+  validator: "{% if backend == 's3' and not state_bucket %}state_bucket: required for the s3 backend{% endif %}"
+
+state_key:
+  type: str
+  default: ""
+  validator: "{% if backend == 's3' and not state_key %}state_key: required for the s3 backend{% endif %}"

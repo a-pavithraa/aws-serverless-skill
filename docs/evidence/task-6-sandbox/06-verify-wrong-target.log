@@ -1,0 +1,6 @@
+FAIL       target                   Terraform outputs are for region us-east-1, expected eu-west-1
+verify-deployment: WRONG-TARGET (pass 0, fail 1, unverified 0)
+exit=3
+FAIL       target                   credentials are for account 123456789012, expected 000000000000; Terraform outputs are for account 123456789012
+verify-deployment: WRONG-TARGET (pass 0, fail 1, unverified 0)
+exit=3

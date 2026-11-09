@@ -1,0 +1,131 @@
+# {{ project_name }}
+
+HTTP service on ECS Fargate (`{{ runtime }}`, `{{ architecture }}`, container), generated from the `ecs-web` template. ECS Express Mode runs it behind an HTTPS load balancer. The service has no authentication: {{ public_reason }}.
+
+## How it works
+
+Terraform owns the image repository, the cluster, the log group, the IAM roles, the alarms and one `aws_ecs_express_gateway_service`. Express Mode then creates and owns the load balancer, listener rules, target groups, security groups, certificate, scaling policy and a deployment alarm. Do not manage those with Terraform: they belong to the service, and deleting the service deletes them.
+
+| Setting | Value | Why |
+| --- | --- | --- |
+| Image | by digest (`image_digest`) | A tag can move; a digest names one image |
+| CPU, memory | {{ cpu }}, {{ memory }} MiB | Fargate sizes |
+| Tasks | {{ min_tasks }} to {{ max_tasks }}, scaled on average CPU 60 % | |
+| Health check | `GET /health` | The load balancer replaces a task that fails it |
+| Rollout | canary, set by Express Mode | Apply waits for a steady state, so a rollout that never becomes healthy fails the apply |
+
+Not available in Express Mode: a WAF, load balancer access logs, your own listener rules, and another deployment strategy. If you need one of them, this template is the wrong start.
+
+The service runs in the public subnets of a network made with the `network` template (`network_name`, read from SSM at plan time), or in the `subnet_ids` you give it. The plan fails when neither is set: the template does not use the default VPC.{% if network_name %} This project uses the network `{{ network_name }}`.{% endif %} Deploy the network first. Public subnets give an internet-facing load balancer; private subnets (at least two, through `subnet_ids`) give an internal one. Public subnets need a VPC with an attached internet gateway: without one, Express Mode retries for 30 minutes without saying why. The first Express Mode service in a VPC sets which subnets the shared load balancer uses.
+
+## What this project uses but does not own
+
+Terraform reads these and never changes them. Destroying this project leaves them in place.
+
+| What | Owner | Read from |
+| --- | --- | --- |
+| VPC, subnets, internet gateway, route tables | the `network` project{% if network_name %} `{{ network_name }}`{% endif %}, or your platform team | `network_name` (SSM) or `subnet_ids`; the plan checks that the subnets share one VPC and span two zones |
+| Extra task security groups | whoever made them | `security_group_ids` |
+| Base image `python:3.13-slim` | Docker Hub, pinned by digest in the `Dockerfile` | `docker buildx build` |
+| IAM policy `AmazonECSInfrastructureRoleforExpressGatewayServices` | AWS (managed policy) | attached to the infrastructure role |
+
+Express Mode's load balancer, target groups and certificate are different: the service owns them, and deleting it deletes them.
+
+## Layout
+
+| Path | What |
+| --- | --- |
+| `app/server.py` | The service. Standard library only; one JSON log line per request |
+| `app/tests/` | Unit and local HTTP tests (stdlib `unittest`) |
+| `Dockerfile` | Image build; base image pinned by digest |
+| `build_image.sh` | Builds and pushes the image, prints its digest |
+| `infra/` | Terraform root: repository, cluster, log group, IAM, Express service, alarms |
+| `infra/envs/{{ environment }}.tfvars` | Values for the `{{ environment }}` environment |
+| `infra/tests/plan.tftest.hcl` | Mocked tests; no AWS credentials needed |
+| `.verify/probes.json` | Requests the deployment verifier sends after a deploy |
+| `docs/runbook.md` | What each alarm means and what to do |
+
+## Prerequisites
+
+Python 3.13, Terraform ≥ 1.10 (tested with 1.14.4), Docker with `buildx` for `linux/arm64`, and the AWS CLI. {% if backend == 's3' %}The state bucket `{{ state_bucket }}` must exist before `init`; state locking uses the S3 lock file.{% else %}State is local (`infra/terraform.tfstate`): fine for a sandbox, not for a team. Switch to an S3 backend before sharing.{% endif %}
+
+## Test
+
+```bash
+python -m unittest discover -s app/tests
+terraform -chdir=infra init -backend=false
+terraform -chdir=infra test
+```
+
+## Deploy
+
+The first `init` writes the provider versions and their hashes to `infra/.terraform.lock.hcl`. Commit `infra/.terraform.lock.hcl`: the checks then run `init` with `-lockfile=readonly`, so a provider cannot change without a reviewed commit. If CI runs on another OS, add its hashes first: `terraform -chdir=infra providers lock -platform=linux_amd64 -platform=darwin_arm64 -platform=windows_amd64`.
+
+The first deploy has two steps, because the image needs the repository and the service needs the image.
+
+1. Create the repository and everything else except the service:
+
+   ```bash
+   terraform -chdir=infra init
+   terraform -chdir=infra plan -var-file=envs/{{ environment }}.tfvars -out=tfplan
+   terraform -chdir=infra apply tfplan
+   ```
+
+{% if secret_names %}   Then set the secret values. Terraform created the secret `{{ project_name }}-{{ environment }}/app` without a value, so no secret enters the Terraform state. Write the JSON to a file outside the repository, store it, and delete the file:
+
+   ```bash
+   # secret.json: {{ '{' }}{% for s in secret_names.split(",") if s %}"{{ s }}": "..."{% if not loop.last %}, {% endif %}{% endfor %}{{ '}' }}
+   aws secretsmanager put-secret-value --region {{ aws_region }} --secret-id {{ project_name }}-{{ environment }}/app      --secret-string file://secret.json
+   rm secret.json
+   ```
+
+   Without a value for every key, ECS cannot start a task, and the deploy in step 3 fails. To change a value later, run `put-secret-value` again, then start new tasks (`aws ecs update-service --force-new-deployment`): running tasks keep the value they started with.
+
+{% endif %}2. Build and push the image. The source hash goes into the image, and the service returns it. The script stops at the first failure and prints only the new image's digest:
+
+   ```bash
+   DIGEST=$(bash build_image.sh)
+   echo "$DIGEST"
+   ```
+
+   If it prints nothing or fails, stop: do not plan with an empty digest, which removes the service. The tag names both `app/` and the `Dockerfile`, so a new base image gets a new tag.
+
+3. Deploy that digest from a saved plan, and read the plan before applying it:
+
+   ```bash
+   terraform -chdir=infra plan -var-file=envs/{{ environment }}.tfvars -var image_digest=$DIGEST -out=tfplan
+   terraform -chdir=infra show tfplan
+   terraform -chdir=infra apply tfplan
+   ```
+
+Apply returns when the service is steady, which can be before the canary's old tasks finish draining. If the verifier reports `rollout not complete` right after an apply, wait a minute and run it again.
+
+Later deploys repeat steps 2 and 3. Put `image_digest` in the tfvars file, or every plan without it removes the service. In a team, CI builds the image and applies the approved plan of the merged commit.
+
+## Secrets and settings
+
+Secrets go in `secret_names` (in `infra/envs/{{ environment }}.tfvars`): each name is one JSON key of the secret `{{ project_name }}-{{ environment }}/app`, injected through the task's `secret` block. Plain settings go in `app_environment`. Anyone who can describe the task definition can read those, so the plan rejects a name in both, or a name that looks like a secret (`PASSWORD`, `SECRET`, `TOKEN`, `CREDENTIAL`, `PRIVATE_KEY`, `API_KEY`). `GET /hello` lists the secret names the task received, never the values, and the verifier checks the list.
+
+## Verify
+
+A deploy is not working until the verifier says so. It checks the account and region. It then checks that every running task runs `image_digest`, that the rollout is complete and that every target is healthy. It calls `GET /hello`, and the response's `source_sha256` must equal this checkout's `app/`. `UNVERIFIED` is not a pass.
+
+## Remove
+
+The repository refuses to delete while it holds images. Delete them first:
+
+```bash
+aws ecr batch-delete-image --region {{ aws_region }} --repository-name {{ project_name }}-{{ environment }} \
+  --image-ids "$(aws ecr list-images --region {{ aws_region }} --repository-name {{ project_name }}-{{ environment }} --query imageIds --output json)"
+terraform -chdir=infra plan -destroy -var-file=envs/{{ environment }}.tfvars -out=destroy.tfplan
+terraform -chdir=infra apply destroy.tfplan
+```
+
+Deleting the service leaves the task definitions that Express Mode registered. Terraform does not own them, so remove them yourself:
+
+```bash
+for td in $(aws ecs list-task-definitions --region {{ aws_region }} --family-prefix {{ project_name }}-{{ environment }}-{{ project_name }}-{{ environment }}-web     --query taskDefinitionArns --output text); do
+  aws ecs deregister-task-definition --region {{ aws_region }} --task-definition "$td" > /dev/null
+  aws ecs delete-task-definitions --region {{ aws_region }} --task-definitions "$td" > /dev/null
+done
+```

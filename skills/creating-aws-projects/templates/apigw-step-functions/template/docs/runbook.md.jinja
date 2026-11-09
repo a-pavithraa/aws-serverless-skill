@@ -1,0 +1,23 @@
+# Runbook: {{ project_name }}-{{ environment }}
+
+Alarms notify the SNS topic `{{ project_name }}-{{ environment }}-alarms`.{% if alarm_email %} Email `{{ alarm_email }}` is subscribed. The subscription does nothing until someone clicks the confirmation link in the email from AWS.{% else %} Nothing is subscribed to it yet. Add a subscription, or no one is told when an alarm fires.{% endif %}
+
+Logs:
+
+- Workflow: `/aws/vendedlogs/states/{{ project_name }}-{{ environment }}` ({{ log_retention_days }} days). Every execution event, without the input and output: the order can hold customer data. The execution is named by the correlation ID, so `execution_arn` ends with it. To see inputs while you debug, plan and apply with `-var log_execution_data=true`, then set it back.
+- API access: `/aws/apigateway/{{ project_name }}-{{ environment }}-access`. One JSON line per request with `status`, `integrationStatus` and `xrayTraceId`.
+
+Find one request, in Logs Insights on the workflow log group:
+
+```
+fields @timestamp, type, execution_arn | filter @message like "<correlation id>" | sort @timestamp asc
+```
+
+| Alarm | Fires when | First checks |
+| --- | --- | --- |
+| `{{ project_name }}-{{ environment }}-api-5xx` | any request answers 5xx in a minute | access log lines with `status` 5xx: `integrationStatus` and `integrationError` tell a template or permission problem from a workflow failure; then the workflow log by correlation ID |
+| `{{ project_name }}-{{ environment }}-executions-timed-out` | any execution runs past {{ workflow_timeout_seconds }} s | the slow state in the workflow log; a downstream call without its own timeout |
+
+A rejected order (422) is not alarmed: the workflow fails it on purpose. Watch `ExecutionsFailed` against your normal rejection rate if a rise in rejections matters.
+
+The verifier's timeout probe trips both alarms on purpose. They return to OK after a minute without new 5xx responses or timeouts.

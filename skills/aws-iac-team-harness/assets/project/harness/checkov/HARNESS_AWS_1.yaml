@@ -1,0 +1,17 @@
+metadata:
+  id: "HARNESS_AWS_1"
+  name: "Lambda function without a Terraform-managed log group: add aws_cloudwatch_log_group with retention_in_days and set logging_config.log_group to it, or Lambda creates one that never expires"
+  category: "LOGGING"
+definition:
+  and:
+    - cond_type: "filter"
+      attribute: "resource_type"
+      value:
+        - "aws_lambda_function"
+      operator: "within"
+    - cond_type: "connection"
+      resource_types:
+        - "aws_lambda_function"
+      connected_resource_types:
+        - "aws_cloudwatch_log_group"
+      operator: "exists"

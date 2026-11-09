@@ -1,0 +1,50 @@
+{
+  "Comment": "Validates an order and returns a result. The probes use action fail (rejected) and slow (timed out).",
+  "StartAt": "Validate",
+  "TimeoutSeconds": {{ workflow_timeout_seconds }},
+  "States": {
+    "Validate": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Not": {"Variable": "$.order.order_id", "IsPresent": true},
+          "Next": "Reject"
+        },
+        {
+          "And": [
+            {"Variable": "$.order.action", "IsPresent": true},
+            {"Variable": "$.order.action", "StringEquals": "fail"}
+          ],
+          "Next": "Reject"
+        },
+        {
+          "And": [
+            {"Variable": "$.order.action", "IsPresent": true},
+            {"Variable": "$.order.action", "StringEquals": "slow"}
+          ],
+          "Next": "Slow"
+        }
+      ],
+      "Default": "Process"
+    },
+    "Slow": {
+      "Type": "Wait",
+      "Seconds": {{ workflow_timeout_seconds + 5 }},
+      "Next": "Process"
+    },
+    "Process": {
+      "Type": "Pass",
+      "Parameters": {
+        "order_id.$": "$.order.order_id",
+        "status": "processed",
+        "correlation_id.$": "$.correlation_id"
+      },
+      "End": true
+    },
+    "Reject": {
+      "Type": "Fail",
+      "Error": "OrderRejected",
+      "Cause": "The order has no order_id, or it asked to fail."
+    }
+  }
+}

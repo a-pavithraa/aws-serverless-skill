@@ -1,0 +1,159 @@
+data.aws_caller_identity.current: Reading...
+aws_cloudwatch_log_group.app: Refreshing state... [id=/ecs/lf-web-dev]
+aws_ecs_cluster.this: Refreshing state... [id=arn:aws:ecs:us-east-1:123456789012:cluster/lf-web-dev]
+aws_ecr_repository.app: Refreshing state... [id=lf-web-dev]
+data.aws_caller_identity.current: Read complete after 0s [id=123456789012]
+data.aws_iam_policy_document.infrastructure_assume: Reading...
+aws_kms_key.alarms: Refreshing state... [id=6bd10bc0-17d1-4f8c-9d23-01292c80e43e]
+data.aws_iam_policy_document.tasks_assume: Reading...
+data.aws_iam_policy_document.infrastructure_assume: Read complete after 0s [id=266576488]
+data.aws_iam_policy_document.tasks_assume: Read complete after 0s [id=101469978]
+aws_iam_role.infrastructure: Refreshing state... [id=lf-web-dev-express-infrastructure]
+aws_iam_role.task: Refreshing state... [id=lf-web-dev-task]
+aws_iam_role.execution: Refreshing state... [id=lf-web-dev-execution]
+aws_ecr_lifecycle_policy.app: Refreshing state... [id=lf-web-dev]
+aws_cloudwatch_log_metric_filter.http_5xx: Refreshing state... [id=lf-web-dev-http-5xx]
+data.aws_iam_policy_document.execution: Reading...
+data.aws_iam_policy_document.execution: Read complete after 0s [id=1987309853]
+aws_sns_topic.alarms: Refreshing state... [id=arn:aws:sns:us-east-1:123456789012:lf-web-dev-alarms]
+aws_iam_role_policy_attachment.infrastructure: Refreshing state... [id=lf-web-dev-express-infrastructure/arn:aws:iam::aws:policy/service-role/AmazonECSInfrastructureRoleforExpressGatewayServices]
+aws_iam_role_policy.execution: Refreshing state... [id=lf-web-dev-execution:pull-image-and-write-logs]
+aws_cloudwatch_metric_alarm.http_5xx: Refreshing state... [id=lf-web-dev-http-5xx]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # aws_cloudwatch_metric_alarm.cpu_high[0] will be created
+  + resource "aws_cloudwatch_metric_alarm" "cpu_high" {
+      + actions_enabled                       = true
+      + alarm_actions                         = [
+          + "arn:aws:sns:us-east-1:123456789012:lf-web-dev-alarms",
+        ]
+      + alarm_name                            = "lf-web-dev-cpu-high"
+      + arn                                   = (known after apply)
+      + comparison_operator                   = "GreaterThanThreshold"
+      + dimensions                            = {
+          + "ClusterName" = "lf-web-dev"
+          + "ServiceName" = "lf-web-dev-web"
+        }
+      + evaluate_low_sample_count_percentiles = (known after apply)
+      + evaluation_periods                    = 5
+      + id                                    = (known after apply)
+      + metric_name                           = "CPUUtilization"
+      + namespace                             = "AWS/ECS"
+      + ok_actions                            = [
+          + "arn:aws:sns:us-east-1:123456789012:lf-web-dev-alarms",
+        ]
+      + period                                = 60
+      + region                                = "us-east-1"
+      + statistic                             = "Average"
+      + tags_all                              = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/ecs-web"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-web"
+        }
+      + threshold                             = 85
+      + treat_missing_data                    = "notBreaching"
+    }
+
+  # aws_cloudwatch_metric_alarm.running_tasks[0] will be created
+  + resource "aws_cloudwatch_metric_alarm" "running_tasks" {
+      + actions_enabled                       = true
+      + alarm_actions                         = [
+          + "arn:aws:sns:us-east-1:123456789012:lf-web-dev-alarms",
+        ]
+      + alarm_name                            = "lf-web-dev-running-tasks"
+      + arn                                   = (known after apply)
+      + comparison_operator                   = "LessThanThreshold"
+      + dimensions                            = {
+          + "ClusterName" = "lf-web-dev"
+          + "ServiceName" = "lf-web-dev-web"
+        }
+      + evaluate_low_sample_count_percentiles = (known after apply)
+      + evaluation_periods                    = 3
+      + id                                    = (known after apply)
+      + metric_name                           = "RunningTaskCount"
+      + namespace                             = "ECS/ContainerInsights"
+      + ok_actions                            = [
+          + "arn:aws:sns:us-east-1:123456789012:lf-web-dev-alarms",
+        ]
+      + period                                = 60
+      + region                                = "us-east-1"
+      + statistic                             = "Minimum"
+      + tags_all                              = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/ecs-web"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-web"
+        }
+      + threshold                             = 1
+      + treat_missing_data                    = "breaching"
+    }
+
+  # aws_ecs_express_gateway_service.web[0] will be created
+  + resource "aws_ecs_express_gateway_service" "web" {
+      + cluster                 = "lf-web-dev"
+      + cpu                     = "256"
+      + cpu_architecture        = "ARM64"
+      + current_deployment      = (known after apply)
+      + execution_role_arn      = "arn:aws:iam::123456789012:role/lf-web-dev-execution"
+      + health_check_path       = "/health"
+      + infrastructure_role_arn = "arn:aws:iam::123456789012:role/lf-web-dev-express-infrastructure"
+      + ingress_paths           = (known after apply)
+      + memory                  = "512"
+      + network_configuration   = (known after apply)
+      + region                  = "us-east-1"
+      + scaling_target          = [
+          + {
+              + auto_scaling_metric       = "AVERAGE_CPU"
+              + auto_scaling_target_value = 60
+              + max_task_count            = 2
+              + min_task_count            = 1
+            },
+        ]
+      + service_arn             = (known after apply)
+      + service_name            = "lf-web-dev-web"
+      + service_revision_arn    = (known after apply)
+      + tags_all                = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/ecs-web"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-web"
+        }
+      + task_role_arn           = "arn:aws:iam::123456789012:role/lf-web-dev-task"
+      + wait_for_steady_state   = true
+
+      + primary_container {
+          + aws_logs_configuration = [
+              + {
+                  + log_group         = "/ecs/lf-web-dev"
+                  + log_stream_prefix = "web"
+                },
+            ]
+          + container_port         = 8080
+          + image                  = "123456789012.dkr.ecr.us-east-1.amazonaws.com/lf-web-dev@sha256:fcce5459b307d3882c33d94b930376c6883eccd5a5b55ff2ad4a1d5b5c5c96c7"
+        }
+    }
+
+Plan: 3 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  ~ alarm_names        = [
+        "lf-web-dev-http-5xx",
+      + "lf-web-dev-running-tasks",
+      + "lf-web-dev-cpu-high",
+    ]
+  + ecs_service_name   = "lf-web-dev-web"
+  + image_digest       = "sha256:fcce5459b307d3882c33d94b930376c6883eccd5a5b55ff2ad4a1d5b5c5c96c7"
+  + service_url        = (known after apply)
+
+─────────────────────────────────────────────────────────────────────────────
+
+Saved the plan to: tfplan
+
+To perform exactly these actions, run the following command to apply:
+    terraform apply "tfplan"

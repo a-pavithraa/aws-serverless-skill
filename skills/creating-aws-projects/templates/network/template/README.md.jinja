@@ -1,0 +1,65 @@
+# {{ project_name }}
+
+A VPC for services, generated from the `network` template: {{ az_count }} public subnets{% if nat_mode != 'none' %}, {{ az_count }} private subnets and {% if nat_mode == 'single' %}one NAT gateway{% else %}one NAT gateway per zone{% endif %}{% else %}, no private subnets and no NAT gateway{% endif %}, in `{{ cidr }}`. It is built on `terraform-aws-modules/vpc/aws` 6.7.3, pinned to the commit of its tag.
+
+## Why it is a separate project
+
+A network outlives the services in it, and several services share it. In its own Terraform root and state:
+
+- destroying or replacing a service never touches the network;
+- a service plan never shows network changes;
+- you apply this project rarely, after reading its plan.
+
+Services do not read this project's state. They read the SSM parameters it publishes:
+
+| Parameter | Value |
+| --- | --- |
+| `/landform/network/{{ project_name }}-{{ environment }}/vpc-id` | the VPC ID |
+| `/landform/network/{{ project_name }}-{{ environment }}/public-subnet-ids` | comma-separated public subnet IDs |
+| `/landform/network/{{ project_name }}-{{ environment }}/private-subnet-ids` | comma-separated private subnet IDs; only when `nat_mode` is not `none` |
+| `/landform/network/{{ project_name }}-{{ environment }}/nat-mode` | `none`, `single` or `per-az` |
+
+To use the network, give `ecs-web` or `alb-ec2` the answer `network_name = "{{ project_name }}-{{ environment }}"`.
+
+## What it contains
+
+| Part | Setting | Why |
+| --- | --- | --- |
+| Zones | the first {{ az_count }} zones that offer `{{ zone_instance_type }}` | Not every zone offers every instance type |
+| Public subnets | /24 each, public IPv4 on launch | Instances there reach the internet without NAT |
+| Default security group | no rules | Nothing uses it by accident |
+| Flow logs | CloudWatch Logs, {{ log_retention_days }} days, 10-minute aggregation | A record of accepted and rejected traffic |
+{% if nat_mode != 'none' %}| NAT | {{ nat_mode }} | Private subnets reach the internet; each NAT gateway costs about 32 USD a month plus data |
+{% endif %}
+## Prerequisites
+
+Terraform ≥ 1.10 (tested with 1.14.4), and network access for `terraform init`: it downloads the AWS provider and the VPC module. {% if backend == 's3' %}The state bucket `{{ state_bucket }}` must exist before `init`; state locking uses the S3 lock file.{% else %}State is local (`infra/terraform.tfstate`): fine for a sandbox, not for a team. Switch to an S3 backend before sharing.{% endif %}
+
+## Test
+
+```bash
+terraform -chdir=infra init -backend=false
+terraform -chdir=infra test
+```
+
+## Deploy
+
+The first `init` writes the provider versions and their hashes to `infra/.terraform.lock.hcl`. Commit `infra/.terraform.lock.hcl`: the checks then run `init` with `-lockfile=readonly`, so a provider cannot change without a reviewed commit. If CI runs on another OS, add its hashes first: `terraform -chdir=infra providers lock -platform=linux_amd64 -platform=darwin_arm64 -platform=windows_amd64`.
+
+```bash
+terraform -chdir=infra init
+terraform -chdir=infra plan -var-file=envs/{{ environment }}.tfvars -out=tfplan
+terraform -chdir=infra show tfplan
+terraform -chdir=infra apply tfplan
+```
+
+After the first apply, copy the `availability_zones` output into `zones` in `infra/envs/{{ environment }}.tfvars`. Without the pin, a change in which zones offer `{{ zone_instance_type }}` would move the subnets, and replace everything in them.
+
+## Remove
+
+Remove every service that uses the network first. AWS refuses to delete a subnet that still has network interfaces in it.
+
+```bash
+terraform -chdir=infra plan -destroy -var-file=envs/{{ environment }}.tfvars -out=destroy.tfplan
+terraform -chdir=infra apply destroy.tfplan
+```

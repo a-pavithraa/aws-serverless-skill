@@ -1,0 +1,426 @@
+data.aws_caller_identity.current: Reading...
+data.aws_vpc.default[0]: Reading...
+data.aws_caller_identity.current: Read complete after 1s [id=123456789012]
+data.aws_iam_policy_document.infrastructure_assume: Reading...
+data.aws_iam_policy_document.tasks_assume: Reading...
+data.aws_iam_policy_document.tasks_assume: Read complete after 0s [id=101469978]
+data.aws_iam_policy_document.infrastructure_assume: Read complete after 0s [id=266576488]
+data.aws_vpc.default[0]: Read complete after 3s [id=vpc-bd239dc0]
+data.aws_internet_gateway.default[0]: Reading...
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+ <= read (data resources)
+
+Terraform planned the following actions, but then encountered a problem:
+
+  # data.aws_iam_policy_document.execution will be read during apply
+  # (config refers to values not yet known)
+ <= data "aws_iam_policy_document" "execution" {
+      + id            = (known after apply)
+      + json          = (known after apply)
+      + minified_json = (known after apply)
+
+      + statement {
+          + actions   = [
+              + "ecr:GetAuthorizationToken",
+            ]
+          + resources = [
+              + "*",
+            ]
+        }
+      + statement {
+          + actions   = [
+              + "ecr:BatchCheckLayerAvailability",
+              + "ecr:BatchGetImage",
+              + "ecr:GetDownloadUrlForLayer",
+            ]
+          + resources = [
+              + (known after apply),
+            ]
+        }
+      + statement {
+          + actions   = [
+              + "logs:CreateLogStream",
+              + "logs:PutLogEvents",
+            ]
+          + resources = [
+              + (known after apply),
+            ]
+        }
+    }
+
+  # aws_cloudwatch_log_group.app will be created
+  + resource "aws_cloudwatch_log_group" "app" {
+      + arn                         = (known after apply)
+      + deletion_protection_enabled = (known after apply)
+      + id                          = (known after apply)
+      + log_group_class             = (known after apply)
+      + name                        = "/ecs/lf-web-dev"
+      + name_prefix                 = (known after apply)
+      + region                      = "us-east-1"
+      + retention_in_days           = 7
+      + skip_destroy                = false
+      + tags_all                    = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/ecs-web"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-web"
+        }
+    }
+
+  # aws_cloudwatch_log_metric_filter.http_5xx will be created
+  + resource "aws_cloudwatch_log_metric_filter" "http_5xx" {
+      + apply_on_transformed_logs = (known after apply)
+      + id                        = (known after apply)
+      + log_group_name            = "/ecs/lf-web-dev"
+      + name                      = "lf-web-dev-http-5xx"
+      + pattern                   = "{ $.status >= 500 }"
+      + region                    = "us-east-1"
+
+      + metric_transformation {
+          + default_value = "0"
+          + name          = "Http5xx"
+          + namespace     = "lf-web-dev"
+          + unit          = "None"
+          + value         = "1"
+        }
+    }
+
+  # aws_cloudwatch_metric_alarm.http_5xx will be created
+  + resource "aws_cloudwatch_metric_alarm" "http_5xx" {
+      + actions_enabled                       = true
+      + alarm_actions                         = (known after apply)
+      + alarm_name                            = "lf-web-dev-http-5xx"
+      + arn                                   = (known after apply)
+      + comparison_operator                   = "GreaterThanThreshold"
+      + evaluate_low_sample_count_percentiles = (known after apply)
+      + evaluation_periods                    = 1
+      + id                                    = (known after apply)
+      + metric_name                           = "Http5xx"
+      + namespace                             = "lf-web-dev"
+      + ok_actions                            = (known after apply)
+      + period                                = 60
+      + region                                = "us-east-1"
+      + statistic                             = "Sum"
+      + tags_all                              = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/ecs-web"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-web"
+        }
+      + threshold                             = 0
+      + treat_missing_data                    = "notBreaching"
+    }
+
+  # aws_ecr_lifecycle_policy.app will be created
+  + resource "aws_ecr_lifecycle_policy" "app" {
+      + id          = (known after apply)
+      + policy      = jsonencode(
+            {
+              + rules = [
+                  + {
+                      + action       = {
+                          + type = "expire"
+                        }
+                      + description  = "Keep the 20 newest images"
+                      + rulePriority = 1
+                      + selection    = {
+                          + countNumber = 20
+                          + countType   = "imageCountMoreThan"
+                          + tagStatus   = "any"
+                        }
+                    },
+                ]
+            }
+        )
+      + region      = "us-east-1"
+      + registry_id = (known after apply)
+      + repository  = "lf-web-dev"
+    }
+
+  # aws_ecr_repository.app will be created
+  + resource "aws_ecr_repository" "app" {
+      + arn                  = (known after apply)
+      + id                   = (known after apply)
+      + image_tag_mutability = "IMMUTABLE"
+      + name                 = "lf-web-dev"
+      + region               = "us-east-1"
+      + registry_id          = (known after apply)
+      + repository_url       = (known after apply)
+      + tags_all             = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/ecs-web"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-web"
+        }
+
+      + encryption_configuration {
+          + encryption_type = "KMS"
+          + kms_key         = (known after apply)
+        }
+
+      + image_scanning_configuration {
+          + scan_on_push = true
+        }
+    }
+
+  # aws_ecs_cluster.this will be created
+  + resource "aws_ecs_cluster" "this" {
+      + arn      = (known after apply)
+      + id       = (known after apply)
+      + name     = "lf-web-dev"
+      + region   = "us-east-1"
+      + tags_all = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/ecs-web"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-web"
+        }
+
+      + setting {
+          + name  = "containerInsights"
+          + value = "enabled"
+        }
+    }
+
+  # aws_iam_role.execution will be created
+  + resource "aws_iam_role" "execution" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Condition = {
+                          + StringEquals = {
+                              + "aws:SourceAccount" = "123456789012"
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "ecs-tasks.amazonaws.com"
+                        }
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "lf-web-dev-execution"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + tags_all              = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/ecs-web"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-web"
+        }
+      + unique_id             = (known after apply)
+
+      + inline_policy (known after apply)
+    }
+
+  # aws_iam_role.infrastructure will be created
+  + resource "aws_iam_role" "infrastructure" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Condition = {
+                          + StringEquals = {
+                              + "aws:SourceAccount" = "123456789012"
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "ecs.amazonaws.com"
+                        }
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "lf-web-dev-express-infrastructure"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + tags_all              = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/ecs-web"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-web"
+        }
+      + unique_id             = (known after apply)
+
+      + inline_policy (known after apply)
+    }
+
+  # aws_iam_role.task will be created
+  + resource "aws_iam_role" "task" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Condition = {
+                          + StringEquals = {
+                              + "aws:SourceAccount" = "123456789012"
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "ecs-tasks.amazonaws.com"
+                        }
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "lf-web-dev-task"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + tags_all              = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/ecs-web"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-web"
+        }
+      + unique_id             = (known after apply)
+
+      + inline_policy (known after apply)
+    }
+
+  # aws_iam_role_policy.execution will be created
+  + resource "aws_iam_role_policy" "execution" {
+      + id          = (known after apply)
+      + name        = "pull-image-and-write-logs"
+      + name_prefix = (known after apply)
+      + policy      = (known after apply)
+      + role        = (known after apply)
+    }
+
+  # aws_iam_role_policy_attachment.infrastructure will be created
+  + resource "aws_iam_role_policy_attachment" "infrastructure" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSInfrastructureRoleforExpressGatewayServices"
+      + role       = "lf-web-dev-express-infrastructure"
+    }
+
+  # aws_kms_key.alarms will be created
+  + resource "aws_kms_key" "alarms" {
+      + arn                                = (known after apply)
+      + bypass_policy_lockout_safety_check = false
+      + customer_master_key_spec           = "SYMMETRIC_DEFAULT"
+      + deletion_window_in_days            = 7
+      + description                        = "Encrypts the lf-web-dev alarm topic"
+      + enable_key_rotation                = true
+      + id                                 = (known after apply)
+      + is_enabled                         = true
+      + key_id                             = (known after apply)
+      + key_usage                          = "ENCRYPT_DECRYPT"
+      + multi_region                       = (known after apply)
+      + policy                             = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "kms:*"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + AWS = "arn:aws:iam::123456789012:root"
+                        }
+                      + Resource  = "*"
+                      + Sid       = "AccountAdministersKey"
+                    },
+                  + {
+                      + Action    = [
+                          + "kms:Decrypt",
+                          + "kms:GenerateDataKey*",
+                        ]
+                      + Condition = {
+                          + StringEquals = {
+                              + "aws:SourceAccount" = "123456789012"
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "cloudwatch.amazonaws.com"
+                        }
+                      + Resource  = "*"
+                      + Sid       = "CloudWatchAlarmsPublish"
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + region                             = "us-east-1"
+      + rotation_period_in_days            = (known after apply)
+      + tags_all                           = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/ecs-web"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-web"
+        }
+    }
+
+  # aws_sns_topic.alarms will be created
+  + resource "aws_sns_topic" "alarms" {
+      + arn                         = (known after apply)
+      + beginning_archive_time      = (known after apply)
+      + content_based_deduplication = false
+      + fifo_throughput_scope       = (known after apply)
+      + fifo_topic                  = false
+      + id                          = (known after apply)
+      + kms_master_key_id           = (known after apply)
+      + maximum_message_size        = (known after apply)
+      + name                        = "lf-web-dev-alarms"
+      + name_prefix                 = (known after apply)
+      + owner                       = (known after apply)
+      + policy                      = (known after apply)
+      + region                      = "us-east-1"
+      + signature_version           = (known after apply)
+      + tags_all                    = {
+          + "Environment" = "dev"
+          + "Generator"   = "landform/ecs-web"
+          + "ManagedBy"   = "terraform"
+          + "Project"     = "lf-web"
+        }
+      + tracing_config              = (known after apply)
+    }
+
+Plan: 13 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + account_id         = "123456789012"
+  + alarm_names        = [
+      + "lf-web-dev-http-5xx",
+    ]
+  + alarm_topic_arn    = (known after apply)
+  + ecr_repository_url = (known after apply)
+  + ecs_cluster_name   = "lf-web-dev"
+  + log_group          = "/ecs/lf-web-dev"
+  + region             = "us-east-1"
+
+Error: no matching EC2 Internet Gateway found
+
+  with data.aws_internet_gateway.default[0],
+  on main.tf line 19, in data "aws_internet_gateway" "default":
+  19: data "aws_internet_gateway" "default" {
+

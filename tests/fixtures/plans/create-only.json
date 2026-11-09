@@ -1,0 +1,13 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.14.4",
+  "resource_changes": [
+    {
+      "address": "aws_sns_topic.alarms",
+      "mode": "managed",
+      "type": "aws_sns_topic",
+      "name": "alarms",
+      "change": {"actions": ["create"], "before": null, "after": {"name": "orders-dev-alarms"}, "after_unknown": {"arn": true}, "after_sensitive": {}}
+    }
+  ]
+}

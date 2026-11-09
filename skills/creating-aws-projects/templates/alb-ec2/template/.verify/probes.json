@@ -1,0 +1,12 @@
+{
+  "probes": [
+    {
+      "name": "hello",
+      "method": "GET",
+      "path": "/hello",
+      "expect_status": 200,
+      "expect_json_keys": ["message", "correlation_id", "source_sha256"],
+      "expect_source_hash": true
+    }
+  ]
+}

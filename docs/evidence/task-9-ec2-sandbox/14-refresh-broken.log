@@ -1,0 +1,75 @@
+t+3s refresh Pending	None	None probe 200000
+t+36s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-034668fbe3ce4bf9b is warming up.	25 probe 200000
+t+69s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-034668fbe3ce4bf9b is warming up.	25 probe 200000
+t+102s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-034668fbe3ce4bf9b is warming up.	25 probe 200000
+t+135s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-034668fbe3ce4bf9b is warming up.	25 probe 200000
+t+167s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-034668fbe3ce4bf9b is warming up.	25 probe 200000
+t+200s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-034668fbe3ce4bf9b is warming up.	25 probe 200000
+t+236s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-034668fbe3ce4bf9b is warming up.	25 probe 200000
+t+270s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-034668fbe3ce4bf9b is warming up.	25 probe 200000
+t+304s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-034668fbe3ce4bf9b is warming up.	25 probe 200000
+t+337s refresh InProgress	Waiting for remaining instances to be available. For example: i-034668fbe3ce4bf9b has insufficient data to evaluate its health with Elastic Load Balancing.	25 probe 200000
+t+369s refresh InProgress	Waiting for remaining instances to be available. For example: i-034668fbe3ce4bf9b has insufficient data to evaluate its health with Elastic Load Balancing.	25 probe 200000
+t+402s refresh InProgress	Waiting for remaining instances to be available. For example: i-034668fbe3ce4bf9b is unhealthy. Resolve issues with failed health checks to continue.	25 probe 200000
+t+435s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-00da4d85abcb121d4 is warming up.	25 probe 200000
+t+468s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-00da4d85abcb121d4 is warming up.	25 probe 200000
+t+501s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-00da4d85abcb121d4 is warming up.	25 probe 200000
+t+534s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-00da4d85abcb121d4 is warming up.	25 probe 200000
+t+569s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-00da4d85abcb121d4 is warming up.	25 probe 200000
+t+602s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-00da4d85abcb121d4 is warming up.	25 probe 200000
+t+635s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-00da4d85abcb121d4 is warming up.	25 probe 200000
+t+668s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-00da4d85abcb121d4 is warming up.	25 probe 200000
+t+701s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-00da4d85abcb121d4 is warming up.	25 probe 200000
+t+733s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-0181a917a689a50c6 is warming up.	25 probe 200000
+t+767s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-0181a917a689a50c6 is warming up.	25 probe 200000
+t+799s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-0181a917a689a50c6 is warming up.	25 probe 200000
+t+833s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-07822d44e33df3f0b is warming up.	25 probe 200000
+t+866s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-07822d44e33df3f0b is warming up.	25 probe 200000
+t+899s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-07822d44e33df3f0b is warming up.	25 probe 200000
+t+931s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-07822d44e33df3f0b is warming up.	25 probe 200000
+t+964s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-07822d44e33df3f0b is warming up.	25 probe 200000
+t+997s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-07822d44e33df3f0b is warming up.	25 probe 200000
+t+1030s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-07822d44e33df3f0b is warming up.	25 probe 200000
+t+1063s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-07822d44e33df3f0b is warming up.	25 probe 200000
+t+1096s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-0fc2cb57bbf7af0e2 is warming up.	25 probe 200000
+t+1129s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-0fc2cb57bbf7af0e2 is warming up.	25 probe 200000
+t+1162s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-0b3ff8a3a034e8077 is warming up.	25 probe 200000
+t+1195s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-0b3ff8a3a034e8077 is warming up.	25 probe 200000
+t+1228s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-0b3ff8a3a034e8077 is warming up.	25 probe 200000
+t+1261s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-090e11099ffb79660 is warming up.	25 probe 200000
+t+1294s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-090e11099ffb79660 is warming up.	25 probe 200000
+t+1327s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-090e11099ffb79660 is warming up.	25 probe 200000
+t+1360s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-090e11099ffb79660 is warming up.	25 probe 200000
+t+1392s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-090e11099ffb79660 is warming up.	25 probe 200000
+t+1425s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-090e11099ffb79660 is warming up.	25 probe 200000
+t+1458s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-090e11099ffb79660 is warming up.	25 probe 200000
+t+1491s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-090e11099ffb79660 is warming up.	25 probe 200000
+t+1524s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-090e11099ffb79660 is warming up.	25 probe 200000
+t+1557s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-0960a6fad46ae188a is warming up.	25 probe 200000
+t+1589s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-0960a6fad46ae188a is warming up.	25 probe 200000
+t+1622s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-0960a6fad46ae188a is warming up.	25 probe 200000
+t+1655s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-0960a6fad46ae188a is warming up.	25 probe 200000
+t+1689s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-0960a6fad46ae188a is warming up.	25 probe 200000
+t+1722s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-0960a6fad46ae188a is warming up.	25 probe 200000
+t+1755s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-0960a6fad46ae188a is warming up.	25 probe 200000
+t+1788s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-0960a6fad46ae188a is warming up.	25 probe 200000
+t+1821s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-0cc6fea77e5aa5d9d is warming up.	25 probe 200000
+t+1854s refresh InProgress	Replacing 1 instances. For example: i-08d9898cb386e89b0 is launching.	25 probe 200000
+t+1886s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-08d9898cb386e89b0 is warming up.	25 probe 200000
+t+1920s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-08d9898cb386e89b0 is warming up.	25 probe 200000
+t+1953s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-08d9898cb386e89b0 is warming up.	25 probe 200000
+t+1985s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-04395e2430e08e5a2 is warming up.	25 probe 200000
+t+2019s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-04395e2430e08e5a2 is warming up.	25 probe 200000
+t+2051s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-04395e2430e08e5a2 is warming up.	25 probe 200000
+t+2084s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-04395e2430e08e5a2 is warming up.	25 probe 200000
+t+2117s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-04395e2430e08e5a2 is warming up.	25 probe 200000
+t+2151s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-04395e2430e08e5a2 is warming up.	25 probe 200000
+t+2184s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-04395e2430e08e5a2 is warming up.	25 probe 200000
+t+2217s refresh InProgress	Replacing 1 instances. For example: i-0eb074d43ec0f92c2 is launching.	25 probe 200000
+t+2250s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-04395e2430e08e5a2 is warming up.	25 probe 200000
+t+2284s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-0eb074d43ec0f92c2 is warming up.	25 probe 200000
+t+2318s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-0eb074d43ec0f92c2 is warming up.	25 probe 200000
+t+2351s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-0c27f84975a94feda is warming up.	25 probe 200000
+t+2384s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-0c27f84975a94feda is warming up.	25 probe 200000
+t+2417s refresh InProgress	Waiting for instances to warm up before continuing. For example: i-0c27f84975a94feda is warming up.	25 probe 200000
+refresh not finished in 2400 s

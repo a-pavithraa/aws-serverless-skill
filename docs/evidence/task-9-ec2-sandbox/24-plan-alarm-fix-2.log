@@ -1,0 +1,41 @@
+data.aws_iam_policy_document.instances_assume: Reading...
+data.aws_ec2_instance_type_offerings.zones: Reading...
+data.aws_caller_identity.current: Reading...
+data.aws_ssm_parameter.ami: Reading...
+data.aws_default_tags.current: Reading...
+aws_cloudwatch_log_group.app: Refreshing state... [id=/ec2/lf-vm-dev]
+data.aws_default_tags.current: Read complete after 0s [id=aws]
+data.aws_iam_policy_document.instances_assume: Read complete after 0s [id=1443847869]
+aws_iam_role.instances: Refreshing state... [id=lf-vm-dev-instances]
+data.aws_caller_identity.current: Read complete after 0s [id=123456789012]
+aws_kms_key.alarms: Refreshing state... [id=af52c7ab-aba9-424e-bf5e-9f10e169dde8]
+data.aws_ssm_parameter.ami: Read complete after 1s [id=/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64]
+data.aws_ec2_instance_type_offerings.zones: Read complete after 1s [id=us-east-1]
+data.aws_subnet.first: Reading...
+data.aws_iam_policy_document.instances: Reading...
+data.aws_iam_policy_document.instances: Read complete after 0s [id=1310382941]
+data.aws_subnet.first: Read complete after 0s [id=subnet-02d7dec8c746e298a]
+data.aws_internet_gateway.vpc: Reading...
+aws_security_group.alb: Refreshing state... [id=sg-0a2c0fd55f0bcb6f3]
+aws_security_group.instances: Refreshing state... [id=sg-0735a6f14bf11ba43]
+aws_lb_target_group.web: Refreshing state... [id=arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/lf-vm-dev/81447a95bc78fca0]
+data.aws_internet_gateway.vpc: Read complete after 0s [id=igw-0f53e767cde106552]
+aws_sns_topic.alarms: Refreshing state... [id=arn:aws:sns:us-east-1:123456789012:lf-vm-dev-alarms]
+aws_iam_role_policy.instances: Refreshing state... [id=lf-vm-dev-instances:write-app-logs]
+aws_iam_instance_profile.instances: Refreshing state... [id=lf-vm-dev-instances]
+aws_vpc_security_group_ingress_rule.alb_listener: Refreshing state... [id=sgr-0229d379ee2163029]
+aws_lb.web: Refreshing state... [id=arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/app/lf-vm-dev/074c0bf5d2c7ba4c]
+aws_vpc_security_group_ingress_rule.instances_from_alb: Refreshing state... [id=sgr-0052c4869da1c0415]
+aws_vpc_security_group_egress_rule.instances_https: Refreshing state... [id=sgr-0efc6eefc7c526439]
+aws_vpc_security_group_egress_rule.alb_to_instances: Refreshing state... [id=sgr-04b6248ae9741f96c]
+aws_launch_template.web: Refreshing state... [id=lt-0a5648b36b4d64ace]
+aws_cloudwatch_metric_alarm.target_5xx: Refreshing state... [id=lf-vm-dev-target-5xx]
+aws_cloudwatch_metric_alarm.unhealthy_hosts: Refreshing state... [id=lf-vm-dev-unhealthy-hosts]
+aws_cloudwatch_metric_alarm.healthy_hosts: Refreshing state... [id=lf-vm-dev-healthy-hosts]
+aws_lb_listener.web: Refreshing state... [id=arn:aws:elasticloadbalancing:us-east-1:123456789012:listener/app/lf-vm-dev/074c0bf5d2c7ba4c/f287885ea0819607]
+aws_autoscaling_group.web: Refreshing state... [id=lf-vm-dev-web]
+
+No changes. Your infrastructure matches the configuration.
+
+Terraform has compared your real infrastructure against your configuration
+and found no differences, so no changes are needed.
