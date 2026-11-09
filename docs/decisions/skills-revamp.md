@@ -23,6 +23,8 @@ The file is at the repository root, and no skill loads it. Its header says that 
 
 Recommendation: delete `DynamoDBDesign.md` from the public repository. This revamp did not delete it, because it is the owner's file.
 
+The owner deleted it on 2026-11-09.
+
 ## Triggering eval results
 
 `tests/fixtures/triggering/run.py` sends 20 prompts that do not name a skill: 15 that should load one of the five skills and 5 that should load none. Each prompt runs once per model in a clean project with only these skills installed. The results are in `tests/fixtures/triggering/results/`.

@@ -21,7 +21,7 @@ python3 "${CLAUDE_SKILL_DIR}/scripts/apply_harness.py" /path/to/project [--workf
 - A rerun updates files nobody edited and reports edited ones as `conflict` (exit 1) instead of overwriting them. Merge a conflict by hand, or delete the file and rerun.
 - `--workflows` adds `.github/workflows/harness-checks.yml` and `terraform-deploy.yml`. Leave it off when the project deploys through Atlantis, HCP Terraform or another runner: wire `harness/check.py` and `harness/plan_summary.py` into that runner instead. Never run two apply paths for one state.
 
-Before telling the user the workflows are ready, go through the administrator checklist in `docs/decisions/deployment-runner.md` with them: branch protection, environment reviewers, the two OIDC trust policies, repository variables, private visibility. YAML cannot enforce any of these.
+Before telling the user the workflows are ready, go through the administrator checklist in `references/deployment-workflows.md` with them: branch protection, environment reviewers, the two OIDC trust policies, repository variables, private visibility. YAML cannot enforce any of these.
 
 ## Check
 
