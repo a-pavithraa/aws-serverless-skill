@@ -48,7 +48,7 @@
 - **Set up per-method latency alarms** using the `Latency` metric (not `Integration Latency`). Alarm on p90/p95/p99 depending on your SLA.
 - **Set up per-method error rate alarms** on `4xxError` and `5xxError` using the `Average` statistic — not Sum. An error count is meaningless without request volume context.
 - **Set up low success rate alarms** using CloudWatch metric math: `200 count / request count`.
-- **Enable X-Ray active tracing** on the API Gateway stage and Lambda function. See [Monitoring](#monitoring--tracing) section below.
+- **Enable X-Ray active tracing** on the Lambda function, and on the stage for a REST API. HTTP APIs do not support X-Ray. See [Monitoring](#monitoring--tracing) section below.
 - **Emit custom business metrics asynchronously** via stdout (EMF format with Powertools Metrics) — never call CloudWatch API inline in the request path.
 - **Apply resource tags** (AppId, Team, CostCenter, Environment) for cost tracking and operational visibility.
 
@@ -94,7 +94,7 @@
 
 ### Enable X-Ray End-to-End
 
-X-Ray tracing must be enabled on both API Gateway and Lambda to get full distributed traces.
+Only REST APIs support X-Ray: enable it on the stage and on the Lambda function to get an API Gateway segment in the trace. HTTP APIs do not support X-Ray, so the trace starts at the Lambda function. Log `$context.requestId` in the access logs and the trace ID (`_X_AMZN_TRACE_ID`) in the function to connect a request to its trace.
 
 **Terraform (API Gateway REST API):**
 ```hcl

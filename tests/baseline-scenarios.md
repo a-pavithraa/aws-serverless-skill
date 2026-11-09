@@ -406,6 +406,34 @@ Agent flags multiple missing pieces:
 
 ---
 
+## Scenario 9: End-to-End Tracing Across API Gateway, Lambda, Secrets Manager and Step Functions
+
+**Skill:** `aws-serverless`
+**Objective:** Validate that the agent knows where tracing stops in a multi-service request: HTTP APIs have no X-Ray support, and active tracing does not show the SDK calls a function makes.
+
+### Test Prompt
+
+```
+We have an HTTP API (API Gateway v2) that invokes a Python Lambda. The Lambda reads a database password from Secrets Manager and starts a Step Functions Standard workflow, which calls two more Lambdas. In Terraform, how do I get one end-to-end X-Ray trace for a request across all of these?
+```
+
+### Expected Baseline Behavior (Without Skill)
+
+- Tells the user to enable X-Ray on the HTTP API stage
+- Treats Lambda active tracing as enough to see the Secrets Manager and Step Functions calls
+- Recommends the X-Ray SDK for new code without noting its maintenance status
+
+### Success Criteria
+
+- [ ] States that HTTP APIs do not support X-Ray tracing (only REST APIs do), so the trace starts at the Lambda function, or the API must be a REST API to get an API Gateway segment
+- [ ] Explains that Lambda active tracing alone records the function's segment, and that the Secrets Manager and `StartExecution` calls appear only when the AWS SDK is instrumented (Powertools Tracer, X-Ray SDK or OpenTelemetry)
+- [ ] Enables tracing on the state machine (`tracing_configuration { enabled = true }`) and active tracing on the downstream Lambdas
+- [ ] Grants X-Ray write permissions to the Lambda roles and the state machine role
+- [ ] Notes that X-Ray samples requests, so not every request has a trace
+- [ ] Does NOT recommend the X-Ray SDK (`patch_all()`) for new code without noting that it is in maintenance mode since 2026-02-25; prefers passing `traceHeader` or OpenTelemetry
+
+---
+
 ## Running the Tests
 
 ### Phase 1 — Baseline (RED)
