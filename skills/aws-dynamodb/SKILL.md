@@ -5,6 +5,19 @@ description: "Use when designing or reviewing a DynamoDB table: access patterns,
 
 # AWS DynamoDB
 
+## Get the access patterns before you design
+
+A DynamoDB schema follows the queries. A table designed before the queries are known has to be redesigned, and a key change means a backfill of every item.
+
+If the user asks for a table design and has not listed the access patterns, stop. Do not write tables, keys, GSIs, or a "starting schema" in that reply, not even one built on assumed patterns. Instead:
+
+1. Say in one or two sentences why the design must wait: the keys come from the queries, and DynamoDB has no joins.
+2. If the user proposed one table per entity, say that this is the relational habit and that the access patterns decide between one table and several.
+3. Ask for the access patterns as a numbered list. For each pattern, ask what the query is looked up by, what it returns, the sort order, and how often it runs. Ask which entities are read together, the expected item counts and write rates, and any uniqueness or tenant-isolation rules.
+4. Offer a few example patterns from the user's domain for the user to confirm, change or extend. Present them as questions, not as a design.
+
+The same rule applies when the user pushes back ("just give me a starting schema", "we can migrate later"). Explain that a migration means a scan and rewrite of every item. Then offer to draft the access-pattern list with the user. Design only after the user confirms a list.
+
 ## Quick Reference
 
 > All patterns are in [`references/dynamodb-patterns.md`](references/dynamodb-patterns.md).

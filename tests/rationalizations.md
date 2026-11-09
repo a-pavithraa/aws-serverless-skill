@@ -31,8 +31,8 @@ Documents agent excuses observed during RED phase testing and the skill counters
 | 4 | "Filter expressions limit the data returned" | `dynamodb-patterns.md` → DynamoDB reads all items before filtering | Needs verification |
 | 5 | "Synthetic keys are the standard DynamoDB pattern" | `dynamodb-patterns.md` → Multi-attribute composite keys (provider v6.29.0+) | Needs verification |
 | 5 | "This is what Alex DeBrie recommends" | `dynamodb-patterns.md` → Multi-attribute keys avoid synthetic key hacks on new GSIs | Needs verification |
-| 6 | "One table per entity is simpler" | `dynamodb-patterns.md` → Design access patterns FIRST, schema second | Needs verification |
-| 6 | "We can always migrate the schema later" | `dynamodb-patterns.md` → Schema changes in DynamoDB are expensive; get access patterns right first | Needs verification |
+| 6 | "One table per entity is simpler" | `SKILL.md` → Get the access patterns before you design (step 2) | Verified 2026-11-09, sonnet, 3 runs |
+| 6 | "We can always migrate the schema later" | `SKILL.md` → Get the access patterns before you design (pushback paragraph) | Verified 2026-11-09, sonnet, 1 run of "Just give me a starting schema" |
 
 ---
 
