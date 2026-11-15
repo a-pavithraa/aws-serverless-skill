@@ -18,6 +18,10 @@ fields @timestamp, @logStream, status, path | filter correlation_id = "<id>"
 
 `healthy-hosts` also fires for a few minutes after the first deploy, while the instances boot: it treats missing data as breaching. It returns to OK once {{ min_instances }} target(s) have been healthy for 3 minutes.
 
+## Two instances at once
+
+{% if min_instances == 1 %}The group runs one instance by decision ({{ single_instance_reason }}), but each refresh runs the old and the new instance together.{% else %}The group runs at least {{ min_instances }} instances, and each refresh adds new instances before it removes old ones.{% endif %} A fault that appears only during refreshes or scale-out comes from state kept on one instance. `GET /hello` returns `instance` (the instance ID); `verify_deployment.py watch-rollout` lists the instances that answered during a refresh.
+
 ## An instance that never becomes healthy
 
 cloud-init installs packages at boot. If the repositories cannot be reached, the service never starts. Read `/var/log/cloud-init-output.log` through the console output. A refresh whose new instances stay unhealthy trips `unhealthy-hosts`, fails, and rolls back to the previous launch template version.

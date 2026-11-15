@@ -8,6 +8,7 @@ cpu                = {{ cpu }}
 memory             = {{ memory }}
 min_tasks          = {{ min_tasks }}
 max_tasks          = {{ max_tasks }}
+single_task_reason = "{{ single_task_reason }}"
 network_name       = "{{ network_name }}"
 subnet_ids         = [{% for s in subnet_ids.split(",") if s %}"{{ s }}"{% if not loop.last %}, {% endif %}{% endfor %}]
 secret_names       = [{% for s in secret_names.split(",") if s %}"{{ s }}"{% if not loop.last %}, {% endif %}{% endfor %}]

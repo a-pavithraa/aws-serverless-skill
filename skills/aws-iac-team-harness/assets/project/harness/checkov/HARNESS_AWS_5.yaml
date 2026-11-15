@@ -1,0 +1,19 @@
+metadata:
+  id: "HARNESS_AWS_5"
+  name: "ECS service without an alarm: add aws_cloudwatch_metric_alarm with dimensions ServiceName = this resource's name (aws_ecs_service.name, aws_ecs_express_gateway_service.service_name), such as RunningTaskCount below the minimum. An alarm on the target group alone does not count: the check follows one reference"
+  category: "LOGGING"
+definition:
+  and:
+    - cond_type: "filter"
+      attribute: "resource_type"
+      value:
+        - "aws_ecs_service"
+        - "aws_ecs_express_gateway_service"
+      operator: "within"
+    - cond_type: "connection"
+      resource_types:
+        - "aws_ecs_service"
+        - "aws_ecs_express_gateway_service"
+      connected_resource_types:
+        - "aws_cloudwatch_metric_alarm"
+      operator: "exists"

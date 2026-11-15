@@ -88,9 +88,9 @@ variable "memory" {
 }
 
 variable "min_tasks" {
-  description = "Fewest tasks the service runs."
+  description = "Fewest tasks the service runs. Two by default: every rollout runs old and new tasks together, so the code meets two copies anyway."
   type        = number
-  default     = 1
+  default     = 2
 
   validation {
     condition     = var.min_tasks >= 1
@@ -98,10 +98,21 @@ variable "min_tasks" {
   }
 }
 
+variable "single_task_reason" {
+  description = "Why one task is enough. Required when min_tasks is 1; recorded as a tag. A rollout still runs the old and the new task together."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.min_tasks >= 2 || length(trimspace(var.single_task_reason)) >= 10
+    error_message = "single_task_reason: min_tasks = 1 needs a reason of at least 10 characters. A rollout still runs the old and the new task together."
+  }
+}
+
 variable "max_tasks" {
   description = "Most tasks the service scales out to, at most 20."
   type        = number
-  default     = 2
+  default     = 4
 
   validation {
     condition     = var.max_tasks >= var.min_tasks && var.max_tasks <= 20

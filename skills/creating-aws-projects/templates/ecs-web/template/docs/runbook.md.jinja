@@ -18,6 +18,10 @@ fields @timestamp, status, path, trace_id | filter correlation_id = "<id>"
 
 Express Mode also creates its own alarm that watches each rollout. ECS uses it to roll a bad rollout back. It is not in this list, and it does not notify the topic.
 
+## Two tasks at once
+
+{% if min_tasks == 1 %}The service runs one task by decision ({{ single_task_reason }}), but each rollout runs the old and the new task together for several minutes.{% else %}The service runs at least {{ min_tasks }} tasks, and each rollout adds new tasks before it stops the old ones.{% endif %} A fault that appears only during deploys, such as doubled timers, a limit that lets twice the traffic through or two caches that disagree, comes from state kept in a task. `GET /hello` returns `instance` (the task ID); `verify_deployment.py watch-rollout` lists the tasks that answered during a rollout.
+
 ## A rollout that fails
 
 Apply waits for a steady state. If the new image never passes `GET /health`, the apply fails and the earlier image keeps serving. Check the service events, then run the verifier: it reports which digest the tasks run. Terraform state then holds the failed digest. Plan again with the digest that works.

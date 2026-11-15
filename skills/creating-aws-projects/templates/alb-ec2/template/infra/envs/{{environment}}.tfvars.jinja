@@ -11,3 +11,6 @@ certificate_arn    = "{{ certificate_arn }}"
 plain_http_reason  = "{{ plain_http_reason }}"
 network_name       = "{{ network_name }}"
 subnet_ids         = [{% for s in subnet_ids.split(",") if s %}"{{ s }}"{% if not loop.last %}, {% endif %}{% endfor %}]
+
+# Required when min_instances is 1: why one instance is enough.
+single_instance_reason = "{{ single_instance_reason }}"

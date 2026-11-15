@@ -44,12 +44,19 @@ memory:
 
 min_tasks:
   type: int
-  default: 1
+  default: 2
+  help: Two or more. Every rollout runs old and new tasks together, so the code must already work as two copies
   validator: "{% if min_tasks < 1 %}min_tasks: at least 1{% endif %}"
+
+single_task_reason:
+  type: str
+  default: ""
+  help: Why one task is enough; required when min_tasks is 1. A rollout still runs the old and the new task together
+  validator: "{% if min_tasks == 1 and (single_task_reason | trim | length) < 10 %}single_task_reason: min_tasks 1 needs a reason of at least 10 characters; a rollout still runs two tasks at once{% endif %}"
 
 max_tasks:
   type: int
-  default: 2
+  default: 4
   validator: "{% if max_tasks < min_tasks or max_tasks > 20 %}max_tasks: between min_tasks and 20{% endif %}"
 
 network_name:

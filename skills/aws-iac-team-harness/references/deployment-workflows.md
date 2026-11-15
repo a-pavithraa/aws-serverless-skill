@@ -27,3 +27,34 @@ The YAML cannot enforce these settings. Go through them with the user before you
 4. **Apply role trust:** `sub` = `repo:<org>/<repo>:environment:<env>`. The agent's own role must not be able to assume it.
 5. **Repository variables:** `AWS_PLAN_ROLE_ARN`, `AWS_APPLY_ROLE_ARN`, `AWS_REGION`, and optionally `TF_ROOT` and `TF_ENVIRONMENT`.
 6. **Repository visibility:** the `tfplan` artifact holds attribute values, because Terraform does not redact plans. Keep the repository private, or replace the artifact with an encrypted store before you use the workflow on a public repository.
+
+## Probe through a rollout
+
+`verify_deployment.py verify` fails while a rollout is in progress. `verify_deployment.py watch-rollout` is for that window: started next to the apply, it waits for the rollout to start (`--start-wait`, default 300 s), sends the HTTP probes from `.verify/probes.json` once every `--interval` (default 5 s) until the rollout ends or `--timeout` (default 1800 s, at most 3600 s), then sends one more round.
+
+| Result | PASS | FAIL | UNVERIFIED |
+| --- | --- | --- | --- |
+| `rollout` | the rollout started and completed | ECS `rolloutState` `FAILED`; an instance refresh `Failed`, `Cancelled`, `RollbackFailed` or `RollbackSuccessful` | no rollout started within `--start-wait`, or still running at `--timeout` |
+| `rollout-probes` | every request answered as the probe expects | any request failed, including a dropped connection | no request sent |
+| `rollout-overlap` (reported) | two or more `source_sha256` values answered: old and new together, the expected overlap | | one value throughout |
+| `rollout-result` | after the rollout every answer is this checkout's `app/` | the service answers other source: rolled back, or another commit deployed | |
+
+The report lists each `instance` and `source_sha256` value that answered and how often. During the rollout the source hash is recorded, not required; after it, `rollout-result` requires it for probes with `expect_source_hash`.
+
+How the rollout state is read. Check the field names against the current documentation before relying on them in another tool:
+
+- **Standard ECS rolling deployments and Express Mode:** `DescribeServices` → `deployments[]`. `rolloutState` is `IN_PROGRESS`, `COMPLETED` or `FAILED` ("only returned for services that use the rolling update (`ECS`) deployment type that aren't behind a Classic Load Balancer"); `status` is `PRIMARY` for the newest deployment ([Deployment](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_Deployment.html), verified 2026-11-15). The watch counts a rollout as complete when one deployment is left and it is `COMPLETED`. Express Mode deploys as a canary: 5 % of traffic to the new tasks, 3 minutes of bake time, then 100 %, then old tasks stop after another 3 minutes ([Updating an Express Mode service](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/express-service-update-full.html), verified 2026-11-15). The `ecs-web` sandbox run (`docs/evidence/task-8-ecs-sandbox`, 2026-11-09) showed the old deployment as `DRAINING`, a status the API reference does not list, and a circuit-breaker rollback as `PRIMARY=IN_PROGRESS` that later completes on the old image; `rollout-result` catches that case through the source hash. `DescribeServiceDeployments` reports blue/green and canary stages (`lifecycleStage`, `status` such as `ROLLBACK_SUCCESSFUL`; [ServiceDeployment](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ServiceDeployment.html), verified 2026-11-15); the watch does not read it yet.
+- **Auto Scaling instance refresh:** `DescribeInstanceRefreshes`, newest first. `Pending`, `InProgress`, `Baking`, `Cancelling` and `RollbackInProgress` are in progress; `Successful` is complete; the rest are failures ([InstanceRefresh](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_InstanceRefresh.html), verified 2026-11-15).
+
+A workflow runs it in the background of the apply step, with the same read-only role the verify uses, and fails the job on its exit code after the apply:
+
+```bash
+python harness/verify_deployment.py watch-rollout . --expect-account "$ACCOUNT" --expect-region "$AWS_REGION" \
+  --json > rollout.json & WATCH=$!
+terraform -chdir=infra apply tfplan
+wait "$WATCH"
+```
+
+The watch reads `terraform output` when it starts, so it needs a service that already exists: not the first deploy. The reference `terraform-deploy.yml` does not run it. Wiring it in needs boto3 and read permissions for ECS, Auto Scaling and the load balancer in the apply job, and a run against a real rollout to show it works; neither exists yet, so the workflow is unchanged.
+
+**Status:** `watch-rollout` and the repeated probes (`repeat`, `expect_distinct`, `expect_same`) are unit-tested with fakes (`tests/scripts/test_verification.py`). They have not run against a sandbox account.

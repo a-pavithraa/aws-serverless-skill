@@ -36,6 +36,12 @@ min_instances:
   help: Two or more, in different Availability Zones, so one can be replaced while the other serves
   validator: "{% if min_instances < 1 %}min_instances: at least 1{% endif %}"
 
+single_instance_reason:
+  type: str
+  default: ""
+  help: Why one instance is enough; required when min_instances is 1. A refresh still runs the old and the new instance together
+  validator: "{% if min_instances == 1 and (single_instance_reason | trim | length) < 10 %}single_instance_reason: min_instances 1 needs a reason of at least 10 characters; a refresh still runs two instances at once{% endif %}"
+
 max_instances:
   type: int
   default: 3

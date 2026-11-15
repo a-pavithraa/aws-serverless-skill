@@ -1,0 +1,3 @@
+# Fixture: only the alarm relationships are under test.
+framework:
+  - terraform

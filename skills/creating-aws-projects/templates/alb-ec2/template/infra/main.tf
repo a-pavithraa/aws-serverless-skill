@@ -281,7 +281,8 @@ resource "aws_autoscaling_group" "web" {
   }
 
   dynamic "tag" {
-    for_each = data.aws_default_tags.current.tags
+    for_each = merge(data.aws_default_tags.current.tags,
+    var.min_instances < 2 ? { SingleInstanceReason = var.single_instance_reason } : {})
     content {
       key                 = tag.key
       value               = tag.value

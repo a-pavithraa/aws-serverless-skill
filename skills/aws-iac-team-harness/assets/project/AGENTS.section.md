@@ -14,7 +14,7 @@ Report its last line (`harness check: PASS|FAIL|UNVERIFIED ...`). `UNVERIFIED` i
 | --- | --- | --- |
 | `fmt`, `validate` | formatting, invalid configuration | |
 | `tflint` | deprecated runtimes, provider mistakes | add `# tflint-ignore` |
-| `checkov` (per environment file) | missing retention, unauthenticated routes, wide IAM, functions without a managed log group or alarm | add `#checkov:skip`, edit `.checkov.yaml` or `harness/baseline.json` to get green |
+| `checkov` (per environment file) | missing retention, unauthenticated routes, wide IAM, functions without a managed log group or alarm, dead-letter queues and ECS services without an alarm | add `#checkov:skip`, edit `.checkov.yaml` or `harness/baseline.json` to get green |
 | `terraform-test` | the root's own mocked tests | delete or weaken a `run` block |
 
 Each finding names its fix. Fix the configuration; if a finding is wrong for this project, say so and leave the exception to a reviewer.

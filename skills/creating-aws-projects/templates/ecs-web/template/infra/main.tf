@@ -220,6 +220,8 @@ resource "aws_ecs_express_gateway_service" "web" {
     max_task_count            = var.max_tasks
   }
 
+  tags = var.min_tasks < 2 ? { SingleTaskReason = var.single_task_reason } : {}
+
   # Without these, destroy can remove the role policies first and leave the service stuck in DRAINING.
   depends_on = [aws_iam_role_policy_attachment.infrastructure, aws_iam_role_policy.execution]
 

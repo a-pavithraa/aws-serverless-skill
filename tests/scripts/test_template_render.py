@@ -369,6 +369,38 @@ class EcsWebTemplateTest(Workdir):
     def test_min_tasks_above_max_is_rejected(self):
         self.assert_rejected({"min_tasks": 3, "max_tasks": 2}, "max_tasks")
 
+    def test_two_tasks_by_default_and_the_probe_asks_two_to_answer(self):
+        dest = self.tmp / "out"
+
+        self.assertEqual(0, copier_copy(ECS_VALID, dest, ECS_TEMPLATE).returncode)
+
+        tfvars = (dest / "infra" / "envs" / "dev.tfvars").read_text(encoding="utf-8")
+        self.assertIn("min_tasks          = 2\n", tfvars)
+        self.assertIn("max_tasks          = 4\n", tfvars)
+        probe = json.loads((dest / ".verify" / "probes.json").read_text(encoding="utf-8"))["probes"][0]
+        self.assertEqual({"key": "instance", "at_least": 2}, probe["expect_distinct"])
+        self.assertGreaterEqual(probe["repeat"], 2 * probe["expect_distinct"]["at_least"])
+        self.assertIn("source_sha256", probe["expect_same"])
+        readme = (dest / "README.md").read_text(encoding="utf-8")
+        self.assertIn("a rollout runs the old and the new tasks together", readme)
+
+    def test_one_task_without_a_reason_is_rejected(self):
+        self.assert_rejected({"min_tasks": 1}, "single_task_reason")
+
+    def test_one_task_with_a_reason_says_a_rollout_still_runs_two(self):
+        dest = self.tmp / "out"
+
+        result = copier_copy({**ECS_VALID, "min_tasks": 1, "single_task_reason": "sandbox that nobody else calls"},
+                             dest, ECS_TEMPLATE)
+
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertIn('single_task_reason = "sandbox that nobody else calls"',
+                      (dest / "infra" / "envs" / "dev.tfvars").read_text(encoding="utf-8"))
+        for doc in ("README.md", "docs/runbook.md"):
+            text = (dest / doc).read_text(encoding="utf-8")
+            self.assertIn("sandbox that nobody else calls", text, doc)
+            self.assertIn("old and the new task together", text, doc)
+
     def test_no_network_and_no_subnets_is_rejected(self):
         self.assert_rejected({"network_name": ""}, "subnet_ids")
 
@@ -485,6 +517,34 @@ class AlbEc2TemplateTest(Workdir):
 
     def test_max_not_above_min_is_rejected(self):
         self.assert_rejected({"min_instances": 2, "max_instances": 2}, "max_instances")
+
+    def test_two_instances_by_default_and_the_probe_asks_two_to_answer(self):
+        dest = self.tmp / "out"
+
+        self.assertEqual(0, copier_copy(EC2_VALID, dest, EC2_TEMPLATE).returncode)
+
+        probe = json.loads((dest / ".verify" / "probes.json").read_text(encoding="utf-8"))["probes"][0]
+        self.assertEqual({"key": "instance", "at_least": 2}, probe["expect_distinct"])
+        self.assertIn("source_sha256", probe["expect_same"])
+        self.assertIn("a refresh adds new instances before it removes old ones",
+                      (dest / "README.md").read_text(encoding="utf-8"))
+
+    def test_one_instance_without_a_reason_is_rejected(self):
+        self.assert_rejected({"min_instances": 1, "max_instances": 2}, "single_instance_reason")
+
+    def test_one_instance_with_a_reason_says_a_refresh_still_runs_two(self):
+        dest = self.tmp / "out"
+
+        result = copier_copy({**EC2_VALID, "min_instances": 1, "max_instances": 2,
+                              "single_instance_reason": "sandbox that nobody else calls"}, dest, EC2_TEMPLATE)
+
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertIn('single_instance_reason = "sandbox that nobody else calls"',
+                      (dest / "infra" / "envs" / "dev.tfvars").read_text(encoding="utf-8"))
+        for doc in ("README.md", "docs/runbook.md"):
+            text = (dest / doc).read_text(encoding="utf-8")
+            self.assertIn("sandbox that nobody else calls", text, doc)
+            self.assertIn("old and the new instance together", text, doc)
 
     def test_name_too_long_for_the_load_balancer_is_rejected(self):
         self.assert_rejected({"project_name": "a-project-name-of-thirty-chars"}, "32 characters")

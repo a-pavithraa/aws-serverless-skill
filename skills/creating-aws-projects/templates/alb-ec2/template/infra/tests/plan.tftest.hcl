@@ -138,6 +138,11 @@ run "fleet_defaults" {
   }
 
   assert {
+    condition     = !contains([for t in aws_autoscaling_group.web.tag : t.key], "SingleInstanceReason")
+    error_message = "Two or more instances need no SingleInstanceReason tag."
+  }
+
+  assert {
     condition     = aws_autoscaling_group.web.instance_refresh[0].preferences[0].min_healthy_percentage == 100 && aws_autoscaling_group.web.instance_refresh[0].preferences[0].auto_rollback
     error_message = "A refresh must add before it removes, and roll back when new instances stay unhealthy."
   }
@@ -165,6 +170,43 @@ run "fleet_defaults" {
   assert {
     condition     = strcontains(base64decode(aws_launch_template.web.user_data), "/opt/app/server.py") && !strcontains(base64decode(aws_launch_template.web.user_data), "/opt/app/tests/")
     error_message = "User data must install app/ without its tests."
+  }
+
+  # 16 KB in raw form: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html (read 2026-11-15)
+  assert {
+    condition     = length(base64decode(aws_launch_template.web.user_data)) <= 16384
+    error_message = "EC2 limits user data to 16 KB before base64 encoding, and app/ travels in it: keep app/ small or ship it another way."
+  }
+}
+
+run "single_instance_needs_a_reason" {
+  command = plan
+
+  variables {
+    min_instances = 1
+    max_instances = 2
+  }
+
+  expect_failures = [var.single_instance_reason]
+}
+
+run "single_instance_with_a_reason" {
+  command = plan
+
+  variables {
+    min_instances          = 1
+    max_instances          = 2
+    single_instance_reason = "sandbox that nobody else calls"
+  }
+
+  assert {
+    condition     = aws_autoscaling_group.web.min_size == 1
+    error_message = "min_instances = 1 with a reason must run one instance."
+  }
+
+  assert {
+    condition     = contains([for t in aws_autoscaling_group.web.tag : "${t.key}=${t.value}"], "SingleInstanceReason=sandbox that nobody else calls")
+    error_message = "One instance records its reason as a tag on the group."
   }
 }
 

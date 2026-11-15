@@ -10,6 +10,9 @@ Stages: **HCL** = `check.py` on source, no credentials (hook, PR CI). **Plan** =
 | Every Lambda function writes to a Terraform-managed log group (not an auto-created never-expiring one) | **`HARNESS_AWS_1`** (graph: function ↔ `aws_cloudwatch_log_group`) | HCL | fixture `lambda-without-log-group`; cross-file pass in `lambda-cross-file` |
 | Every Lambda function has an alarm | **`HARNESS_AWS_2`** (graph: function ↔ `aws_cloudwatch_metric_alarm`) | HCL | `test_alarms_removed_in_another_file_fail_at_the_function` (finding lands in unchanged `main.tf`) |
 | Alarm notifications can be published: the alarm topic does not use `alias/aws/sns` | **`HARNESS_AWS_3`** (graph: topic connected to an alarm, with the AWS managed key) | HCL | `test_alarm_topic_on_aws_managed_key_fails`; false-positive guard `test_managed_key_topic_without_alarm_passes`; found by the Task 6 sandbox deployment |
+| Every dead-letter queue has an alarm: a queue that another `aws_sqs_queue` names in its `redrive_policy` | **`HARNESS_AWS_4`** (graph: queue ↔ queue without its own `redrive_policy`, ↔ `aws_cloudwatch_metric_alarm`) | HCL | fixture `dlq-without-alarm` (finding at the dead-letter queue only, not its source queue); cross-file pass and false-positive guard (a queue that is no dead-letter queue, and a source queue, need no alarm) in `queue-cross-file`; `test_dead_letter_queue_without_its_alarm_fails_at_the_queue` on a rendered `sqs-lambda-worker` |
+| Every ECS service has an alarm that names it (`aws_ecs_service`, and `aws_ecs_express_gateway_service` for Express Mode) | **`HARNESS_AWS_5`** (graph: service ↔ `aws_cloudwatch_metric_alarm`) | HCL | fixture `ecs-service-without-alarm` (an alarm on the target group only fails); cross-file pass and false-positive guard (task definitions need none) in `ecs-service-cross-file`; `test_express_service_without_its_alarms_fails_at_the_service` on a rendered `ecs-web` |
+| A service runs two instances unless one is a recorded decision | `ecs-web` `min_tasks` default 2, `alb-ec2` `min_instances` default 2; `single_task_reason` / `single_instance_reason` (≥ 10 characters) in Copier, Terraform variable validation and a tag | HCL | `test_template_render` `test_one_task_without_a_reason_is_rejected`, `test_one_instance_without_a_reason_is_rejected`; `plan.tftest.hcl` `single_task_needs_a_reason`, `single_instance_needs_a_reason` |
 | Routes are authenticated, or publicly exposed by a reviewed decision | Checkov `CKV_AWS_309`; Terraform variable validation needs `public_reason` | HCL | `test_unauthenticated_route_fails`; `plan.tftest.hcl` `public_route_without_reason_is_rejected` |
 | Invoke permission scoped to the API | Checkov `CKV_AWS_364` | HCL | upstream check; no harness fixture yet |
 | Function not publicly invokable | Checkov `CKV_AWS_301` | HCL | upstream |
@@ -23,6 +26,21 @@ Stages: **HCL** = `check.py` on source, no credentials (hook, PR CI). **Plan** =
 | Pattern configuration (auth wiring, alias, retention values) | mocked `terraform test` in the template | HCL | `infra/tests/plan.tftest.hcl` |
 | Stateful deletes / replacements surfaced before apply | plan summary in CI | Plan | Task 5 |
 | Deployed code is this checkout's package; authorized 200, unauthorized 403; request found in logs | `verify_deployment.py` | Runtime | Task 6 |
+| More than one instance answers, and the instances agree (`repeat`, `expect_distinct`, `expect_same` in `.verify/probes.json`) | `verify_deployment.py verify`: `instances:<probe>`, `agree:<probe>` | Runtime | `test_verification.MultiInstanceProbeTest`. **Unit-tested with fakes only; not yet run against a sandbox account** |
+| No request fails while a rollout runs; old and new both answer; the rollout ends on this checkout's source | `verify_deployment.py watch-rollout`: `rollout`, `rollout-probes`, `rollout-overlap` (reported), `rollout-result` | Runtime | `test_verification.WatchRolloutTest`. **Unit-tested with fakes only; not yet run against a sandbox account** |
+
+## Why `HARNESS_AWS_4` and `HARNESS_AWS_5` are custom
+
+Checked against Checkov 3.4.3 (`checkov --list --framework terraform` and its `checkov/terraform/checks` directory, verified 2026-11-15): the only check that names `aws_cloudwatch_metric_alarm` is `CKV_AWS_319` (alarm actions enabled); no check reads `redrive_policy` or names `aws_ecs_express_gateway_service`, and no check asks for an alarm on a queue or an ECS service.
+
+What they do not cover, observed with Checkov 3.4.3 on 2026-11-15:
+
+- **One reference only.** A graph connection follows one reference between two resources. An alarm that names the queue or service through a `local` does not count (observed: a `local.dlq_name` in the dimensions failed the check), so name the resource attribute in `dimensions`. Two-hop conditions (service → target group → alarm) combined with `and` passed a service whose target group had no alarm, so `HARNESS_AWS_5` does not accept a target-group alarm.
+- **Inline `redrive_policy` only.** A dead-letter queue wired with a separate `aws_sqs_queue_redrive_policy` resource is not recognized: that resource names both queues, and the graph has no direction to tell them apart.
+- **No direction between queues.** Two queues that reference each other for another reason (a tag, a `redrive_allow_policy` on a queue whose source uses `aws_sqs_queue_redrive_policy`) are treated as a dead-letter pair; the one without a `redrive_policy` needs an alarm or a reviewed skip.
+- **A queue that is a dead-letter queue and also has its own `redrive_policy`** (a chain) is not checked.
+- **Not whether the alarm is useful.** Any alarm that names the resource passes. The templates alarm on `ApproximateNumberOfMessagesVisible > 0` for a dead-letter queue and on `RunningTaskCount` below the minimum and CPU for a service.
+- Resources with `count = 0` are still checked (observed on `ecs-web` before an image digest exists), which is the wanted result.
 
 ## Values Checkov cannot resolve
 

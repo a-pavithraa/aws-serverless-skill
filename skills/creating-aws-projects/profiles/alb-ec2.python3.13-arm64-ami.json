@@ -46,7 +46,8 @@
   "evidence": {
     "render": "docs/evidence/task-9-ec2-sandbox/README.md",
     "checks": "docs/evidence/task-9-ec2-sandbox/README.md",
-    "sandbox": "docs/evidence/task-9-ec2-sandbox/README.md"
+    "sandbox": "docs/evidence/task-9-ec2-sandbox/README.md",
+    "not_sandbox_verified": "Added after the sandbox run and unit-tested only, not yet verified in a sandbox account: single_instance_reason for min_instances 1, the instance field in GET /hello (IMDSv2), the repeated probe that needs two instances to answer and agree, and verify_deployment.py watch-rollout."
   },
   "review": "pending: promote status to supported after a person reviews the sandbox evidence"
 }

@@ -83,6 +83,17 @@ variable "min_instances" {
   }
 }
 
+variable "single_instance_reason" {
+  description = "Why one instance is enough. Required when min_instances is 1; recorded as a tag. A refresh still runs the old and the new instance together."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.min_instances >= 2 || length(trimspace(var.single_instance_reason)) >= 10
+    error_message = "single_instance_reason: min_instances = 1 needs a reason of at least 10 characters. A refresh still runs the old and the new instance together."
+  }
+}
+
 variable "max_instances" {
   description = "Most instances the group runs. A refresh needs one above min_instances to add before it removes."
   type        = number

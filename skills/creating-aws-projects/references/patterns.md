@@ -56,6 +56,7 @@ Prerequisite: the account's API Gateway CloudWatch role (`aws apigateway get-acc
 | --- | --- | --- | --- |
 | `instance_type` | a Graviton type (`t4g`, `m7g`, `c7g`, `r7g` and their `8g` successors) | `t4g.micro` | The AMI is arm64 |
 | `min_instances`, `max_instances` | 1-20, max > min | `2`, `3` | A refresh adds one instance before it removes one |
+| `single_instance_reason` | text, 10 characters or more | empty | Required when `min_instances` is 1; recorded as a tag. A refresh still runs the old and the new instance together |
 | `certificate_arn` | ACM certificate ARN or empty | empty | Empty serves plain HTTP on port 80 |
 | `plain_http_reason` | text, 10 characters or more | none | Required when `certificate_arn` is empty |
 | `network_name` | a `network` project's `<project>-<environment>` | none | Required unless `subnet_ids` is given; the default VPC is not used |
@@ -70,10 +71,13 @@ Prerequisite: the account's API Gateway CloudWatch role (`aws apigateway get-acc
 | `public_reason` | text, 10 characters or more | none | Required: the service has no authentication |
 | `cpu` | `256`, `512`, `1024` | `256` | Fargate CPU units |
 | `memory` | MiB that Fargate accepts for the CPU | `512` | 256 CPU: 512-2048; 512: 1024-4096; 1024: 2048-8192 |
-| `min_tasks`, `max_tasks` | 1-20, min ≤ max | `1`, `2` | Scaled on average CPU 60 % |
+| `min_tasks`, `max_tasks` | 1-20, min ≤ max | `2`, `4` | Scaled on average CPU 60 %. Two from the first deploy: every rollout runs old and new tasks together anyway |
+| `single_task_reason` | text, 10 characters or more | empty | Required when `min_tasks` is 1; recorded as a tag. A rollout still runs the old and the new task together |
 | `network_name` | a `network` project's `<project>-<environment>` | none | Required unless `subnet_ids` is given; the default VPC is not used |
 | `subnet_ids` | comma-separated subnet IDs in two or more zones | empty | Only when there is no `network` project |
 | `secret_names` | comma-separated upper-case names, such as `DB_PASSWORD,API_TOKEN` | empty | One Secrets Manager secret, one JSON key per name, injected through the task's `secret` block; the value is set with the AWS CLI, never in Terraform |
+
+`GET /hello` in `ecs-web` and `alb-ec2` returns `instance` (the ECS task ID or EC2 instance ID), and the probe in `.verify/probes.json` sends it 10 times and needs two instances to answer and agree. This is unit-tested only; no sandbox run has shown it yet.
 
 The first deploy has two steps: the plan without `image_digest` creates the repository (and the secret, with `secret_names`), then the image is pushed and the plan with its digest creates the service. With `secret_names`, set the secret value between the two. The generated README has the commands.
 
