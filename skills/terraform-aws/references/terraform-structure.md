@@ -109,6 +109,19 @@ variable "db_sidecar" {
 
 The guard stops a mistake. It does not create what prod needs instead, so list each switch with what replaces it and who provides it.
 
+Test each guard with `terraform test`: `command = plan`, `environment = "prod"`, and `expect_failures = [var.db_sidecar]`. Under a `mock_provider`, give `mock_data` defaults that pass the provider's ARN checks and the data sources' postconditions. The mocked provider otherwise returns random strings, the plan stops on those checks, and the test reports an unexpected error instead of the guard.
+
+```hcl
+mock_provider "aws" {
+  mock_data "aws_iam_role" {
+    defaults = { arn = "arn:aws:iam::123456789012:role/mock" }
+  }
+  mock_data "aws_subnet" {
+    defaults = { vpc_id = "vpc-0123456789abcdef0" } # the VPC the postcondition expects
+  }
+}
+```
+
 ### One owner per resource
 
 A rule like "apply only with `-target`" means that a resource has two owners: Terraform, and a person who edits it in the console. CI cannot apply such a root, and each targeted apply skips everything else.
@@ -128,7 +141,7 @@ removed {
 }
 ```
 
-Use `removed` rather than `ignore_changes` for a resource that a person owns. With `ignore_changes`, the resource stays in state, so a change that forces replacement, or a `destroy`, still acts on it.
+Use `removed` rather than `ignore_changes` for a resource that a person owns. With `ignore_changes`, the resource stays in state, so a change that forces replacement, or a `destroy`, still acts on it. `ignore_changes` on the edited attribute is only a transition step, while the console edits move into code.
 
 Split a root by owner and by rate of change, not by resource type. For example, users generated from an identity provider change every week, and flows change with releases. A user sync then does not wait on unfinished flow work.
 

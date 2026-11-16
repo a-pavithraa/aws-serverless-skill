@@ -14,11 +14,11 @@ Before you write or review anything, list each Connect resource and who edits it
 | Owner | Do this |
 | --- | --- |
 | Terraform | Manage it. A console edit is drift, and the next apply reverts it. Say so in the repository's agent instructions. |
-| Console, for the flow content only | Manage the resource and set `lifecycle { ignore_changes = [content] }`. Before you remove that again, export the live content and port it back, or the apply reverts the console edits. |
-| Console, for everything | Read it with a data source (`aws_connect_queue`, `aws_connect_security_profile`, `aws_connect_contact_flow`). |
+| Console | If Terraform created or adopted it, take it out of state with a `removed` block and `lifecycle { destroy = false }`, which does not delete it. Then read it with a data source (`aws_connect_queue`, `aws_connect_security_profile`, `aws_connect_contact_flow`). |
+| Moving from the console to Terraform | For the transition only, set `lifecycle { ignore_changes = [content] }` on the flow while the console edits are ported into code. Before you remove it, export the live content and port it back, or the apply reverts the console edits. `ignore_changes` keeps the flow in state, so a `type` change or a destroy still replaces or deletes it. |
 | Built in the console, Terraform from now on | Adopt it: an `import {}` block, plus `lifecycle { prevent_destroy = true }` when flows, numbers or campaigns depend on it. |
 
-The step is complete when every resource in the root has one owner. If the answer is "both", which forces a `-target` on every apply, report it as a finding. Standing `-target` applies are partial applies that nobody reviews as a whole. The fix is `ignore_changes`, or a separate root for the console-owned part.
+The step is complete when every resource in the root has one owner. If the answer is "both", which forces a `-target` on every apply, report it as a finding. Standing `-target` applies are partial applies that nobody reviews as a whole. The fix is one owner for each resource: move the console edits into code, or hand the resource to the console with `removed` and a data source (`terraform-aws` → `references/terraform-structure.md` → "One owner per resource").
 
 ## Rules that fail without an error
 

@@ -22,6 +22,8 @@ Look up each item with a data source, and check it at plan time. Then a wrong ID
 ```hcl
 data "aws_iam_role" "execution" { name = local.execution_role_name } # plan fails if the role is missing
 
+# Exists only for its postcondition, which tflint cannot see.
+# tflint-ignore: terraform_unused_declarations
 data "aws_subnet" "private" {
   for_each = toset(var.private_subnet_ids)
   id       = each.value
