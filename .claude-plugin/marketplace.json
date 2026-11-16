@@ -4,13 +4,13 @@
     "name": "Pavithra"
   },
   "metadata": {
-    "description": "Skills for AWS applications in Terraform: tested project templates, repository checks for agents and CI, serverless, DynamoDB and Terraform guidance.",
+    "description": "Skills for AWS applications in Terraform: tested project templates, repository checks for agents and CI, serverless, DynamoDB, ECS Fargate, Amazon Connect and Terraform guidance.",
     "version": "2.0.0"
   },
   "plugins": [
     {
       "name": "aws-infrastructure-skills",
-      "description": "Create AWS projects from tested templates, install the Terraform checks every agent must pass, and get current guidance for Lambda, API Gateway, DynamoDB and Terraform.",
+      "description": "Create AWS projects from tested templates, install the Terraform checks every agent must pass, and get current guidance for Lambda, API Gateway, DynamoDB, ECS Fargate, Amazon Connect and Terraform.",
       "source": "./",
       "strict": false,
       "skills": [
@@ -18,7 +18,9 @@
         "./skills/aws-iac-team-harness",
         "./skills/terraform-aws",
         "./skills/aws-serverless",
-        "./skills/aws-dynamodb"
+        "./skills/aws-dynamodb",
+        "./skills/aws-connect",
+        "./skills/aws-ecs-fargate"
       ]
     }
   ]

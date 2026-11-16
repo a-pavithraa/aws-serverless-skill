@@ -1,6 +1,6 @@
 ---
 name: terraform-aws
-description: "Use when writing or reviewing Terraform for AWS: module layout, naming, state backends and locking, IAM least privilege and confused-deputy conditions, KMS key policies, keeping secrets out of state, OIDC for CI, or GitHub Actions plan and apply pipelines. Not for creating a new application (creating-aws-projects) or installing repository checks (aws-iac-team-harness)."
+description: "Use when writing or reviewing Terraform for AWS: module layout, naming, one root deployed to several environments, state backends and locking, resources also edited in the console, IAM least privilege and confused-deputy conditions, KMS key policies, keeping secrets out of state, OIDC for CI, GitHub Actions plan and apply pipelines, or promoting one build to each environment. Not for creating a new application (creating-aws-projects) or installing repository checks (aws-iac-team-harness)."
 ---
 
 # Terraform AWS
@@ -18,7 +18,10 @@ description: "Use when writing or reviewing Terraform for AWS: module layout, na
 | Secrets in Terraform state | `references/security-iam.md` | Use `ephemeral` resource (Terraform 1.10+); protect state with SSE-KMS S3 backend |
 | CI/CD OIDC federation | `references/security-iam.md` + `references/cicd-patterns.md` | `aws_iam_openid_connect_provider` + `sts:AssumeRoleWithWebIdentity` — no static keys |
 | CI/CD pipelines | `references/cicd-patterns.md` | Use OIDC — never store AWS keys as secrets |
+| Environments in one root | `references/terraform-structure.md` | `env/<env>.s3.tfbackend` + `env/<env>.tfvars`; `*.auto.tfvars` loads in every environment; validation blocks POC switches in prod |
+| Console and Terraform both edit a resource | `references/terraform-structure.md` | One owner per resource; `removed` with `destroy = false` hands it to the console |
 | Multi-env pipelines | `references/cicd-patterns.md` | Per-branch backend keys, env resolver, ephemeral cleanup |
+| Promotion and saved plans | `references/cicd-patterns.md` | Build once and promote the digest; dev re-plans on merge, prod applies the approved saved plan; plan files are cleartext |
 | Pipeline safety | `references/cicd-patterns.md` | Concurrency per env, environment protection gates, drift detection |
 
 ## Critical Anti-Patterns
@@ -41,7 +44,10 @@ description: "Use when writing or reviewing Terraform for AWS: module layout, na
 ### CI/CD
 - **Don't** run `terraform apply`, `destroy`, `state` commands, `-target` or `-auto-approve` from an agent session. Apply runs in CI from the approved saved plan. The `aws-iac-team-harness` skill installs the checks and the reference workflow.
 - **Don't** store AWS credentials as GitHub/CI secrets — use OIDC federation
-- **Don't** run `terraform apply` directly on push to main — require plan review in PR
+- **Don't** apply to prod without an approved saved plan. Dev may re-plan and apply on merge, because the pull request's plan is stale by then
+- **Don't** accept "apply only with `-target`" as a working rule. It means a resource has two owners; give each one owner (`terraform-structure.md`)
+- **Don't** trust an apply role only for `ref:refs/heads/main` when the job uses an `environment`. Its OIDC `sub` is the environment form
+- **Don't** keep saved plan files as long-lived CI artifacts. They hold sensitive values in cleartext
 - **Don't** use `cancel-in-progress: true` on apply/destroy jobs — cancelling mid-apply corrupts state
 - **Don't** skip `default_tags` with `Branch` tag — orphaned resources become untrackable
 - **Prefer** object format `environment: { name: ${{ needs.x.outputs.y }} }` for dynamic environment names — more explicit, avoids ambiguity in YAML parsers
@@ -75,8 +81,8 @@ Load **only** the reference file that matches the user's question. Never bulk-lo
 
 | User is asking about | Load |
 |---------------------|------|
-| Module structure, naming, state, backend buckets | `references/terraform-structure.md` |
+| Module structure, naming, state, backend buckets, several environments, console ownership | `references/terraform-structure.md` |
 | IAM policies, least privilege, role design, SCPs, Checkov checks, KMS, secrets in state, OIDC | `references/security-iam.md` |
-| CI/CD, GitHub Actions, OIDC, pipelines, ephemeral envs, drift | `references/cicd-patterns.md` |
+| CI/CD, GitHub Actions, OIDC, pipelines, promotion, saved plans, ephemeral envs, drift | `references/cicd-patterns.md` |
 
 For infrastructure **reviews**: load `terraform-structure.md` and `security-iam.md`. Only add `cicd-patterns.md` if the review scope includes pipeline config.

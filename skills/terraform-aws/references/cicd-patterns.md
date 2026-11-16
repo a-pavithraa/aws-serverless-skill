@@ -38,6 +38,24 @@ resource "aws_iam_role" "github_actions" {
 }
 ```
 
+**The `sub` claim depends on the job.** A job that names an `environment` gets `repo:ORG/REPO:environment:NAME`, not the `ref` form above. So a role that trusts only `ref:refs/heads/main` rejects the apply job. Give each role the subject of the jobs that use it:
+
+| Role | Trusted `sub` |
+| --- | --- |
+| Plan on pull requests (read-only) | `repo:ORG/REPO:pull_request` |
+| Plan prod, in a job with no `environment`, run from `master` | `repo:ORG/REPO:ref:refs/heads/master` |
+| Apply to prod | `repo:ORG/REPO:environment:prod` |
+
+Repositories created after 2026-07-15 use a default subject that also includes the owner and repository IDs. `gh api repos/ORG/REPO/actions/oidc/customization/sub` shows the repository's subject settings without running a job. Decode one token from the job to confirm its `sub` before you write the condition.
+
+An environment subject is only as strong as the environment's rules. Restrict its deployment branches, require reviewers, and add CODEOWNERS for `.github/workflows/**` and the Terraform roots, because a change to a workflow can request any role that the repository is trusted for.
+
+> *Source: [GitHub OIDC](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/about-security-hardening-with-openid-connect) · verified 2026-11-16*
+
+### When a platform team owns the roles
+
+Keep a file next to each root that lists the AWS actions its deploy role needs, and update it in the same change that adds a resource type. When the platform team applies policy JSON from this repository, agree how a difference is caught: they apply from a tagged commit, or a scheduled job compares `aws iam get-role-policy` with the file. Without that, a deployment fails on a permission that the repository says is granted.
+
 ### GitHub Actions Usage
 ```yaml
 permissions:
@@ -47,9 +65,11 @@ permissions:
 steps:
   - uses: aws-actions/configure-aws-credentials@v4
     with:
-      role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+      role-to-assume: ${{ vars.AWS_ROLE_ARN }}
       aws-region: us-east-1
 ```
+
+Keep role ARNs in repository variables (`vars`), not secrets. An ARN is not a secret, and a job-level `if: vars.AWS_ROLE_ARN != ''` can then skip AWS jobs until the role exists. A job-level `if` cannot read `secrets`, or the variables of the job's own environment.
 
 ---
 
@@ -299,6 +319,7 @@ provider "aws" {
 > - `aws_autoscaling_group` is explicitly excluded — use `tag {}` blocks directly on that resource.
 > - Never pass the same tag key via both `default_tags` and a resource/module `tags` variable — causes perpetual plan diffs ([hashicorp/terraform-provider-aws#18311](https://github.com/hashicorp/terraform-provider-aws/issues/18311)).
 > - Never use computed values (`timestamp()`, `formatdate()`) in `default_tags` — use static strings only.
+> - Adding a key to `default_tags` in an existing root changes the tags of every taggable resource on the next plan. Make it a change of its own and review it as a tag-only plan. A root that is applied only with `-target` cannot take it until each resource has one owner.
 > - Use `tags_all` (not `tags`) in outputs/references that need the full merged tag set.
 
 Pass branch name from CI:
@@ -338,11 +359,13 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: TFLint init
-        run: tflint --init
+        run: tflint --init --config "$PWD/.tflint.hcl"
         working-directory: terraform/
 
       - name: TFLint
-        run: tflint --format compact --recursive
+        # One shared config for every root. With --recursive, a relative --config
+        # path is looked up in each module's directory, so pass an absolute path.
+        run: tflint --recursive --config "$PWD/.tflint.hcl" --format compact
         working-directory: terraform/
 
       - uses: bridgecrewio/checkov-action@v12
@@ -354,6 +377,39 @@ jobs:
 ```
 
 > For Lambda container image deployments, replace the Checkov HCL step with `trivy-action` (image + config scan) and keep Checkov for plan-mode only. See `security-iam.md` → "CI Integration" for the container scenario pipeline.
+
+On an existing codebase, start Checkov with a baseline (`aws-iac-team-harness` → `baseline.py`) or `soft_fail: true`. A gate that is red on the first day gets switched off. Keep `fmt`, `validate` and TFLint blocking from the start.
+
+With the `recommended` preset, TFLint reports a data source as unused when it exists only for its `postcondition`. Suppress that one rule on that line, with the reason (`aws-iac-team-harness` → suppressions).
+
+Commit `.terraform.lock.hcl` with hashes for every platform that runs `init`. A lock file made on one machine holds only that platform's `h1:` hashes, so `init` on CI or another laptop adds hashes and leaves the file changed. Generate it once for all of them:
+
+```bash
+terraform providers lock -platform=linux_amd64 -platform=darwin_arm64 -platform=windows_amd64
+```
+
+Run every test that the infrastructure depends on in the same workflow: `terraform test` for local modules, and the unit tests and build of each Lambda function and helper script under the Terraform root. A path filter for application code only leaves them untested.
+
+---
+
+## Promoting one build
+
+- **Build each artifact once, in CI.** Tag the image with the commit SHA, and deploy that digest to every environment. Build Lambda zips in CI, before the plan. A zip built on a laptop and one built in CI have different hashes, so the plan shows a change whenever the builder changes.
+- **Promote from one main branch.** Merge, deploy to dev, then approve prod for the same commit and digest. With a `develop` to `master` model, prod runs a merge commit that dev never ran, and the image is usually rebuilt. If the team keeps two branches, still promote the digest and never rebuild on `master`.
+- **Prod in another account** needs the image there: a repository policy that lets the prod account pull, or ECR replication. The lifecycle policy must not expire an image that prod runs (`aws-ecs-fargate` → Images).
+
+## Re-plan or apply a saved plan
+
+| Environment | On merge |
+| --- | --- |
+| Dev | Plan and apply in the same job. The plan from the pull request is stale by then: the base branch moved, and the image tag differs. |
+| Prod | Plan, approve that plan in a protected environment, then apply the saved plan file. Terraform refuses a saved plan when the state changed after it was made. |
+
+- **Saved plan files hold every value in cleartext**, including values that the terminal output hides as sensitive. Keep them in encrypted S3 with a short expiry, or upload them with `retention-days: 1`. Do not keep them as long-lived artifacts.
+- **The plan role.** Anyone who can open a pull request runs code with it, through a provider or an `external` data source, and it can read the whole state. Give it read access only, trust it only for pull requests from this repository, and keep secrets out of state (`ephemeral`).
+- **Locking.** With `use_lockfile = true`, a plan writes `<key>.tflock`, so a read-only role fails to plan. Either grant `s3:GetObject`, `s3:PutObject` and `s3:DeleteObject` on the lock key only, or run pull-request and drift plans with `-lock=false`. Applies always take the lock.
+
+> *Sources: [`terraform plan -out`](https://developer.hashicorp.com/terraform/cli/commands/plan) · verified 2026-11-16; [S3 backend permissions](https://developer.hashicorp.com/terraform/language/backend/s3) · verified 2026-11-16*
 
 ---
 
@@ -475,7 +531,7 @@ jobs:
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: us-east-1
 
       - uses: hashicorp/setup-terraform@v3
@@ -553,7 +609,7 @@ jobs:
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: us-east-1
 
       - name: Find orphaned branch environments
@@ -565,6 +621,8 @@ jobs:
 ## Drift Detection
 
 Run a read-only plan on a schedule to catch out-of-band changes (console edits, manual CLI changes).
+
+Start it only after each resource has one owner (`terraform-structure.md` → "One owner per resource"). Before that, it reports the same console edits every night, and people stop reading it. Add `-lock=false` to the plan so that the read-only role does not need write access to the lock file.
 
 ```yaml
 # .github/workflows/drift-detection.yml
@@ -592,7 +650,7 @@ jobs:
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: us-east-1
 
       - uses: hashicorp/setup-terraform@v3

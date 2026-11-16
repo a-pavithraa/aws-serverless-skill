@@ -1,6 +1,6 @@
 # AWS skills for coding agents
 
-Skills for Claude Code and Codex that create AWS applications in Terraform from tested templates, install the checks every agent and developer must pass, and give current guidance for Lambda, API Gateway, DynamoDB and Terraform.
+Skills for Claude Code and Codex that create AWS applications in Terraform from tested templates, install the checks every agent and developer must pass, and give current guidance for Lambda, API Gateway, DynamoDB, Amazon Connect and Terraform.
 
 ## Install
 
@@ -62,6 +62,14 @@ Guidance for Lambda, API Gateway, SQS, SNS, EventBridge and Step Functions: cold
 ### `aws-dynamodb`
 
 Guidance for DynamoDB data modeling: access patterns, keys, indexes, hot partitions, capacity mode and cost.
+
+### `aws-ecs-fargate`
+
+Guidance for an ECS Fargate service in Terraform when a platform team owns the VPC, load balancer, roles and secrets: checking platform inputs at plan time, secrets injected by JSON key (and why a rotated secret needs a new deployment), image digests and an ECR lifecycle that cannot delete a running image, circuit breaker and alarm rollback, alarms on a shared load balancer, stopped-task diagnosis, and what to fix before running more than one task. It ends with a review checklist. A reference covers observability: when a sidecar (CloudWatch agent, OpenTelemetry collector, FireLens) is worth it, how to wire one, and what changes with a Grafana or other OTLP backend.
+
+### `aws-connect`
+
+Guidance for Amazon Connect in Terraform: who owns each resource (Terraform or the console), flows authored as a graph and checked at plan time, Lambda functions in flows (instance association, the 8-second limit, status-only replies), PHI in flow logs and contact attributes, security profiles with access-control tags, provider gaps and their `awscc` alternatives, and contact events to SQS. It ends with a review checklist.
 
 ## Test
 

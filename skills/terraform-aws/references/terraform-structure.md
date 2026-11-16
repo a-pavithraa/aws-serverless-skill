@@ -66,6 +66,87 @@ Choose bucket strategy based on isolation requirements — not a blanket rule.
 
 **Recommended hybrid**: separate buckets at hard trust boundaries (prod vs non-prod), key paths within a bucket for soft boundaries (feature branches, dev/qa within non-prod). See `cicd-patterns.md` → "Per-Branch Backend State" for the key-path pattern.
 
+## Environments and ownership
+
+### One root, two files per environment
+
+When every environment has the same resources, keep one root and give each environment a backend file and a variables file:
+
+```text
+infra/app/
+  *.tf                      # no environment-specific value
+  env/dev.s3.tfbackend      # key = "app/dev/terraform.tfstate"
+  env/dev.tfvars            # environment, aws_account_id, IDs and names
+```
+
+```bash
+terraform init -reconfigure -backend-config=env/dev.s3.tfbackend
+terraform plan -var-file=env/dev.tfvars -out=dev.tfplan
+```
+
+- Set `allowed_account_ids = [var.aws_account_id]` on the provider. Then dev's variables with prod credentials fail before anything is planned.
+- Use a directory per environment only when the environments have different resources.
+- `terraform.tfvars`, `terraform.tfvars.json`, `*.auto.tfvars` and `*.auto.tfvars.json` load in **every** environment. A generated file with one of those names (for example, a user list exported from the identity provider) is applied to prod with dev's values. Name it `env/<env>.<name>.tfvars.json` and pass it with `-var-file`.
+- To convert a root whose key is written in the `backend` block and whose values are in `terraform.tfvars`: put the existing key, unchanged, in `env/dev.s3.tfbackend`, and move the values to `env/dev.tfvars`. With the same key, `init -reconfigure` finds the existing state and nothing moves.
+
+> *Source: [Variable definition files](https://developer.hashicorp.com/terraform/language/values/variables) · verified 2026-11-16*
+
+### Stop temporary settings from reaching prod
+
+Proof-of-concept switches (a database container in the task, a borrowed security group, a repository shared with dev) stay as variables. Fail the plan when one is set in prod. A `check` block only warns, so use a validation (Terraform 1.9+ lets it read other variables):
+
+```hcl
+variable "db_sidecar" {
+  type    = bool
+  default = false
+
+  validation {
+    condition     = !(var.db_sidecar && var.environment == "prod")
+    error_message = "The database sidecar loses its data on every deployment. Prod needs a real database."
+  }
+}
+```
+
+The guard stops a mistake. It does not create what prod needs instead, so list each switch with what replaces it and who provides it.
+
+Test each guard with `terraform test`: `command = plan`, `environment = "prod"`, and `expect_failures = [var.db_sidecar]`. Under a `mock_provider`, give `mock_data` defaults that pass the provider's ARN checks and the data sources' postconditions. The mocked provider otherwise returns random strings, the plan stops on those checks, and the test reports an unexpected error instead of the guard.
+
+```hcl
+mock_provider "aws" {
+  mock_data "aws_iam_role" {
+    defaults = { arn = "arn:aws:iam::123456789012:role/mock" }
+  }
+  mock_data "aws_subnet" {
+    defaults = { vpc_id = "vpc-0123456789abcdef0" } # the VPC the postcondition expects
+  }
+}
+```
+
+### One owner per resource
+
+A rule like "apply only with `-target`" means that a resource has two owners: Terraform, and a person who edits it in the console. CI cannot apply such a root, and each targeted apply skips everything else.
+
+1. Run one plan without `-target`, and list every resource that shows a change.
+2. Choose one owner for each:
+   - **Terraform owns it.** The console edit moves into the code in a pull request, and the console stops editing it.
+   - **The console owns it.** Add a `removed` block with `destroy = false`, which takes it out of state without deleting it. Read its ID with a data source when other resources need it.
+3. The plan without `-target` is then empty, and CI can apply the root.
+
+```hcl
+removed {
+  from = aws_connect_contact_flow.this["ivr"]
+  lifecycle {
+    destroy = false
+  }
+}
+```
+
+Use `removed` rather than `ignore_changes` for a resource that a person owns. With `ignore_changes`, the resource stays in state, so a change that forces replacement, or a `destroy`, still acts on it. `ignore_changes` on the edited attribute is only a transition step, while the console edits move into code.
+
+Split a root by owner and by rate of change, not by resource type. For example, users generated from an identity provider change every week, and flows change with releases. A user sync then does not wait on unfinished flow work.
+
+> *Source: [`removed` block](https://developer.hashicorp.com/terraform/language/block/removed) · verified 2026-11-16*
+
 ### CloudTrail Integration
 
 Enable CloudTrail on the state bucket to attribute every state change to a specific identity:
