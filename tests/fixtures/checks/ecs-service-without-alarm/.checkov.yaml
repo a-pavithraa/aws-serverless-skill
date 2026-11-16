@@ -1,0 +1,7 @@
+# Fixture: only the alarm relationships are under test.
+framework:
+  - terraform
+skip-check:
+  # Target group health check and HTTP protocol: not what this fixture tests.
+  - CKV_AWS_261
+  - CKV_AWS_378

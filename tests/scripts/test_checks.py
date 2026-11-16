@@ -19,7 +19,8 @@ REPO = Path(__file__).resolve().parents[2]
 HARNESS = REPO / "skills" / "aws-iac-team-harness"
 CHECK = HARNESS / "scripts" / "check.py"
 NEW_PROJECT_CHECK = REPO / "skills" / "creating-aws-projects" / "scripts" / "check_new_project.py"
-TEMPLATE = REPO / "skills" / "creating-aws-projects" / "templates" / "apigw-lambda"
+TEMPLATES = REPO / "skills" / "creating-aws-projects" / "templates"
+TEMPLATE = TEMPLATES / "apigw-lambda"
 FIXTURES = REPO / "tests" / "fixtures" / "checks"
 
 sys.path.insert(0, str(HARNESS / "scripts"))
@@ -28,6 +29,25 @@ import check  # noqa: E402
 
 ANSWERS = {"project_name": "check-test", "aws_region": "us-east-1", "environment": "dev",
            "auth_mode": "iam", "log_retention_days": 14}
+
+
+# Answers for each template, as the render tests use them.
+TEMPLATE_ANSWERS = {
+    "apigw-lambda": ANSWERS,
+    "sqs-lambda-worker": {"project_name": "check-worker", "aws_region": "us-east-1", "environment": "dev",
+                          "log_retention_days": 14},
+    "ecs-web": {"project_name": "check-web", "aws_region": "us-east-1", "environment": "dev", "log_retention_days": 14,
+                "public_reason": "public storefront read API", "network_name": "shared-dev"},
+    "apigw-step-functions": {"project_name": "check-flow", "aws_region": "us-east-1", "environment": "dev",
+                             "log_retention_days": 14, "auth_mode": "iam"},
+    "alb-ec2": {"project_name": "check-vm", "aws_region": "us-east-1", "environment": "dev", "log_retention_days": 14,
+                "plain_http_reason": "sandbox without a domain name", "network_name": "shared-dev"},
+    "network": {"project_name": "check-net", "aws_region": "us-east-1", "environment": "dev", "log_retention_days": 14},
+}
+
+
+def findings(report, check_id):
+    return [f for c in report["checks"] for f in c.get("findings", []) if f["id"] == check_id]
 
 
 def run(script, *args):
@@ -68,11 +88,12 @@ class Workdir(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tmp, ignore_errors=True)
 
-    def render(self):
+    def render(self, template="apigw-lambda"):
         import copier
 
-        dest = self.tmp / "project"
-        copier.run_copy(str(TEMPLATE), str(dest), data=ANSWERS, defaults=True, quiet=True, unsafe=False)
+        dest = self.tmp / template
+        copier.run_copy(str(TEMPLATES / template), str(dest), data=TEMPLATE_ANSWERS[template], defaults=True,
+                        quiet=True, unsafe=False)
         return dest
 
     def fixture(self, name):
@@ -186,6 +207,46 @@ class RenderedProjectTest(Workdir):
             self.assertEqual(["UNVERIFIED"], statuses(report, check_id), check_id)
 
 
+class TemplateChecksTest(Workdir):
+    def test_every_template_passes_every_check(self):
+        for template in sorted(TEMPLATE_ANSWERS):
+            with self.subTest(template=template):
+                project = self.render(template)
+
+                result, report = run(CHECK, str(project), "--json")
+
+                self.assertEqual(0, result.returncode, result.stdout[-3000:] + result.stderr)
+                self.assertEqual("PASS", report["status"])
+
+    def test_express_service_without_its_alarms_fails_at_the_service(self):
+        project = self.render("ecs-web")
+        self.edit(project / "infra" / "observability.tf",
+                  r'(# No data means no task reports metrics.*?)\Z', "")
+        self.edit(project / "infra" / "outputs.tf", r'aws_cloudwatch_metric_alarm.running_tasks\[\*\].alarm_name,\n\s*'
+                  r'aws_cloudwatch_metric_alarm.cpu_high\[\*\].alarm_name', "[]")
+
+        result, report = run(CHECK, str(project), "--json")
+
+        self.assertEqual(1, result.returncode, result.stdout[-3000:])
+        self.assertEqual(["aws_ecs_express_gateway_service.web"],
+                         sorted({f["resource"].split("[")[0] for f in findings(report, "HARNESS_AWS_5")}))
+
+    def test_dead_letter_queue_without_its_alarm_fails_at_the_queue(self):
+        project = self.render("sqs-lambda-worker")
+        self.edit(project / "infra" / "observability.tf",
+                  r'resource "aws_cloudwatch_metric_alarm" "dead_letter_messages" \{.*?\n\}\n', "")
+        for path in (project / "infra").glob("*.tf"):
+            text = path.read_text(encoding="utf-8")
+            if "aws_cloudwatch_metric_alarm.dead_letter_messages" in text:
+                path.write_text(re.sub(r"aws_cloudwatch_metric_alarm\.dead_letter_messages\.(alarm_name|arn),?\s*", "",
+                                       text), encoding="utf-8")
+
+        result, report = run(CHECK, str(project), "--json")
+
+        self.assertEqual(["aws_sqs_queue.dead_letter"], [f["resource"] for f in findings(report, "HARNESS_AWS_4")],
+                         result.stdout[-3000:])
+
+
 class FixtureTest(Workdir):
     def test_function_without_managed_log_group_fails(self):
         result, report = run(CHECK, str(self.fixture("lambda-without-log-group")), "--json")
@@ -209,6 +270,30 @@ class FixtureTest(Workdir):
         result, report = run(CHECK, str(project), "--json")
 
         self.assertNotIn("HARNESS_AWS_3", finding_ids(report))
+
+    def test_dead_letter_queue_without_alarm_fails_and_its_source_queue_does_not(self):
+        result, report = run(CHECK, str(self.fixture("dlq-without-alarm")), "--json")
+
+        self.assertEqual(1, result.returncode)
+        self.assertEqual(["aws_sqs_queue.dead_letter"], [f["resource"] for f in findings(report, "HARNESS_AWS_4")])
+
+    def test_dead_letter_alarm_in_another_file_passes_and_other_queues_need_none(self):
+        result, report = run(CHECK, str(self.fixture("queue-cross-file")), "--json")
+
+        self.assertNotIn("HARNESS_AWS_4", finding_ids(report))
+        self.assertEqual(["PASS"], statuses(report, "checkov"), report)
+
+    def test_ecs_service_with_only_a_target_group_alarm_fails(self):
+        result, report = run(CHECK, str(self.fixture("ecs-service-without-alarm")), "--json")
+
+        self.assertEqual(1, result.returncode)
+        self.assertEqual(["aws_ecs_service.web"], [f["resource"] for f in findings(report, "HARNESS_AWS_5")])
+
+    def test_ecs_service_alarm_in_another_file_passes_and_task_definitions_need_none(self):
+        result, report = run(CHECK, str(self.fixture("ecs-service-cross-file")), "--json")
+
+        self.assertNotIn("HARNESS_AWS_5", finding_ids(report))
+        self.assertEqual(["PASS"], statuses(report, "checkov"), report)
 
     def test_unresolved_variables_are_unverified(self):
         project = self.fixture("lambda-cross-file")

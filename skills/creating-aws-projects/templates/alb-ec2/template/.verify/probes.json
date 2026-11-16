@@ -5,8 +5,12 @@
       "method": "GET",
       "path": "/hello",
       "expect_status": 200,
-      "expect_json_keys": ["message", "correlation_id", "source_sha256"],
-      "expect_source_hash": true
+      "expect_json_keys": ["message", "correlation_id", "source_sha256", "instance"],
+      "expect_source_hash": true,
+      "repeat": 10,
+      "max_seconds": 30,
+      "expect_distinct": {"key": "instance", "at_least": 2},
+      "expect_same": ["source_sha256"]
     }
   ]
 }

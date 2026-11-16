@@ -70,12 +70,14 @@ resource "aws_cloudwatch_metric_alarm" "http_5xx" {
 }
 
 # No data means no task reports metrics, which is as bad as zero running tasks.
+# ServiceName names the service resource, not local.service_name: the harness check HARNESS_AWS_5
+# follows that reference to prove the service has an alarm.
 resource "aws_cloudwatch_metric_alarm" "running_tasks" {
   count               = local.deploy_service ? 1 : 0
   alarm_name          = "${local.name}-running-tasks"
   namespace           = "ECS/ContainerInsights"
   metric_name         = "RunningTaskCount"
-  dimensions          = { ClusterName = aws_ecs_cluster.this.name, ServiceName = local.service_name }
+  dimensions          = { ClusterName = aws_ecs_cluster.this.name, ServiceName = aws_ecs_express_gateway_service.web[0].service_name }
   statistic           = "Minimum"
   period              = 60
   evaluation_periods  = 3
@@ -91,7 +93,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
   alarm_name          = "${local.name}-cpu-high"
   namespace           = "AWS/ECS"
   metric_name         = "CPUUtilization"
-  dimensions          = { ClusterName = aws_ecs_cluster.this.name, ServiceName = local.service_name }
+  dimensions          = { ClusterName = aws_ecs_cluster.this.name, ServiceName = aws_ecs_express_gateway_service.web[0].service_name }
   statistic           = "Average"
   period              = 60
   evaluation_periods  = 5

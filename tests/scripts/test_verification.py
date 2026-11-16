@@ -1139,5 +1139,334 @@ class ResidueTest(unittest.TestCase):
         self.assertEqual("FAIL", result.status)
 
 
+class FakeClock:
+    """time.time and time.sleep for the verifier: sleeping moves the clock."""
+    def __init__(self, per_call=0.0):
+        self.now, self.per_call = 1000.0, per_call
+
+    def time(self):
+        self.now += self.per_call
+        return self.now
+
+    def sleep(self, seconds):
+        self.now += seconds
+
+
+class ScriptedHttp(FakeHttp):
+    """Answers request n with answer(n): a dict body, an int status, or an exception to raise."""
+    def __init__(self, answer):
+        super().__init__(unsigned_status=None)
+        self.answer = answer
+
+    def __call__(self, method, url, headers, sign, body=None):
+        n = len(self.requests)
+        self.requests.append({"url": url, "signed": sign, "headers": headers})
+        produced = self.answer(n)
+        if isinstance(produced, Exception):
+            raise produced
+        if isinstance(produced, int):
+            return vd.HttpResponse(produced, {"x-correlation-id": headers["x-correlation-id"]}, '{"message":"bad"}')
+        return vd.HttpResponse(200, {"x-correlation-id": headers["x-correlation-id"]},
+                               json.dumps({"message": "hello", **produced}))
+
+
+def write_probe(project, **fields):
+    probe = {"name": "hello", "method": "GET", "path": "/hello", "expect_status": 200,
+             "expect_json_keys": ["message", "source_sha256", "instance"], "expect_source_hash": True, **fields}
+    (project.root / ".verify" / "probes.json").write_text(json.dumps({"probes": [probe]}), encoding="utf-8")
+
+
+MULTI = {"repeat": 10, "expect_distinct": {"key": "instance", "at_least": 2}, "expect_same": ["source_sha256"]}
+
+
+class MultiInstanceProbeTest(VerifierCase):
+    def setUp(self):
+        self.project = EcsProject()
+        self.addCleanup(self.project.cleanup)
+        self.source = vd.source_hash(self.project.root / "app")
+
+    def answers(self, instances, **extra):
+        return lambda n: {"source_sha256": self.source, "instance": instances[n % len(instances)], **extra}
+
+    def run_ecs(self, http, tasks=2, clients=None, **probe):
+        write_probe(self.project, **{**MULTI, **probe})
+        clients = clients or FakeEcsClients(self.project, task_digests=(DIGEST,) * tasks, running=tasks,
+                                            desired=tasks, target_states=("healthy",) * tasks)
+        return self.verify(clients=clients, http=http)
+
+    def check(self, report, check_id):
+        return next(c for c in report["checks"] if c["id"] == check_id)
+
+    def test_two_tasks_answering_and_agreeing_pass(self):
+        report = self.run_ecs(ScriptedHttp(self.answers(["task-a", "task-b"])))
+
+        self.assertEqual(0, report["exit_code"], report)
+        self.assertEqual("PASS", self.status(report, "instances:hello"))
+        self.assertEqual(["task-a", "task-b"], self.check(report, "instances:hello")["evidence"]["seen"])
+        self.assertEqual("PASS", self.status(report, "agree:hello"))
+        self.assertEqual(10, len(self.http.requests))
+
+    def test_one_task_answering_while_two_run_fails(self):
+        report = self.run_ecs(ScriptedHttp(self.answers(["task-a"])))
+
+        self.assertEqual(1, report["exit_code"])
+        self.assertEqual("FAIL", self.status(report, "instances:hello"))
+        self.assertIn("2 running but only 1 distinct instance", self.check(report, "instances:hello")["detail"])
+
+    def test_a_single_task_is_unverified_with_the_reason_not_passed(self):
+        report = self.run_ecs(ScriptedHttp(self.answers(["task-a"])), tasks=1)
+
+        found = self.check(report, "instances:hello")
+        self.assertEqual("UNVERIFIED", found["status"])
+        self.assertIn("1 running", found["detail"])
+        self.assertFalse(found["required"])
+
+    def test_tasks_that_disagree_fail(self):
+        answers = lambda n: {"source_sha256": self.source, "instance": f"task-{n % 2}", "flags": [n % 2]}  # noqa: E731
+
+        report = self.run_ecs(ScriptedHttp(answers), expect_same=["source_sha256", "flags"])
+
+        self.assertEqual(1, report["exit_code"])
+        self.assertEqual("FAIL", self.status(report, "agree:hello"))
+        self.assertIn("flags differs", self.check(report, "agree:hello")["detail"])
+
+    def test_one_failed_response_among_the_repeats_fails_the_probe(self):
+        answers = lambda n: 502 if n == 6 else {"source_sha256": self.source, "instance": f"task-{n % 2}"}  # noqa: E731
+
+        report = self.run_ecs(ScriptedHttp(answers))
+
+        self.assertEqual("FAIL", self.status(report, "probe:hello"))
+        self.assertIn("response 7 of 10", self.check(report, "probe:hello")["detail"])
+
+    def test_a_response_without_the_instance_key_fails(self):
+        answers = lambda n: {"source_sha256": self.source, "instance": "task-a" if n else ""}  # noqa: E731
+
+        report = self.run_ecs(ScriptedHttp(answers), expect_json_keys=["message"])
+
+        self.assertEqual("FAIL", self.status(report, "instances:hello"))
+
+    def test_repeats_stop_at_max_seconds(self):
+        write_probe(self.project, **{**MULTI, "repeat": 50, "max_seconds": 10})
+        clients = FakeEcsClients(self.project, task_digests=(DIGEST,) * 2, running=2, desired=2,
+                                 target_states=("healthy",) * 2)
+        http = ScriptedHttp(self.answers(["task-a", "task-b"]))
+        clients.http = http
+        clock = FakeClock(per_call=1.0)
+        verifier = vd.Verifier(self.project.root, "infra", self.project.outputs, clients, http,
+                               vd.Target(ACCOUNT, REGION), waits=vd.Waits(logs=3, traces=2, interval=1), sleep=clock.sleep, clock=clock.time)
+
+        report = verifier.run()
+
+        self.assertLess(len(http.requests), 50)
+        self.assertEqual("PASS", self.status(report, "instances:hello"), report)
+
+    def test_repeat_outside_its_bounds_fails_the_probe_definition(self):
+        for repeat in (0, 51, "10", True):
+            with self.subTest(repeat=repeat):
+                report = self.run_ecs(ScriptedHttp(self.answers(["task-a", "task-b"])), repeat=repeat)
+
+                self.assertEqual("FAIL", self.status(report, "probe:hello"))
+                self.assertIn("probe definition", self.check(report, "probe:hello")["detail"])
+
+    def test_fewer_repeats_than_the_distinct_count_is_a_definition_error(self):
+        report = self.run_ecs(ScriptedHttp(self.answers(["task-a", "task-b"])), repeat=1)
+
+        self.assertEqual("FAIL", self.status(report, "probe:hello"))
+
+    def test_a_probe_without_repeat_sends_one_request_and_adds_no_instance_check(self):
+        write_probe(self.project)
+
+        report = self.verify(clients=FakeEcsClients(self.project), http=ScriptedHttp(self.answers(["task-a"])))
+
+        self.assertEqual(1, len(self.http.requests))
+        self.assertNotIn("instances:hello", [c["id"] for c in report["checks"]])
+        self.assertEqual(0, report["exit_code"], report)
+
+    def test_fleet_of_two_with_one_instance_answering_fails(self):
+        self.project.outputs = AsgProject().outputs
+        clients = FakeAsgClients(self.project, target_states=("healthy", "healthy"))
+
+        report = self.run_ecs(ScriptedHttp(self.answers(["i-0aaa"])), clients=clients)
+
+        self.assertEqual("FAIL", self.status(report, "instances:hello"))
+
+    def test_fleet_of_two_both_answering_passes(self):
+        self.project.outputs = AsgProject().outputs
+        clients = FakeAsgClients(self.project, target_states=("healthy", "healthy"))
+
+        report = self.run_ecs(ScriptedHttp(self.answers(["i-0aaa", "i-0bbb"])), clients=clients)
+
+        self.assertEqual("PASS", self.status(report, "instances:hello"), report)
+        self.assertEqual(0, report["exit_code"], report)
+
+
+class FakeRolloutEcsClients(FakeEcsClients):
+    """describe_services returns the next deployments list from steps; the last one repeats."""
+    def __init__(self, project, steps, **kwargs):
+        super().__init__(project, **kwargs)
+        self.steps, self.describes = list(steps), 0
+
+    def _ecs(self):
+        fake, ecs = self, super()._ecs()
+        describe = ecs.describe_services
+
+        def describe_services(cluster, services):
+            fake.deployments = fake.steps[min(fake.describes, len(fake.steps) - 1)]
+            fake.describes += 1
+            return describe(cluster, services)
+        ecs.describe_services = describe_services
+        return ecs
+
+
+def done(deployment_id):
+    return [{"id": deployment_id, "status": "PRIMARY", "rolloutState": "COMPLETED"}]
+
+
+def rolling(new, old):
+    return [{"id": new, "status": "PRIMARY", "rolloutState": "IN_PROGRESS"},
+            {"id": old, "status": "DRAINING", "rolloutState": "COMPLETED"}]
+
+
+class WatchRolloutTest(unittest.TestCase):
+    OLD = "0" * 64
+
+    def setUp(self):
+        self.project = EcsProject()
+        self.addCleanup(self.project.cleanup)
+        self.new = vd.source_hash(self.project.root / "app")
+        write_probe(self.project)
+
+    def overlap(self, n):
+        """Old and new tasks both answer until the rollout ends; afterwards only new ones."""
+        return {"source_sha256": self.new if n % 2 else self.OLD, "instance": f"task-{n % 3}"}
+
+    def watch(self, steps, answer, clients=None, timeout=600, start_wait=60, account=ACCOUNT):
+        self.clients = clients or FakeRolloutEcsClients(self.project, steps)
+        self.http = ScriptedHttp(answer)
+        self.clients.http = self.http
+        clock = FakeClock()
+        verifier = vd.Verifier(self.project.root, "infra", self.project.outputs, self.clients, self.http,
+                               vd.Target(account, REGION), waits=vd.Waits(interval=5), sleep=clock.sleep,
+                               clock=clock.time)
+        return verifier.watch(timeout=timeout, start_wait=start_wait)
+
+    def status(self, report, check_id):
+        return next(c["status"] for c in report["checks"] if c["id"] == check_id)
+
+    def detail(self, report, check_id):
+        return next(c["detail"] for c in report["checks"] if c["id"] == check_id)
+
+    def rollout(self):
+        return [done("d1"), done("d1")] + [rolling("d2", "d1")] * 4 + [done("d2")]
+
+    def test_rollout_with_old_and_new_answering_passes_and_lists_both(self):
+        steps = self.rollout()
+        final = len(steps) - 1
+
+        def answer(n):
+            return self.overlap(n) if n < final else {"source_sha256": self.new, "instance": "task-9"}
+
+        report = self.watch(steps, answer)
+
+        self.assertEqual(0, report["exit_code"], report)
+        for check_id in ("rollout", "rollout-probes", "rollout-overlap", "rollout-result"):
+            self.assertEqual("PASS", self.status(report, check_id), check_id)
+        self.assertIn(self.OLD[:12], self.detail(report, "rollout-probes"))
+        self.assertIn(self.new[:12], self.detail(report, "rollout-probes"))
+        self.assertIn("task-0", self.detail(report, "rollout-probes"))
+
+    def test_a_failed_request_during_the_rollout_fails(self):
+        report = self.watch(self.rollout(), lambda n: 502 if n == 3 else {"source_sha256": self.new, "instance": "t"})
+
+        self.assertEqual(1, report["exit_code"])
+        self.assertEqual("FAIL", self.status(report, "rollout-probes"))
+        self.assertIn("status 502", self.detail(report, "rollout-probes"))
+
+    def test_a_dropped_connection_during_the_rollout_fails(self):
+        report = self.watch(self.rollout(), lambda n: ConnectionResetError("reset") if n == 2
+                            else {"source_sha256": self.new, "instance": "t"})
+
+        self.assertEqual("FAIL", self.status(report, "rollout-probes"))
+
+    def test_a_rollout_that_does_not_end_in_time_is_unverified(self):
+        report = self.watch([rolling("d2", "d1")], self.overlap, timeout=60)
+
+        self.assertEqual(2, report["exit_code"], report)
+        self.assertEqual("UNVERIFIED", self.status(report, "rollout"))
+        self.assertIn("still in progress", self.detail(report, "rollout"))
+        self.assertLessEqual(len(self.http.requests), 13)
+
+    def test_a_rollout_that_never_starts_is_unverified_not_passed(self):
+        report = self.watch([done("d1")], self.overlap, start_wait=30)
+
+        self.assertEqual(2, report["exit_code"])
+        self.assertEqual("UNVERIFIED", self.status(report, "rollout"))
+        self.assertIn("no rollout started", self.detail(report, "rollout"))
+
+    def test_a_failed_rollout_fails(self):
+        failed = [{"id": "d2", "status": "PRIMARY", "rolloutState": "FAILED",
+                   "rolloutStateReason": "ECS deployment circuit breaker: tasks failed to start."}]
+
+        report = self.watch([done("d1"), rolling("d2", "d1"), failed], self.overlap)
+
+        self.assertEqual(1, report["exit_code"])
+        self.assertEqual("FAIL", self.status(report, "rollout"))
+        self.assertIn("circuit breaker", self.detail(report, "rollout"))
+
+    def test_a_rollout_that_ends_on_the_old_source_fails(self):
+        report = self.watch(self.rollout(), lambda n: {"source_sha256": self.OLD, "instance": "t"})
+
+        self.assertEqual(1, report["exit_code"])
+        self.assertEqual("FAIL", self.status(report, "rollout-result"))
+        self.assertEqual("UNVERIFIED", self.status(report, "rollout-overlap"))
+
+    def test_wrong_account_stops_before_any_request(self):
+        report = self.watch(self.rollout(), self.overlap, account="222222222222")
+
+        self.assertEqual(3, report["exit_code"])
+        self.assertEqual([], self.http.requests)
+
+    def test_target_without_a_service_or_group_is_unverified(self):
+        del self.project.outputs["ecs_service_name"]
+
+        report = self.watch(self.rollout(), self.overlap)
+
+        self.assertEqual(2, report["exit_code"])
+        self.assertIn("ecs_service_name", self.detail(report, "rollout"))
+
+    def refresh_clients(self, statuses):
+        project = self.project
+        project.outputs = AsgProject().outputs
+
+        class Clients(FakeAsgClients):
+            calls = 0
+
+            def _autoscaling(inner):
+                class AutoScaling:
+                    def describe_instance_refreshes(self, AutoScalingGroupName, MaxRecords):
+                        refresh_id, status = statuses[min(Clients.calls, len(statuses) - 1)]
+                        Clients.calls += 1
+                        return {"InstanceRefreshes": [{"InstanceRefreshId": refresh_id, "Status": status}]}
+                return AutoScaling()
+        return Clients(project)
+
+    def test_instance_refresh_that_succeeds_passes(self):
+        statuses = [("r1", "Successful"), ("r2", "Pending"), ("r2", "InProgress"), ("r2", "Baking"),
+                    ("r2", "Successful")]
+
+        report = self.watch(None, self.overlap, clients=self.refresh_clients(statuses))
+
+        self.assertEqual("PASS", self.status(report, "rollout"), report)
+        self.assertIn("r2 Successful", self.detail(report, "rollout"))
+
+    def test_instance_refresh_that_rolls_back_fails(self):
+        statuses = [("r2", "InProgress"), ("r2", "RollbackInProgress"), ("r2", "RollbackSuccessful")]
+
+        report = self.watch(None, self.overlap, clients=self.refresh_clients(statuses))
+
+        self.assertEqual("FAIL", self.status(report, "rollout"))
+        self.assertIn("RollbackSuccessful", self.detail(report, "rollout"))
+
+
 if __name__ == "__main__":
     unittest.main()

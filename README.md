@@ -30,10 +30,10 @@ Creates a new AWS application from a tested Copier template. Each template has a
 | --- | --- |
 | `apigw-lambda` (HTTP API, Lambda Python 3.13 on arm64) | Template exists. Verified in a sandbox account (`docs/evidence/task-6-sandbox`). The profile stays `candidate` until a person reviews the evidence. |
 | `sqs-lambda-worker` (SQS queue, dead-letter queue, Lambda Python 3.13 on arm64, Powertools batch and idempotency) | Template exists. Verified in a sandbox account (`docs/evidence/task-8-sqs-sandbox`). The profile stays `candidate` until a person reviews the evidence. |
-| `ecs-web` (ECS Express Mode, Fargate arm64, Python 3.13 container) | Template exists. Sandbox evidence: `docs/evidence/task-8-ecs-sandbox`. The profile stays `candidate` until a person reviews the evidence. |
+| `ecs-web` (ECS Express Mode, Fargate arm64, Python 3.13 container) | Template exists. Sandbox evidence: `docs/evidence/task-8-ecs-sandbox`. The profile stays `candidate` until a person reviews the evidence. Two tasks by default, the `instance` field and the multi-instance probe came later: they are unit-tested only, not yet verified in a sandbox account. |
 | `apigw-step-functions` (REST API, synchronous Express workflow) | Template exists. Sandbox evidence: `docs/evidence/task-9-sfn-sandbox`. The profile stays `candidate` until a person reviews the evidence. |
 | `network` (VPC from `terraform-aws-modules/vpc`, own state, subnet IDs in SSM) | Template exists. Sandbox evidence: `docs/evidence/task-9-network-sandbox`. The profile stays `candidate` until a person reviews the evidence. |
-| `alb-ec2` (Application Load Balancer, Auto Scaling group, AL2023 arm64, Python 3.13) | Template exists. Sandbox evidence: `docs/evidence/task-9-ec2-sandbox`. The profile stays `candidate` until a person reviews the evidence. |
+| `alb-ec2` (Application Load Balancer, Auto Scaling group, AL2023 arm64, Python 3.13) | Template exists. Sandbox evidence: `docs/evidence/task-9-ec2-sandbox`. The profile stays `candidate` until a person reviews the evidence. The `instance` field and the multi-instance probe came later: they are unit-tested only, not yet verified in a sandbox account. |
 
 The skill renders only runtime profiles that pass the gate in `scripts/profiles.py`. `scripts/render.py` refuses an existing directory. `scripts/check_new_project.py` checks the result.
 
@@ -47,9 +47,9 @@ Installs checks into a Terraform repository with `scripts/apply_harness.py`. A r
 | `baseline.py` | Records the findings that a repository already has, each with an owner, a reason and an expiry date. New findings still fail. |
 | `plan_summary.py` | Summarizes `terraform show -json` without attribute values, and flags stateful resources that are destroyed or replaced. |
 | `plan_provenance.py` | Binds a saved plan to its commit, account, region, root, backend and Terraform version. The apply job refuses the plan if any of them changed. |
-| `verify_deployment.py` | Checks a deployment: target, deployed code hash, signed and unsigned probes, logs by request ID, then traces, alarms and alerting. |
+| `verify_deployment.py` | Checks a deployment: target, deployed code hash, signed and unsigned probes, logs by request ID, then traces, alarms and alerting. A repeated probe shows that two or more instances answered and agree. `watch-rollout` probes while a rollout runs and lists the instances and source hashes that answered. Both are unit-tested only, not yet verified in a sandbox account. |
 
-Custom Checkov checks exist only where no upstream check covers the requirement. `references/coverage.md` lists each one with the test that proves it.
+Custom Checkov checks exist only where no upstream check covers the requirement: a Lambda function without a managed log group or an alarm, an alarm topic on the AWS managed key, a dead-letter queue without an alarm, an ECS service without an alarm. `references/coverage.md` lists each one with the test that proves it.
 
 ### `terraform-aws`
 
@@ -66,7 +66,7 @@ Guidance for DynamoDB data modeling: access patterns, keys, indexes, hot partiti
 ## Test
 
 ```bash
-uv run --no-project --with copier==9.19.1 --with pyyaml python -m unittest discover -s tests/scripts
+uv run --no-project --with copier==9.19.1 --with pyyaml --with boto3 python -m unittest discover -s tests/scripts
 ```
 
 The suite needs Terraform, TFLint 0.65.0 and Checkov 3.4.3 on PATH, and network access for `terraform init`. Set `GITHUB_TOKEN` so that `tflint --init` does not hit the GitHub rate limit. The suite runs about 15 minutes, because each check test renders a project and runs every tool on it. Run one suite at a time: the Terraform plugin cache is not safe for concurrent use.
@@ -77,6 +77,7 @@ The suite needs Terraform, TFLint 0.65.0 and Checkov 3.4.3 on PATH, and network 
 
 - **No common knowledge.** Each section has something that a model does not produce correctly without it.
 - **Rules that can fail a build are checks, not prose.** The harness fails the build. The skills explain why.
+- **Two instances from the first deploy.** A service always runs two copies at some moment (a rollout, a scale-out), so the templates run two and the verifier shows two answering. One is a recorded decision with a reason. See `docs/decisions/multi-instance.md`.
 - **Cite sources.** Facts carry a link and the date someone verified them. `tests/scripts/test_docs.py` fails on a verification date older than one year.
 
 ## Credits

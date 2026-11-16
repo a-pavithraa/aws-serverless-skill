@@ -3,6 +3,7 @@ import os
 import sys
 import threading
 import unittest
+import unittest.mock
 import urllib.error
 import urllib.request
 from http.server import ThreadingHTTPServer
@@ -34,6 +35,10 @@ class RouteTest(unittest.TestCase):
     def test_hello_without_secrets_lists_none(self):
         self.assertEqual([], server.route("GET", "/hello", "c-1", {})[1]["secrets_loaded"])
 
+    def test_hello_names_the_instance_that_answered(self):
+        self.assertEqual(server.instance(), server.route("GET", "/hello", "c-1")[1]["instance"])
+        self.assertTrue(server.instance())
+
     def test_unknown_path_is_not_found(self):
         self.assertEqual(404, server.route("GET", "/nope", "c-1")[0])
 
@@ -42,6 +47,36 @@ class RouteTest(unittest.TestCase):
 
     def test_unsafe_correlation_id_is_replaced(self):
         self.assertNotEqual("a b\nforged", server.correlation_id_from({"x-correlation-id": "a b\nforged"}))
+
+
+class TaskIdTest(unittest.TestCase):
+    ENV = {"ECS_CONTAINER_METADATA_URI_V4": "http://169.254.170.2/v4/abc"}
+
+    def test_task_id_is_the_last_part_of_the_task_arn(self):
+        urls = []
+
+        def fetch(url):
+            urls.append(url)
+            return json.dumps({"TaskARN": "arn:aws:ecs:us-east-1:123456789012:task/web/0123456789abcdef"}).encode()
+
+        self.assertEqual("0123456789abcdef", server.task_id(self.ENV, fetch))
+        self.assertEqual(["http://169.254.170.2/v4/abc/task"], urls)
+
+    def test_unreachable_metadata_endpoint_falls_back_to_the_hostname(self):
+        def fetch(url):
+            raise OSError("connection refused")
+
+        self.assertEqual(server.socket.gethostname(), server.task_id(self.ENV, fetch))
+
+    def test_unexpected_metadata_falls_back_to_the_hostname(self):
+        self.assertEqual(server.socket.gethostname(), server.task_id(self.ENV, lambda url: b"not json"))
+
+    def test_outside_ecs_the_hostname_is_used(self):
+        self.assertEqual(server.socket.gethostname(), server.task_id({}, lambda url: self.fail("no endpoint to call")))
+
+    def test_no_hostname_is_still_an_answer(self):
+        with unittest.mock.patch.object(server.socket, "gethostname", side_effect=OSError("no name")):
+            self.assertEqual("unknown", server.task_id({}))
 
 
 class HttpTest(unittest.TestCase):

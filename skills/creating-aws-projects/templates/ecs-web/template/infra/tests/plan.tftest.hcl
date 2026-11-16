@@ -130,6 +130,46 @@ run "service_runs_the_digest" {
     condition     = length(aws_cloudwatch_metric_alarm.running_tasks) == 1 && length(aws_cloudwatch_metric_alarm.cpu_high) == 1
     error_message = "A deployed service needs the running-task and CPU alarms."
   }
+
+  assert {
+    condition     = aws_ecs_express_gateway_service.web[0].scaling_target[0].min_task_count == 2 && aws_cloudwatch_metric_alarm.running_tasks[0].threshold == 2
+    error_message = "The service runs two tasks by default, so two copies meet each other from the first deploy, not only during rollouts in production."
+  }
+
+  assert {
+    condition     = length(aws_ecs_express_gateway_service.web[0].tags) == 0
+    error_message = "Two or more tasks need no SingleTaskReason tag."
+  }
+}
+
+run "single_task_needs_a_reason" {
+  command = plan
+
+  variables {
+    min_tasks = 1
+  }
+
+  expect_failures = [var.single_task_reason]
+}
+
+run "single_task_with_a_reason" {
+  command = plan
+
+  variables {
+    image_digest       = "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    min_tasks          = 1
+    single_task_reason = "sandbox that nobody else calls"
+  }
+
+  assert {
+    condition     = aws_ecs_express_gateway_service.web[0].scaling_target[0].min_task_count == 1
+    error_message = "min_tasks = 1 with a reason must run one task."
+  }
+
+  assert {
+    condition     = aws_ecs_express_gateway_service.web[0].tags["SingleTaskReason"] == "sandbox that nobody else calls"
+    error_message = "One task records its reason as a tag on the service."
+  }
 }
 
 run "rejects_a_tag_instead_of_a_digest" {

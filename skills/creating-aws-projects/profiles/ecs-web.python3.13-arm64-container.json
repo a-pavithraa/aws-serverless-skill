@@ -51,7 +51,8 @@
   "evidence": {
     "render": "docs/evidence/task-8-ecs-sandbox/README.md",
     "checks": "docs/evidence/task-8-ecs-sandbox/README.md",
-    "sandbox": "docs/evidence/task-8-ecs-sandbox/README.md"
+    "sandbox": "docs/evidence/task-8-ecs-sandbox/README.md",
+    "not_sandbox_verified": "Added after the sandbox run and unit-tested only, not yet verified in a sandbox account: min_tasks 2 by default (single_task_reason for 1), the instance field in GET /hello (task metadata endpoint v4), the repeated probe that needs two tasks to answer and agree, and verify_deployment.py watch-rollout. The sandbox evidence above ran with one task."
   },
   "review": "pending: promote status to supported after a person reviews the sandbox evidence"
 }

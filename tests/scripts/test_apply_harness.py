@@ -17,7 +17,8 @@ from check_new_project import TEMPLATE_SYNTAX, harness_installed  # noqa: E402
 OWNED = ["harness/check.py", "harness/baseline.py", "harness/plan_summary.py", "harness/plan_provenance.py",
          "harness/verify_deployment.py", "harness/.tflint.hcl",
          "harness/checkov/HARNESS_AWS_1.yaml", "harness/checkov/HARNESS_AWS_2.yaml",
-         "harness/checkov/HARNESS_AWS_3.yaml"]
+         "harness/checkov/HARNESS_AWS_3.yaml", "harness/checkov/HARNESS_AWS_4.yaml",
+         "harness/checkov/HARNESS_AWS_5.yaml"]
 
 
 def snapshot(root: Path):

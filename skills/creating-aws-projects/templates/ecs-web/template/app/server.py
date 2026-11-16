@@ -3,6 +3,8 @@
 import json
 import os
 import re
+import socket
+import urllib.request
 import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -17,6 +19,36 @@ def secrets_loaded(env):
     return [n for n in names if env.get(n)]
 
 
+def task_id(env=os.environ, fetch=None):
+    """ID of the ECS task this process runs in, so a response shows which task answered.
+
+    Read once from the task metadata endpoint v4 (ECS_CONTAINER_METADATA_URI_V4, Fargate 1.4.0 and later):
+    https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-metadata-endpoint-v4-fargate.html
+    Outside ECS, or when the endpoint does not answer, the hostname. Never raises.
+    """
+    uri = env.get("ECS_CONTAINER_METADATA_URI_V4", "")
+    if uri:
+        try:
+            fetch = fetch or (lambda url: urllib.request.urlopen(url, timeout=1).read())
+            arn = json.loads(fetch(uri + "/task"))["TaskARN"]
+            return arn.rsplit("/", 1)[-1]
+        except Exception:  # noqa: BLE001 - an unknown instance must never fail a request
+            pass
+    try:
+        return socket.gethostname() or "unknown"
+    except Exception:  # noqa: BLE001
+        return "unknown"
+
+
+_INSTANCE = []
+
+
+def instance():
+    if not _INSTANCE:
+        _INSTANCE.append(task_id())
+    return _INSTANCE[0]
+
+
 def route(method, path, correlation_id, env=os.environ):
     if method != "GET":
         return 405, {"message": "method not allowed"}
@@ -24,7 +56,7 @@ def route(method, path, correlation_id, env=os.environ):
         return 200, {"status": "ok"}
     if path == "/hello":
         return 200, {"message": "hello", "correlation_id": correlation_id, "source_sha256": SOURCE_SHA256,
-                     "secrets_loaded": secrets_loaded(env)}
+                     "instance": instance(), "secrets_loaded": secrets_loaded(env)}
     return 404, {"message": "not found"}
 
 
@@ -66,7 +98,8 @@ class Handler(BaseHTTPRequestHandler):
 
 def serve(port):
     server = ThreadingHTTPServer(("0.0.0.0", port), Handler)
-    print(json.dumps({"message": "listening", "port": port, "source_sha256": SOURCE_SHA256}), flush=True)
+    print(json.dumps({"message": "listening", "port": port, "source_sha256": SOURCE_SHA256, "instance": instance()}),
+          flush=True)
     server.serve_forever()
 
 

@@ -3,6 +3,7 @@ import os
 import sys
 import threading
 import unittest
+import unittest.mock
 import urllib.error
 import urllib.request
 from http.server import ThreadingHTTPServer
@@ -37,6 +38,40 @@ class RouteTest(unittest.TestCase):
 
     def test_unsafe_correlation_id_is_replaced(self):
         self.assertNotEqual("a b\nforged", server.correlation_id_from({"x-correlation-id": "a b\nforged"}))
+
+
+class InstanceIdTest(unittest.TestCase):
+    def test_instance_id_comes_from_imdsv2_with_a_token(self):
+        calls = []
+
+        def fetch(method, url, headers):
+            calls.append((method, url, headers))
+            return "token-1" if method == "PUT" else "i-0123456789abcdef0\n"
+
+        self.assertEqual("i-0123456789abcdef0", server.instance_id(fetch))
+        self.assertEqual(("PUT", "http://169.254.169.254/latest/api/token"), calls[0][:2])
+        self.assertIn("X-aws-ec2-metadata-token-ttl-seconds", calls[0][2])
+        self.assertEqual(("GET", "http://169.254.169.254/latest/meta-data/instance-id",
+                          {"X-aws-ec2-metadata-token": "token-1"}), calls[1])
+
+    def test_unreachable_metadata_service_falls_back_to_the_hostname(self):
+        def fetch(method, url, headers):
+            raise OSError("timed out")
+
+        self.assertEqual(server.socket.gethostname(), server.instance_id(fetch))
+
+    def test_unexpected_answer_falls_back_to_the_hostname(self):
+        self.assertEqual(server.socket.gethostname(), server.instance_id(lambda m, u, h: "<html>proxy</html>"))
+
+    def test_no_hostname_is_still_an_answer(self):
+        def fetch(method, url, headers):
+            raise OSError("timed out")
+
+        with unittest.mock.patch.object(server.socket, "gethostname", side_effect=OSError("no name")):
+            self.assertEqual("unknown", server.instance_id(fetch))
+
+    def test_hello_names_the_instance_that_answered(self):
+        self.assertEqual(server.instance(), server.route("GET", "/hello", "c-1")[1]["instance"])
 
 
 class HttpTest(unittest.TestCase):

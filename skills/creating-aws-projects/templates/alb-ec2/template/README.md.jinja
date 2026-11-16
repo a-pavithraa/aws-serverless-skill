@@ -19,6 +19,10 @@ The group runs in the public subnets of a network made with the `network` templa
 
 Instances get public IP addresses, whatever the subnet's default, so they can reach the package repositories and CloudWatch Logs. Their security group accepts only the load balancer, and sends only HTTPS out. Nothing allows SSH.
 
+## Two copies at once
+
+{% if min_instances == 1 %}This group runs one instance by decision: {{ single_instance_reason }}. A refresh still runs the old and the new instance together: it adds the new instance before it removes the old one. For those minutes, anything the service keeps in memory exists twice, and requests reach either copy.{% else %}The group runs at least {{ min_instances }} instances, and a refresh adds new instances before it removes old ones. Anything the service keeps in memory (timers, rate limits, caches, sessions) exists once per instance, and the load balancer sends each request to any of them. Keep shared state off the instance.{% endif %} `GET /hello` returns `instance`, the EC2 instance ID, so the verifier can show that more than one instance answered and that they agree.
+
 ## What this project uses but does not own
 
 Terraform reads these and never changes them. Destroying this project leaves them in place.
@@ -76,7 +80,9 @@ aws autoscaling describe-instance-refreshes --auto-scaling-group-name {{ project
 
 ## Verify
 
-A deploy is not working until the verifier says so. It checks the account and region. It then checks that every instance is InService and Healthy, on the current launch template version and AMI, with no refresh running, and that every target is healthy. It calls `GET /hello`, and the response's `source_sha256` must equal this checkout's `app/`. `UNVERIFIED` is not a pass.
+A deploy is not working until the verifier says so. It checks the account and region. It then checks that every instance is InService and Healthy, on the current launch template version and AMI, with no refresh running, and that every target is healthy. It calls `GET /hello` several times: every response's `source_sha256` must equal this checkout's `app/`, the responses must agree, and{% if min_instances == 1 %} with one instance the check that two instances answered is `UNVERIFIED`{% else %} at least two instances (`instance`) must answer{% endif %}. `UNVERIFIED` is not a pass.
+
+To see a refresh from the client side, run `verify_deployment.py watch-rollout` while it runs: it sends the probes until the refresh ends and reports which instances and which `source_sha256` values answered. Old and new both answering is the expected overlap; any failed request fails it.
 
 ## Remove
 

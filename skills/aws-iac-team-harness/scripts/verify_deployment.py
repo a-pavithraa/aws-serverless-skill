@@ -6,6 +6,8 @@ Usage:
            [--profile NAME] [--root infra] [--json] [--log-wait 120] [--trace-wait 60]
     python verify_deployment.py residue --project-tag NAME --environment ENV
            --expect-account ID --expect-region REGION [--profile NAME]
+    python verify_deployment.py watch-rollout <project> --expect-account ID --expect-region REGION
+           [--profile NAME] [--root infra] [--json] [--timeout 1800] [--start-wait 300] [--interval 5]
     python verify_deployment.py source-hash <project>
 
 `verify` order: target (account and region from STS and Terraform outputs must equal the
@@ -28,6 +30,18 @@ definition to equal workflow/definition.asl.json and the state machine to be ACT
 
 A probe may name alarms it trips (trips_alarm); those alarms in ALARM do not fail the
 alarms check.
+
+An HTTP probe may repeat (repeat: 1-50, within max_seconds, default 30, at most 120) and assert
+across the responses: expect_distinct {"key": "instance", "at_least": 2} needs that many distinct
+values of the key (which instance answered), and expect_same ["source_sha256"] needs those keys
+equal in every response (the instances agree). When the service or group runs at least at_least,
+fewer distinct values is FAIL; when it runs fewer, the assertion is UNVERIFIED (reported).
+
+`watch-rollout` runs alongside an apply that rolls out an ECS service or refreshes an Auto
+Scaling group. It waits up to --start-wait for the rollout to start, sends the HTTP probes once
+per --interval until the rollout ends or --timeout, and reports the instances and source_sha256
+values that answered (old and new together is the expected overlap). Any failed request is FAIL;
+a failed or rolled-back rollout is FAIL; a rollout that does not start or end in time is UNVERIFIED.
 
 Probe types: HTTP (the default; needs the api_url output) and, for a queue worker,
 sqs-processed (one message is logged "order processed"), sqs-processed-once (the same
@@ -61,7 +75,12 @@ import zipfile
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-REQUIRED = ("target", "artifact", "health", "probe", "auth-rejection", "logs", "dead-letter")
+REQUIRED = ("target", "artifact", "health", "probe", "auth-rejection", "logs", "dead-letter", "instances", "agree",
+            "rollout", "rollout-probes", "rollout-result")
+# A probe may repeat (repeat), within max_seconds; both are bounded so a probe cannot run away.
+MAX_REPEAT, DEFAULT_REPEAT_SECONDS, MAX_REPEAT_SECONDS = 50, 30, 120
+# watch-rollout: Auto Scaling instance refresh states, from the InstanceRefresh API reference.
+REFRESH_RUNNING = ("Pending", "InProgress", "Baking", "Cancelling", "RollbackInProgress")
 APP_SKIP = {"tests", "__pycache__"}
 
 
@@ -105,6 +124,26 @@ def exit_code(results):
     return 0
 
 
+def probe_repeat(probe):
+    """How often to send a probe, or why its definition is wrong."""
+    repeat = probe.get("repeat", 1)
+    if not isinstance(repeat, int) or isinstance(repeat, bool) or not 1 <= repeat <= MAX_REPEAT:
+        return 0, f"repeat must be a whole number from 1 to {MAX_REPEAT}"
+    spec = probe.get("expect_distinct")
+    if spec is not None:
+        if not isinstance(spec, dict) or not isinstance(spec.get("key"), str):
+            return 0, 'expect_distinct must be {"key": <response key>, "at_least": <n>}'
+        want = spec.get("at_least", 2)
+        if not isinstance(want, int) or want < 2 or repeat < want:
+            return 0, "expect_distinct.at_least must be 2 or more, and repeat at least that"
+    if not isinstance(probe.get("expect_same", []), list):
+        return 0, "expect_same must be a list of response keys"
+    seconds = probe.get("max_seconds", DEFAULT_REPEAT_SECONDS)
+    if not isinstance(seconds, (int, float)) or not 0 < seconds <= MAX_REPEAT_SECONDS:
+        return 0, f"max_seconds must be above 0 and at most {MAX_REPEAT_SECONDS}"
+    return repeat, ""
+
+
 def b64_sha256(data: bytes) -> str:
     return base64.b64encode(hashlib.sha256(data).digest()).decode()
 
@@ -129,6 +168,8 @@ class Verifier:
         self.sleep, self.clock = sleep, clock
         self.results = []
         self.expected_alarms = set()
+        # How many instances (tasks, EC2 instances) serve, once the artifact check has counted them.
+        self.running = None
 
     def add(self, check_id, status, detail="", required=None, **evidence):
         if required is None:
@@ -218,6 +259,7 @@ class Verifier:
                        if i["ImageId"] != ami)
         if other:
             problems.append(f"not on {ami}: {', '.join(other)}")
+        self.running = len(serving)
         if problems:
             self.add("artifact", "FAIL", "; ".join(problems))
         else:
@@ -259,6 +301,7 @@ class Verifier:
             problems.append("tasks not described: " + ", ".join(f"{f.get('arn')} ({f.get('reason')})" for f in failures))
         if len(tasks) != service["runningCount"]:
             problems.append(f"service counts {service['runningCount']} running task(s), {len(tasks)} described")
+        self.running = len(tasks)
         digests = sorted({c.get("imageDigest") for task in tasks for c in task["containers"]})
         other = [d for d in digests if d != expected]
         if other:
@@ -322,44 +365,112 @@ class Verifier:
         response = self.http(probe["method"], url, headers, sign, body)
         return correlation_id, response
 
+    def response_problems(self, probe, response, correlation_id, check_source=True):
+        """What is wrong with one response to an HTTP probe, and its JSON body when it parsed."""
+        problems, body = [], None
+        if response.status != probe["expect_status"]:
+            return [f"status {response.status}, expected {probe['expect_status']}: {response.body[:200]}"], None
+        try:
+            body = json.loads(response.body)
+        except json.JSONDecodeError:
+            problems.append("response is not JSON")
+        if isinstance(body, dict):
+            missing = [k for k in probe.get("expect_json_keys", []) if k not in body]
+            if missing:
+                problems.append(f"response lacks {', '.join(missing)}")
+            for key, value in probe.get("expect_json", {}).items():
+                if body.get(key) != value:
+                    problems.append(f"response {key} is {json.dumps(body.get(key))}, expected {json.dumps(value)}")
+            local = source_hash(self.project / "app")
+            if check_source and probe.get("expect_source_hash") and body.get("source_sha256") != local:
+                problems.append(f"response source_sha256 {body.get('source_sha256')} is not app/ ({local})")
+        elif body is not None:
+            problems.append("response is not a JSON object")
+            body = None
+        if response.headers.get("x-correlation-id") != correlation_id:
+            problems.append("correlation ID not echoed")
+        return problems, body
+
     def check_probe(self, probe):
         name = probe["name"]
         iam = self.outputs.get("auth_mode") == "iam"
         self.expect_alarms(probe)
+        repeat, problem = probe_repeat(probe)
+        if problem:
+            self.add(f"probe:{name}", "FAIL", f"probe definition: {problem}")
+            return None
         started = self.clock()
-        try:
-            correlation_id, response = self.request(probe, sign=iam)
-        except (OSError, TimeoutError) as error:
-            self.add(f"probe:{name}", "UNVERIFIED", f"request failed: {error}")
-            return None
-        problems = []
-        if response.status != probe["expect_status"]:
-            problems.append(f"status {response.status}, expected {probe['expect_status']}: {response.body[:200]}")
-        else:
+        deadline = started + min(float(probe.get("max_seconds", DEFAULT_REPEAT_SECONDS)), MAX_REPEAT_SECONDS)
+        answers, first = [], None
+        for sent in range(repeat):
+            if sent and self.clock() > deadline:
+                break
             try:
-                body = json.loads(response.body)
-                missing = [k for k in probe.get("expect_json_keys", []) if k not in body]
-                if missing:
-                    problems.append(f"response lacks {', '.join(missing)}")
-                for key, value in probe.get("expect_json", {}).items():
-                    if body.get(key) != value:
-                        problems.append(f"response {key} is {json.dumps(body.get(key))}, expected {json.dumps(value)}")
-                local = source_hash(self.project / "app")
-                if probe.get("expect_source_hash") and body.get("source_sha256") != local:
-                    problems.append(f"response source_sha256 {body.get('source_sha256')} is not app/ ({local})")
-            except json.JSONDecodeError:
-                problems.append("response is not JSON")
-            if response.headers.get("x-correlation-id") != correlation_id:
-                problems.append("correlation ID not echoed")
-        request_id = response.headers.get("x-lambda-request-id", "")
-        if problems:
-            self.add(f"probe:{name}", "FAIL", "; ".join(problems), request_id=request_id)
-            return None
-        self.add(f"probe:{name}", "PASS", f"{response.status}", request_id=request_id, correlation_id=correlation_id)
+                correlation_id, response = self.request(probe, sign=iam)
+            except (OSError, TimeoutError) as error:
+                self.add(f"probe:{name}", "UNVERIFIED", f"request {sent + 1} failed: {error}")
+                return None
+            problems, body = self.response_problems(probe, response, correlation_id)
+            request_id = response.headers.get("x-lambda-request-id", "")
+            if problems:
+                where = f"response {sent + 1} of {repeat}: " if repeat > 1 else ""
+                self.add(f"probe:{name}", "FAIL", where + "; ".join(problems), request_id=request_id)
+                return None
+            answers.append(body)
+            if first is None:
+                first = (correlation_id, response, request_id)
+        correlation_id, response, request_id = first
+        detail = f"{response.status}" if repeat == 1 else f"{len(answers)} responses, all {response.status}"
+        self.add(f"probe:{name}", "PASS", detail, request_id=request_id, correlation_id=correlation_id)
+        self.check_instances(probe, answers)
+        self.check_agreement(probe, answers)
         if iam:
             self.check_rejection(probe)
         return {"name": name, "request_id": request_id, "correlation_id": correlation_id,
                 "trace_header": response.headers.get("x-trace-id", ""), "started": started}
+
+    def check_instances(self, probe, answers):
+        """At least `at_least` distinct values of a response key (the instance that answered)."""
+        spec = probe.get("expect_distinct")
+        if not spec:
+            return
+        key, want, check_id = spec["key"], int(spec.get("at_least", 2)), f"instances:{probe['name']}"
+        seen = sorted({str(a[key]) for a in answers if a.get(key) not in (None, "")})
+        running = self.running
+        summary = f"{len(seen)} distinct {key} in {len(answers)} response(s): {', '.join(seen) or 'none'}"
+        if any(a.get(key) in (None, "") for a in answers):
+            self.add(check_id, "FAIL", f"a response has no {key}; {summary}")
+        elif running is not None and running < want:
+            self.add(check_id, "UNVERIFIED", f"{running} running: {want} distinct {key} cannot be shown "
+                                             f"(a single instance is a recorded decision, not a pass); {summary}",
+                     required=False, seen=seen)
+        elif len(seen) >= want:
+            self.add(check_id, "PASS", summary, seen=seen)
+        elif running is None:
+            self.add(check_id, "UNVERIFIED", f"how many instances run is unknown for this target; {summary}",
+                     seen=seen)
+        else:
+            self.add(check_id, "FAIL", f"{running} running but only {summary}: requests reach one copy "
+                                       "(load balancer stickiness, or targets not registered)", seen=seen)
+
+    def check_agreement(self, probe, answers):
+        """Named response keys are identical in every response: the instances agree."""
+        keys = probe.get("expect_same") or []
+        if not keys:
+            return
+        differ = {}
+        for key in keys:
+            values = sorted({json.dumps(a.get(key), sort_keys=True) for a in answers})
+            if len(values) > 1:
+                differ[key] = values
+        check_id = f"agree:{probe['name']}"
+        if len(answers) < 2:
+            self.add(check_id, "UNVERIFIED", f"{len(answers)} response: nothing to compare")
+        elif differ:
+            self.add(check_id, "FAIL", "; ".join(f"{k} differs between responses: {', '.join(v)}"
+                                                 for k, v in differ.items()))
+        else:
+            self.add(check_id, "PASS", f"{', '.join(keys)} equal in {len(answers)} responses")
 
     def check_rejection(self, probe):
         expected = probe.get("unauthenticated_expect_status_when_iam", 403)
@@ -515,6 +626,145 @@ class Verifier:
             self.add("alerting", "UNVERIFIED", "no confirmed subscriber on the alarm topic: alarms notify no one",
                      required=False)
 
+    def rollout_state(self):
+        """(state, marker, detail): state is in_progress, complete or failed; marker names the rollout.
+
+        ECS: the service's deployments (DescribeServices). rolloutState is IN_PROGRESS, COMPLETED or
+        FAILED; a rollout is complete when one deployment is left and it is COMPLETED. Express Mode
+        services report the same fields, with the old deployment as DRAINING (sandbox, 2026-11-09).
+        Auto Scaling: the newest instance refresh (DescribeInstanceRefreshes).
+        """
+        if "ecs_service_name" in self.outputs:
+            deployments = self.ecs_service()["deployments"]
+            primary = next((d for d in deployments if d.get("status") == "PRIMARY"),
+                           deployments[0] if deployments else {})
+            detail = ", ".join(f"{d.get('status')}={d.get('rolloutState')}" for d in deployments)
+            if primary.get("rolloutStateReason"):
+                detail += f" ({primary['rolloutStateReason']})"
+            if primary.get("rolloutState") == "FAILED":
+                return "failed", primary.get("id"), detail
+            if len(deployments) == 1 and primary.get("rolloutState") == "COMPLETED":
+                return "complete", primary.get("id"), detail
+            return "in_progress", primary.get("id"), detail
+        refreshes = self.clients.client("autoscaling").describe_instance_refreshes(
+            AutoScalingGroupName=self.outputs["asg_name"], MaxRecords=1)["InstanceRefreshes"]
+        if not refreshes:
+            return "complete", None, "no instance refresh"
+        refresh = refreshes[0]
+        detail = f"instance refresh {refresh['InstanceRefreshId']} {refresh['Status']}"
+        if refresh.get("StatusReason"):
+            detail += f" ({refresh['StatusReason']})"
+        if refresh["Status"] in REFRESH_RUNNING:
+            return "in_progress", refresh["InstanceRefreshId"], detail
+        if refresh["Status"] == "Successful":
+            return "complete", refresh["InstanceRefreshId"], detail
+        return "failed", refresh["InstanceRefreshId"], detail
+
+    def watch_round(self, probes, tally):
+        """Send each probe once; count what answered. Returns the bodies of this round."""
+        bodies = []
+        for probe in probes:
+            tally["sent"] += 1
+            try:
+                correlation_id, response = self.request(probe, sign=self.outputs.get("auth_mode") == "iam")
+            except (OSError, TimeoutError) as error:
+                tally["failures"].append(f"{probe['name']}: request failed: {error}")
+                continue
+            # During a rollout the old source answers too, so the source hash is reported, not required.
+            problems, body = self.response_problems(probe, response, correlation_id, check_source=False)
+            if problems:
+                tally["failures"].append(f"{probe['name']}: {'; '.join(problems)}")
+                continue
+            for key in ("instance", "source_sha256"):
+                if body.get(key):
+                    tally[key][str(body[key])] = tally[key].get(str(body[key]), 0) + 1
+            bodies.append((probe, body))
+        return bodies
+
+    def watch(self, timeout, start_wait):
+        """Probe while a rollout runs, until it ends or the timeout. Needs ECS or Auto Scaling outputs."""
+        if not self.check_target():
+            return self.report()
+        if "ecs_service_name" not in self.outputs and "asg_name" not in self.outputs:
+            self.add("rollout", "UNVERIFIED", "watch-rollout needs an ecs_service_name or asg_name output")
+            return self.report()
+        probes = [p for p in self.probes() if p.get("type", "http") == "http"]
+        if not probes:
+            self.add("rollout-probes", "UNVERIFIED", "no HTTP probe in .verify/probes.json")
+            return self.report()
+        started = self.clock()
+        state, first_marker, detail = self.rollout_state()
+        began, states = state == "in_progress", [detail]
+        tally = {"sent": 0, "failures": [], "instance": {}, "source_sha256": {}}
+        while True:
+            elapsed = self.clock() - started
+            if began and state != "in_progress":
+                break
+            if (not began and elapsed >= start_wait) or elapsed >= timeout:
+                break
+            self.watch_round(probes, tally)
+            self.sleep(self.waits.interval)
+            state, marker, detail = self.rollout_state()
+            if detail != states[-1]:
+                states.append(detail)
+            began = began or state == "in_progress" or marker != first_marker
+        elapsed = round(self.clock() - started)
+        evidence = {"states": states, "instances": tally["instance"], "source_sha256": tally["source_sha256"]}
+        if not began:
+            self.add("rollout", "UNVERIFIED", f"no rollout started within {start_wait:g}s ({states[-1]}): "
+                                              "start the watch together with the apply", **evidence)
+        elif state == "in_progress":
+            self.add("rollout", "UNVERIFIED", f"still in progress after {timeout:g}s: {states[-1]}", **evidence)
+        elif state == "failed":
+            self.add("rollout", "FAIL", f"rollout failed after {elapsed}s: {states[-1]}", **evidence)
+        else:
+            self.add("rollout", "PASS", f"completed after {elapsed}s: {' -> '.join(states)}", **evidence)
+        final = self.watch_round(probes, tally) if began and state == "complete" else []
+        self.watch_results(tally, final)
+        return self.report()
+
+    def watch_results(self, tally, final):
+        instances = ", ".join(f"{k} x{v}" for k, v in sorted(tally["instance"].items())) or "none"
+        sources = ", ".join(f"{k[:12]} x{v}" for k, v in sorted(tally["source_sha256"].items())) or "none"
+        seen = f"instances {instances}; source_sha256 {sources}"
+        evidence = {"instances": tally["instance"], "source_sha256": tally["source_sha256"]}
+        if tally["failures"]:
+            self.add("rollout-probes", "FAIL", f"{len(tally['failures'])} of {tally['sent']} requests failed during "
+                                               f"the rollout; first: {tally['failures'][0]}; {seen}",
+                     failures=tally["failures"][:20], **evidence)
+        elif not tally["sent"]:
+            self.add("rollout-probes", "UNVERIFIED", "no request was sent")
+        else:
+            self.add("rollout-probes", "PASS", f"{tally['sent']} requests answered; {seen}", **evidence)
+        if len(tally["source_sha256"]) > 1:
+            self.add("rollout-overlap", "PASS", f"old and new source both answered, the expected overlap; {seen}",
+                     required=False)
+        elif tally["sent"]:
+            self.add("rollout-overlap", "UNVERIFIED", f"one source answered throughout: the rollout changed no code, "
+                                                      f"or the overlap was not sampled; {seen}", required=False)
+        checked = [(p, b) for p, b in final if p.get("expect_source_hash")]
+        if checked:
+            local = source_hash(self.project / "app")
+            other = sorted({b.get("source_sha256") or "none" for _, b in checked} - {local})
+            if other:
+                self.add("rollout-result", "FAIL", f"after the rollout the service answers source {', '.join(other)}, "
+                                                   f"not this checkout's app/ ({local}): rolled back, or another "
+                                                   "commit was deployed")
+            else:
+                self.add("rollout-result", "PASS", f"after the rollout every answer comes from app/ ({local[:12]})")
+
+    def report(self):
+        code = exit_code(self.results)
+        status = {0: "PASS", 1: "FAIL", 2: "UNVERIFIED", 3: "WRONG-TARGET"}[code]
+        counts = {s: sum(r.status == s for r in self.results) for s in ("PASS", "FAIL", "UNVERIFIED")}
+        return {
+            "status": status,
+            "exit_code": code,
+            "summary": f"verify-deployment: {status} (pass {counts['PASS']}, fail {counts['FAIL']}, "
+                       f"unverified {counts['UNVERIFIED']})",
+            "checks": [asdict(r) for r in self.results],
+        }
+
     def run(self):
         if self.check_target():
             self.check_artifact()
@@ -532,16 +782,7 @@ class Verifier:
                     self.check_processed(message)
             self.check_alarms()
             self.check_alerting()
-        code = exit_code(self.results)
-        status = {0: "PASS", 1: "FAIL", 2: "UNVERIFIED", 3: "WRONG-TARGET"}[code]
-        counts = {s: sum(r.status == s for r in self.results) for s in ("PASS", "FAIL", "UNVERIFIED")}
-        return {
-            "status": status,
-            "exit_code": code,
-            "summary": f"verify-deployment: {status} (pass {counts['PASS']}, fail {counts['FAIL']}, "
-                       f"unverified {counts['UNVERIFIED']})",
-            "checks": [asdict(r) for r in self.results],
-        }
+        return self.report()
 
 
 LAGGING = "deleted; the tag index has not caught up"
@@ -707,12 +948,18 @@ def main(argv=None):
     v.add_argument("--root", default="infra")
     v.add_argument("--log-wait", type=float, default=120)
     v.add_argument("--trace-wait", type=float, default=60)
+    w = sub.add_parser("watch-rollout")
+    w.add_argument("project", type=Path)
+    w.add_argument("--root", default="infra")
+    w.add_argument("--timeout", type=float, default=1800, help="seconds to wait for the rollout to end (max 3600)")
+    w.add_argument("--start-wait", type=float, default=300, help="seconds to wait for a rollout to start")
+    w.add_argument("--interval", type=float, default=5, help="seconds between probe rounds (min 1)")
     h = sub.add_parser("source-hash")
     h.add_argument("project", type=Path)
     r = sub.add_parser("residue")
     r.add_argument("--project-tag", required=True)
     r.add_argument("--environment", required=True)
-    for p in (v, r):
+    for p in (v, w, r):
         p.add_argument("--profile")
         p.add_argument("--expect-account", required=True)
         p.add_argument("--expect-region", required=True)
@@ -740,6 +987,12 @@ def main(argv=None):
                   "checks": [asdict(Result("target", "UNVERIFIED", error))]}
         print_report(report, args.json)
         return 2
+    if args.command == "watch-rollout":
+        verifier = Verifier(project, args.root, outputs, session, signed_http(session, args.expect_region),
+                            Target(args.expect_account, args.expect_region), Waits(interval=max(args.interval, 1)))
+        report = verifier.watch(timeout=min(args.timeout, 3600), start_wait=min(args.start_wait, args.timeout, 3600))
+        print_report(report, args.json)
+        return report["exit_code"]
     verifier = Verifier(project, args.root, outputs, session, signed_http(session, args.expect_region),
                         Target(args.expect_account, args.expect_region),
                         Waits(logs=args.log_wait, traces=args.trace_wait))

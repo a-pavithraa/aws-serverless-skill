@@ -1,6 +1,6 @@
 ---
 name: aws-iac-team-harness
-description: "Use when a Terraform-on-AWS repository needs checks every agent and developer must pass: installing or updating the harness (fmt, validate, TFLint, Checkov with graph policies, mocked terraform tests), recording legacy findings in a baseline, adding the reference GitHub Actions plan/approve/apply workflow with plan provenance, or verifying a deployed Lambda/API against the checkout. Not for writing new infrastructure from scratch (use creating-aws-projects)."
+description: "Use when a Terraform-on-AWS repository needs checks every agent and developer must pass: installing or updating the harness (fmt, validate, TFLint, Checkov with graph policies, mocked terraform tests), recording legacy findings in a baseline, adding the reference GitHub Actions plan/approve/apply workflow with plan provenance, or verifying a deployed Lambda, API, ECS service or EC2 fleet against the checkout, also during a rollout. Not for writing new infrastructure from scratch (use creating-aws-projects)."
 ---
 
 # AWS IaC team harness
@@ -67,7 +67,11 @@ uv run --with boto3 python harness/verify_deployment.py verify . \
 
 Order: target (exit 3 before any request if the credentials or Terraform outputs point elsewhere) → artifact (deployed `CodeSha256` = local package = `app/`) → probes from `.verify/probes.json` (signed when the API uses IAM, plus an unsigned request that must be rejected) → logs found by request ID with the correlation ID → trace, alarms, alerting (reported, not deciding the exit: traces are sampled, alarms lag, a confirmed subscriber is not a delivered message).
 
+A probe with `repeat` sends the request up to 50 times (within `max_seconds`, at most 120). `expect_distinct {"key": "instance", "at_least": 2}` then needs two instances to answer, and `expect_same` needs the named keys equal in every response. A service that runs two or more where only one answered is FAIL; a service that runs one is UNVERIFIED, reported. A service always runs two copies at some moment (a rollout, a scale-out), so the `ecs-web` and `alb-ec2` probes ask for two.
+
 Exit 0 PASS, 1 FAIL, 2 UNVERIFIED (for example, logs not in yet: rerun, do not report a pass), 3 wrong target. Paste the last line as evidence.
+
+`verify` fails while a rollout runs. To probe through one, run `verify_deployment.py watch-rollout . --expect-account ... --expect-region ...` next to the apply: it fails on any failed request and lists the instances and `source_sha256` values that answered. `references/deployment-workflows.md` has the results and how a workflow runs it. The repeated probes and `watch-rollout` are unit-tested only, not yet run against a sandbox account.
 
 After a sandbox teardown, `verify_deployment.py residue --project-tag NAME --environment ENV ...` lists anything still tagged with the project.
 
