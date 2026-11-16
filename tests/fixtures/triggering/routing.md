@@ -48,4 +48,6 @@ When a request matches one of these, read the code it touches, then load the ski
 - Terraform layout, state, IAM, KMS or CI pipelines: `terraform-aws`
 - Lambda, API Gateway, SQS, SNS, EventBridge or Step Functions behavior: `aws-serverless`
 - DynamoDB table design: `aws-dynamodb`
+- ECS Fargate services: task definitions, secrets, images, deployments or scaling past one task: `aws-ecs-fargate`
+- Amazon Connect flows, flow Lambda functions, security profiles or contact events: `aws-connect`
 - These checks, a baseline, or verifying a deployment: `aws-iac-team-harness`
