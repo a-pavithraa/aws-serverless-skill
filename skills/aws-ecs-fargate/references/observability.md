@@ -6,8 +6,10 @@ Work down this list, and stop at the first step that answers the question you ha
 
 1. **Alarms on what the load balancer and queues already publish** (see SKILL.md). No sidecar, no code change.
 2. **Container Insights** (`setting { name = "containerInsights" }` on the cluster). Task CPU, memory and `RunningTaskCount`. No sidecar.
+   - The values are `disabled`, `enabled` and `enhanced`. `enhanced` adds task and container metrics, which AWS recommends, and which is how you find one bad task among several. A cluster without the setting takes the account's `containerInsights` setting, so set it on the cluster on purpose.
+   - Its metrics are billed as custom metrics, and `enhanced` publishes more of them, per task and per container. `RunningTaskCount` is not billed since 2026-10-01. A common choice is `enhanced` in prod and `disabled` in dev.
 3. **Log metric filters** on the application's own log lines (for example, a count of `ERROR`). No sidecar.
-4. **Custom metrics from code.** Use a metrics library that calls `PutMetricData` directly (for example, Micrometer's CloudWatch registry), with `cloudwatch:PutMetricData` on the task role. No sidecar.
+4. **Custom metrics from code.** Use a metrics library that calls `PutMetricData` directly (for example, Micrometer's CloudWatch registry), with `cloudwatch:PutMetricData` on the task role. No sidecar. See [Custom metrics with several tasks](#custom-metrics-with-several-tasks).
 5. **Traces, or "which downstream call is slow".** This step needs a sidecar: CloudWatch Application Signals, or an OpenTelemetry collector.
 6. **Logs to a destination other than CloudWatch, or filtered before storage.** This step needs a FireLens (Fluent Bit) sidecar.
 
@@ -18,19 +20,30 @@ These steps assume CloudWatch stores the telemetry. For Grafana (LGTM or Grafana
 Two shortcuts that do not work as expected:
 
 - **EMF printed to stdout.** AWS documents agent-free extraction of embedded metric format only for Lambda. For containers, the documented paths are the CloudWatch agent, or the CloudWatch OTLP endpoint (which AWS recommends). Test a metric in a real task before you depend on stdout EMF through `awslogs`.
-- **A plain OpenTelemetry exporter pointed at AWS.** The CloudWatch OTLP endpoints (`https://xray.<region>.amazonaws.com/v1/traces`, `https://monitoring.<region>.amazonaws.com/v1/metrics`, `https://logs.<region>.amazonaws.com/v1/logs`) take HTTP only, not gRPC, and need SigV4-signed requests. Use a collector with the `sigv4auth` extension, or the ADOT agent.
+- **A plain OpenTelemetry exporter pointed at AWS.** The CloudWatch OTLP endpoints (`https://xray.<region>.amazonaws.com/v1/traces`, `https://monitoring.<region>.amazonaws.com/v1/metrics`, `https://logs.<region>.amazonaws.com/v1/logs`) take HTTP only, not gRPC. They accept SigV4-signed requests, which AWS recommends, or a long-lived API key as a bearer token. Most exporters built into an application, such as Spring Boot's, cannot sign with SigV4, and a bearer token is a long-lived secret in every task. Use a collector with the `sigv4auth` extension, or the ADOT agent, which sign with the task role.
 
-> *Sources: [EMF with the CloudWatch agent](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Generation_CloudWatch_Agent.html) · verified 2026-11-16; [CloudWatch OTLP endpoints](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-OTLPEndpoint.html) · verified 2026-11-16*
+> *Sources: [EMF with the CloudWatch agent](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Generation_CloudWatch_Agent.html) · verified 2026-11-16; [CloudWatch OTLP endpoints](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-OTLPEndpoint.html) · verified 2026-11-21; [Container Insights](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/cloudwatch-container-insights.html) · verified 2026-11-21; [ClusterSetting](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ClusterSetting.html) · verified 2026-11-21*
 
 Do not add the X-Ray daemon as a sidecar, or the X-Ray SDK to new code. Both have been in maintenance mode since 2026-02-25. Use OpenTelemetry.
 
 > *Source: [X-Ray SDK and daemon timeline](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-daemon-timeline.html) · verified 2026-11-16*
 
+## Custom metrics with several tasks
+
+When every task publishes to the same metric, CloudWatch combines their data points in each period:
+
+- **No task dimension.** Each distinct set of dimensions is a separate billed metric, and every deployment starts new task IDs. A task-ID dimension adds a new set of metrics with each deployment. Use Container Insights with enhanced observability for the per-task view.
+- **Statistics.** Sum for counters. Maximum for pool waits, heap and job durations. For an average latency, divide the timer's sum by its count in metric math: the Average statistic weights a quiet task like a busy one.
+- **Percentiles.** Percentiles computed inside each task cannot be combined. Use the load balancer's `TargetResponseTime` percentiles, which cover all targets.
+- **A task that stops publishing.** Alarm on the `SampleCount` of a gauge over 5 minutes, below about 5 × `desired_count` minus a margin. A task's publishes do not line up with the minute, so a 1-minute count flaps.
+- **Publish an allow-list.** A metrics library registers many meters by default (JVM, HTTP per route, connection pools), and each tag set is a billed metric. Deny by default, and publish only what an alarm, a dashboard or a known question needs. Tag only with fixed values: route templates, outcomes, job names, AWS service names. Never with user, patient or request IDs.
+- **Dev in windows.** Custom metrics are billed for the hours in which they are published. A switch that turns publishing on in dev only while someone checks it costs only those hours.
+
 ## The `awslogs` driver loses logs by default
 
 Since 2025-06-25, a container without `mode` in its `logConfiguration` uses `non-blocking` mode, with a `max-buffer-size` of `10m`. When the buffer is full, new log lines are lost. `blocking` mode keeps every line, but a write to stdout then waits when CloudWatch Logs is slow, and the application can hang and fail its health check.
 
-Choose a mode on purpose, and write it in the task definition:
+The `defaultLogDriverMode` account setting changes the default for every container in a Region that does not set `mode`, so a task definition without `mode` can behave differently in two accounts. Choose a mode on purpose, and write it in the task definition:
 
 ```hcl
 logConfiguration = {
@@ -47,7 +60,7 @@ logConfiguration = {
 
 Put records that must not be lost (an audit trail, for example) in a database, not only in logs.
 
-> *Source: [ECS task definition parameters, logConfiguration](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html) · verified 2026-11-16*
+> *Source: [ECS task definition parameters, logConfiguration](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html) · verified 2026-11-21*
 
 ## Adding a sidecar
 
@@ -110,3 +123,14 @@ Traces and their attributes are a second copy of what the application handles, w
 - Keep the agent's SQL statement sanitizer on. Do not capture bind parameters.
 - Set retention on the trace and span log groups.
 - Give access to trace data only to people who may read the underlying records.
+
+### A backstop for regulated data in logs
+
+The rule is that application logs hold no regulated data. A CloudWatch Logs data protection policy on the log group catches what slips through. It is a backstop, not a replacement for the rule: it misses free-text names, and flags lines that hold none.
+
+- **There is no audit-only mode.** The policy needs an `Audit` statement and a `Deidentify` statement, and their data identifiers must match exactly. So a policy masks every match from its first apply, for anyone without `logs:Unmask`.
+- **Findings are counted** in the `AWS/Logs` metric `LogEventsWithFindings`, one per log event that has a match. Alarm on it, but only after a trial.
+- **Choose only the identifiers that fit the logs.** Loose ones, such as the full-name identifier, flag many lines that hold no regulated data. Test data in dev shows only that the policy is wired up: write one made-up line, and check that it is masked and counted. The false-positive rate shows only on real data. In prod, run the policy for a week with the alarm off, have someone who may read the records review the findings with `logs:Unmask`, and drop the identifiers that match mostly by mistake. Then turn the alarm on.
+- **The deployer needs** `logs:PutDataProtectionPolicy`, `GetDataProtectionPolicy` and `DeleteDataProtectionPolicy` on the log group. Scanning is billed per GB, so read the log group's `IncomingBytes` first.
+
+> *Sources: [Mask sensitive log data](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/mask-sensitive-log-data-start.html) · verified 2026-11-21; [Audit findings](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/mask-sensitive-log-data-audit-findings.html) · verified 2026-11-21*

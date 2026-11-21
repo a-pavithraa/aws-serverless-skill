@@ -44,7 +44,10 @@ resource "aws_iam_role" "github_actions" {
 | --- | --- |
 | Plan on pull requests (read-only) | `repo:ORG/REPO:pull_request` |
 | Plan prod, in a job with no `environment`, run from `master` | `repo:ORG/REPO:ref:refs/heads/master` |
+| Plan prod on a release tag, in a `prod-plan` environment with no reviewers | `repo:ORG/REPO:environment:prod-plan` |
 | Apply to prod | `repo:ORG/REPO:environment:prod` |
+
+A job that runs on a tag and names no environment gets `ref:refs/tags/v1.4.0`, a different subject for every release, which only a `StringLike` with `*` matches. Name an environment with no reviewers instead, and limit its deployment refs to the release tags.
 
 Repositories created after 2026-07-15 use a default subject that also includes the owner and repository IDs. `gh api repos/ORG/REPO/actions/oidc/customization/sub` shows the repository's subject settings without running a job. Decode one token from the job to confirm its `sub` before you write the condition.
 
@@ -397,6 +400,12 @@ Run every test that the infrastructure depends on in the same workflow: `terrafo
 - **Build each artifact once, in CI.** Tag the image with the commit SHA, and deploy that digest to every environment. Build Lambda zips in CI, before the plan. A zip built on a laptop and one built in CI have different hashes, so the plan shows a change whenever the builder changes.
 - **Promote from one main branch.** Merge, deploy to dev, then approve prod for the same commit and digest. With a `develop` to `master` model, prod runs a merge commit that dev never ran, and the image is usually rebuilt. If the team keeps two branches, still promote the digest and never rebuild on `master`.
 - **Prod in another account** needs the image there: a repository policy that lets the prod account pull, or ECR replication. The lifecycle policy must not expire an image that prod runs (`aws-ecs-fargate` → Images).
+- **Or copy the approved digest into prod's own repository.** Replication copies every dev build. A copy after approval puts only released images in prod's repository, and dev's lifecycle policy can no longer expire what prod runs:
+  1. A release tag (`v1.4.0`) on a commit that the main branch contains builds the image once, deploys it to dev, and checks the rollout.
+  2. The prod plan job records the image's digest in dev's repository, and shows it in the plan summary.
+  3. After approval, the apply job copies that digest (`skopeo copy --all --preserve-digests docker://<dev-repo>@<digest> docker://<prod-repo>:v1.4.0`), checks that the tag in prod's repository resolves to the same digest, then applies the saved plan. What the reviewer approved is what prod runs.
+  4. The prod roles need `ecr:DescribeImages` on dev's repository for the plan, and the pull actions for the apply. In another account, dev's repository policy must also allow them.
+  5. Protect the tags with a ruleset: only the people who release may create `v*` tags, and nobody may move or delete them. Image tags are immutable, so a moved Git tag would deploy the image that was built from the commit it first pointed at.
 
 ## Re-plan or apply a saved plan
 
